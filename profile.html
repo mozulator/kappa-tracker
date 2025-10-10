@@ -266,12 +266,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="avatarUrl">Avatar Image URL</label>
-                    <input type="url" id="avatarUrl" name="avatarUrl" placeholder="https://example.com/avatar.jpg">
-                    <small>URL to your avatar image (optional) - will be displayed on rankings and profile</small>
-                </div>
-
-                <div class="form-group">
                     <div class="checkbox-group">
                         <input type="checkbox" id="isPublic" name="isPublic">
                         <label for="isPublic">Show my profile on public leaderboards</label>
@@ -312,7 +306,6 @@
                 document.getElementById('twitchUrl').value = user.twitchUrl || '';
                 document.getElementById('discordTag').value = user.discordTag || '';
                 document.getElementById('tarkovDevId').value = user.tarkovDevId || '';
-                document.getElementById('avatarUrl').value = user.avatarUrl || '';
                 document.getElementById('isPublic').checked = user.isPublic;
             } catch (error) {
                 console.error('Error loading profile:', error);

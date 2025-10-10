@@ -186,25 +186,6 @@ class QuestTracker {
             }
         });
 
-        // Complete quest dialog buttons
-        const cancelCompleteBtn = document.getElementById('cancel-complete');
-        const confirmCompleteBtn = document.getElementById('confirm-complete');
-        
-        cancelCompleteBtn.addEventListener('click', () => {
-            this.hideCompleteQuestDialog();
-        });
-        
-        confirmCompleteBtn.addEventListener('click', () => {
-            this.confirmCompleteQuest();
-        });
-
-        // Close complete quest dialog when clicking outside
-        const completeDialogOverlay = document.getElementById('complete-quest-dialog');
-        completeDialogOverlay.addEventListener('click', (e) => {
-            if (e.target === completeDialogOverlay) {
-                this.hideCompleteQuestDialog();
-            }
-        });
     }
 
 
@@ -1343,38 +1324,6 @@ class QuestTracker {
                             ` : ''}
                         </div>
                         
-                        <div style="border-top: 1px solid #3a3a3a; padding-top: 20px;">
-                            <h4 style="color: #c7aa6a; font-size: 16px; margin-bottom: 15px;">
-                                <i class="fas fa-image"></i> Avatar Image URL
-                            </h4>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input 
-                                    type="url" 
-                                    id="avatar-url-input" 
-                                    value="${user.avatarUrl || ''}" 
-                                    placeholder="https://example.com/avatar.jpg"
-                                    style="flex: 1; padding: 10px 15px; background: rgba(20, 20, 20, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px;"
-                                />
-                                <button 
-                                    id="save-avatar-btn" 
-                                    style="padding: 10px 20px; background: #c7aa6a; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px; transition: background 0.2s;"
-                                    onmouseover="this.style.background='#d4ba7f'"
-                                    onmouseout="this.style.background='#c7aa6a'"
-                                >
-                                    <i class="fas fa-save"></i> Save
-                                </button>
-                            </div>
-                            ${user.avatarUrl ? `
-                                <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
-                                    <img src="${user.avatarUrl}" alt="Avatar Preview" 
-                                         style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #c7aa6a;" 
-                                         onerror="this.style.display='none'">
-                                    <div style="color: #4CAF50; font-size: 14px;">
-                                        <i class="fas fa-check-circle"></i> Avatar set
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
                     </div>
                     
                     <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; padding: 30px;">
@@ -1460,39 +1409,6 @@ class QuestTracker {
                         this.showNotification('Failed to save Tarkov.dev ID', 'error');
                         saveTarkovDevBtn.disabled = false;
                         saveTarkovDevBtn.innerHTML = '<i class="fas fa-save"></i> Save';
-                    }
-                });
-            }
-            
-            // Add event listener for Avatar URL save button
-            const saveAvatarBtn = document.getElementById('save-avatar-btn');
-            if (saveAvatarBtn) {
-                saveAvatarBtn.addEventListener('click', async () => {
-                    const avatarUrlInput = document.getElementById('avatar-url-input');
-                    const avatarUrl = avatarUrlInput.value.trim();
-                    
-                    try {
-                        saveAvatarBtn.disabled = true;
-                        saveAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-                        
-                        const response = await fetch(`/api/users/${user.username}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({ avatarUrl })
-                        });
-                        
-                        if (response.ok) {
-                            this.showNotification('Avatar URL saved successfully!', 'success');
-                            setTimeout(() => this.loadProfile(), 500);
-                        } else {
-                            throw new Error('Failed to save');
-                        }
-                    } catch (error) {
-                        console.error('Error saving Avatar URL:', error);
-                        this.showNotification('Failed to save Avatar URL', 'error');
-                        saveAvatarBtn.disabled = false;
-                        saveAvatarBtn.innerHTML = '<i class="fas fa-save"></i> Save';
                     }
                 });
             }
