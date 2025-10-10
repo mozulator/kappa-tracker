@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "overlay_tokens" (
+CREATE TABLE IF NOT EXISTS "overlay_tokens" (
     "id" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -11,14 +11,21 @@ CREATE TABLE "overlay_tokens" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "overlay_tokens_token_key" ON "overlay_tokens"("token");
+CREATE UNIQUE INDEX IF NOT EXISTS "overlay_tokens_token_key" ON "overlay_tokens"("token");
 
 -- CreateIndex
-CREATE INDEX "overlay_tokens_token_idx" ON "overlay_tokens"("token");
+CREATE INDEX IF NOT EXISTS "overlay_tokens_token_idx" ON "overlay_tokens"("token");
 
 -- CreateIndex
-CREATE INDEX "overlay_tokens_userId_idx" ON "overlay_tokens"("userId");
+CREATE INDEX IF NOT EXISTS "overlay_tokens_userId_idx" ON "overlay_tokens"("userId");
 
 -- AddForeignKey
-ALTER TABLE "overlay_tokens" ADD CONSTRAINT "overlay_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'overlay_tokens_userId_fkey'
+    ) THEN
+        ALTER TABLE "overlay_tokens" ADD CONSTRAINT "overlay_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
