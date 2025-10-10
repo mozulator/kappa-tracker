@@ -87,6 +87,11 @@ passport.use(new LocalStrategy(
                 return done(null, false, { message: 'Incorrect username or password.' });
             }
 
+            // Check if user is approved
+            if (!user.approved) {
+                return done(null, false, { message: 'Your account is pending approval. Please wait for an administrator to approve your account.' });
+            }
+
             return done(null, user);
         } catch (error) {
             return done(error);
@@ -114,6 +119,8 @@ passport.deserializeUser(async (id, done) => {
                 discordTag: true,
                 tarkovDevId: true,
                 avatarUrl: true,
+                approved: true,
+                isAdmin: true,
                 createdAt: true
             }
         });
@@ -139,6 +146,16 @@ const apiLimiter = rateLimit({
 function requireAuth(req, res, next) {
     if (!req.isAuthenticated()) {
         return res.status(401).json({ error: 'Unauthorized' });
+    }
+    next();
+}
+
+function requireAdmin(req, res, next) {
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (!req.user.isAdmin) {
+        return res.status(403).json({ error: 'Forbidden - Admin access required' });
     }
     next();
 }
@@ -190,6 +207,10 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
         // Hash password
         const passwordHash = await bcrypt.hash(password, 10);
 
+        // Check if this is the first user (auto-approve and make admin)
+        const userCount = await prisma.user.count();
+        const isFirstUser = userCount === 0;
+
         // Create user and progress
         const user = await prisma.user.create({
             data: {
@@ -197,6 +218,8 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                 username: username.toLowerCase(),
                 displayName: displayName || username,
                 passwordHash,
+                approved: isFirstUser, // First user auto-approved
+                isAdmin: isFirstUser,  // First user is admin
                 progress: {
                     create: {
                         pmcLevel: 1,
@@ -211,22 +234,33 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                 username: true,
                 email: true,
                 displayName: true,
+                approved: true,
+                isAdmin: true,
                 createdAt: true
             }
         });
 
-        // Auto login
-        req.login(user, (err) => {
-            if (err) {
-                console.error('Auto-login failed after registration:', err);
-                return res.status(500).json({ error: 'Registration successful but login failed' });
-            }
-            console.log('User auto-logged in after registration:', user.username);
-            res.json({
-                message: 'Registration successful',
-                user
+        // Handle approved vs pending users
+        if (user.approved) {
+            // Auto login for approved users (first user)
+            req.login(user, (err) => {
+                if (err) {
+                    console.error('Auto-login failed after registration:', err);
+                    return res.status(500).json({ error: 'Registration successful but login failed' });
+                }
+                console.log('User auto-logged in after registration:', user.username);
+                res.json({
+                    message: 'Registration successful',
+                    user
+                });
             });
-        });
+        } else {
+            // Pending approval
+            res.json({
+                message: 'Registration successful! Your account is pending approval.',
+                pending: true
+            });
+        }
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Registration failed' });
@@ -294,6 +328,82 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch user data' });
     }
 });
+
+// ============================================================================
+// ADMIN ROUTES
+// ============================================================================
+
+// Get pending users (admin only)
+app.get('/api/admin/pending-users', requireAdmin, async (req, res) => {
+    try {
+        const pendingUsers = await prisma.user.findMany({
+            where: { approved: false },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                displayName: true,
+                createdAt: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        res.json({ users: pendingUsers });
+    } catch (error) {
+        console.error('Error fetching pending users:', error);
+        res.status(500).json({ error: 'Failed to fetch pending users' });
+    }
+});
+
+// Approve user (admin only)
+app.post('/api/admin/approve-user/:userId', requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { approved: true },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                displayName: true
+            }
+        });
+        
+        console.log(`Admin ${req.user.username} approved user: ${user.username}`);
+        res.json({ message: 'User approved successfully', user });
+    } catch (error) {
+        console.error('Error approving user:', error);
+        res.status(500).json({ error: 'Failed to approve user' });
+    }
+});
+
+// Reject user (admin only) - deletes the user
+app.delete('/api/admin/reject-user/:userId', requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Delete user (cascade will delete progress and activities)
+        const user = await prisma.user.delete({
+            where: { id: userId },
+            select: {
+                username: true,
+                email: true
+            }
+        });
+        
+        console.log(`Admin ${req.user.username} rejected user: ${user.username}`);
+        res.json({ message: 'User rejected and removed', user });
+    } catch (error) {
+        console.error('Error rejecting user:', error);
+        res.status(500).json({ error: 'Failed to reject user' });
+    }
+});
+
+// ============================================================================
+// USER PROFILE MANAGEMENT
+// ============================================================================
 
 // Update Twitch name
 app.post('/api/user/update-twitch', requireAuth, async (req, res) => {

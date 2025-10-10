@@ -32,6 +32,10 @@ model User {
   tarkovDevId   String?
   avatarUrl     String?
   
+  // Account status
+  approved      Boolean  @default(false)
+  isAdmin       Boolean  @default(false)
+  
   // Relations
   progress      UserProgress?
   activities    QuestActivity[]
