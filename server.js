@@ -527,8 +527,12 @@ app.get('/api/progress', requireAuth, async (req, res) => {
             });
         }
 
-        progress.completedQuests = JSON.parse(progress.completedQuests || '[]');
-        res.json(progress);
+        // Parse completedQuests before sending
+        const responseData = {
+            ...progress,
+            completedQuests: JSON.parse(progress.completedQuests || '[]')
+        };
+        res.json(responseData);
     } catch (error) {
         console.error('Error fetching progress:', error);
         res.status(500).json({ error: error.message });

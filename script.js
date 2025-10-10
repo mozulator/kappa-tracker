@@ -32,7 +32,10 @@ class QuestTracker {
         try {
             const response = await fetch('/api/progress', { credentials: 'include' });
             this.userProgress = await response.json();
-            this.userProgress.completedQuests = JSON.parse(this.userProgress.completedQuests || '[]');
+            // completedQuests is already parsed by the server
+            if (!Array.isArray(this.userProgress.completedQuests)) {
+                this.userProgress.completedQuests = [];
+            }
         } catch (error) {
             console.error('Error loading progress:', error);
         }
