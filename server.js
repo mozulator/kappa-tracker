@@ -1666,6 +1666,12 @@ async function applyQuestFixes() {
             }
         });
         
+        // Lend Lease - Part 1 - should be Any Location, not Woods
+        await prisma.quest.update({
+            where: { id: '656f9d5ff3a29858a60214a4' },
+            data: { mapName: 'Any Location' }
+        });
+        
         console.log('Applied quest data fixes');
     } catch (error) {
         console.error('Error applying quest fixes:', error);
