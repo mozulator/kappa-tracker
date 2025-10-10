@@ -510,6 +510,70 @@ app.delete('/api/admin/delete-user/:userId', requireAdmin, async (req, res) => {
     }
 });
 
+// Update user Twitch info (admin only)
+app.post('/api/admin/update-twitch/:username', requireAdmin, async (req, res) => {
+    try {
+        const { username } = req.params;
+        const { twitchName } = req.body;
+        
+        if (!twitchName || !twitchName.trim()) {
+            return res.status(400).json({ error: 'Twitch name is required' });
+        }
+        
+        // Find user
+        const user = await prisma.user.findUnique({
+            where: { username: username.toLowerCase() }
+        });
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Fetch Twitch avatar
+        const twitchUrl = `https://twitch.tv/${twitchName.trim()}`;
+        let avatarUrl = null;
+        
+        try {
+            const avatarResponse = await fetch(`https://decapi.me/twitch/avatar/${twitchName.trim()}`);
+            if (avatarResponse.ok) {
+                const avatar = await avatarResponse.text();
+                if (avatar && avatar.startsWith('http')) {
+                    avatarUrl = avatar.trim();
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching Twitch avatar:', error);
+        }
+        
+        // Update user
+        const updateData = {
+            twitchName: twitchName.trim(),
+            twitchUrl
+        };
+        
+        if (avatarUrl) {
+            updateData.avatarUrl = avatarUrl;
+        }
+        
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
+            data: updateData,
+            select: {
+                username: true,
+                twitchName: true,
+                twitchUrl: true,
+                avatarUrl: true
+            }
+        });
+        
+        console.log(`Admin ${req.user.username} updated Twitch info for ${updatedUser.username}: ${twitchName}`);
+        res.json({ message: 'Twitch info updated', user: updatedUser });
+    } catch (error) {
+        console.error('Error updating Twitch info:', error);
+        res.status(500).json({ error: 'Failed to update Twitch info' });
+    }
+});
+
 // ============================================================================
 // REPORT SYSTEM
 // ============================================================================
