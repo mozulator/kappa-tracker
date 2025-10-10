@@ -7,45 +7,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: #0d0d0d;
             color: #fff;
-            min-height: 100vh;
-        }
-
-        .admin-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .admin-header {
-            background: linear-gradient(135deg, rgba(199, 170, 106, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
-            border: 2px solid #3a3a3a;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
+            background: linear-gradient(135deg, rgba(199, 170, 106, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+            border-bottom: 2px solid #3a3a3a;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .admin-header h1 {
             color: #c7aa6a;
-            font-size: 36px;
-            margin: 0 0 10px 0;
+            font-size: 28px;
             text-transform: uppercase;
             letter-spacing: 2px;
-        }
-
-        .admin-header p {
-            color: #888;
-            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .nav-links {
             display: flex;
             gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
         }
 
         .nav-links a {
@@ -63,86 +61,131 @@
             background: rgba(199, 170, 106, 0.2);
         }
 
-        .section {
+        .dashboard-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .panel {
             background: rgba(30, 30, 30, 0.8);
             border: 2px solid #3a3a3a;
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-
-        .section h2 {
-            color: #c7aa6a;
-            font-size: 24px;
-            margin: 0 0 20px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .pending-users-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: rgba(199, 170, 106, 0.1);
+            border-bottom: 2px solid #3a3a3a;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            color: #c7aa6a;
+            font-size: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #c7aa6a;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .panel-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: #c7aa6a;
+            border-radius: 4px;
         }
 
         .user-card {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid #3a3a3a;
             border-radius: 8px;
-            padding: 20px;
+            padding: 15px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
 
         .user-card:hover {
             border-color: #c7aa6a;
+            background: rgba(0, 0, 0, 0.6);
         }
 
-        .user-info {
+        .user-info-section {
             flex: 1;
         }
 
-        .user-info .name {
+        .user-info-section .name {
             color: #fff;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
-        .user-info .details {
+        .user-info-section .details {
             color: #888;
-            font-size: 14px;
+            font-size: 13px;
         }
 
-        .user-info .username {
+        .user-info-section .username {
             color: #c7aa6a;
             font-weight: 600;
         }
 
-        .user-info .date {
+        .user-info-section .date {
             color: #666;
-            font-size: 13px;
-            margin-top: 5px;
+            font-size: 12px;
+            margin-top: 4px;
         }
 
         .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn-approve {
@@ -154,12 +197,12 @@
             background: #45a049;
         }
 
-        .btn-reject {
+        .btn-delete {
             background: #f44336;
             color: #fff;
         }
 
-        .btn-reject:hover {
+        .btn-delete:hover {
             background: #da190b;
         }
 
@@ -168,22 +211,17 @@
             cursor: not-allowed;
         }
 
-        .loading {
+        .loading, .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 40px 20px;
             color: #888;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            color: #888;
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
+        .loading i, .empty-state i {
+            font-size: 36px;
+            margin-bottom: 12px;
             color: #555;
+            display: block;
         }
 
         .notification {
@@ -214,28 +252,102 @@
                 opacity: 1;
             }
         }
+
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-mini {
+            flex: 1;
+            background: rgba(199, 170, 106, 0.1);
+            border: 1px solid #c7aa6a;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-mini .value {
+            color: #c7aa6a;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stat-mini .label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="notification" id="notification"></div>
 
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1><i class="fas fa-shield-alt"></i> ADMIN PANEL</h1>
-            <p>Manage user registrations and approvals</p>
-            <div class="nav-links">
-                <a href="/"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="/rankings.html"><i class="fas fa-trophy"></i> Rankings</a>
-                <a href="#" onclick="location.reload()"><i class="fas fa-sync"></i> Refresh</a>
+    <div class="admin-header">
+        <h1><i class="fas fa-shield-alt"></i> ADMIN DASHBOARD</h1>
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/rankings.html"><i class="fas fa-trophy"></i> Rankings</a>
+            <a href="#" onclick="loadData()"><i class="fas fa-sync"></i> Refresh</a>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Pending Approvals Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <i class="fas fa-user-clock"></i>
+                    Pending Approvals
+                    <span class="badge" id="pending-count">0</span>
+                </h2>
+            </div>
+            <div class="panel-content" id="pending-users-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
+                </div>
             </div>
         </div>
 
-        <div class="section">
-            <h2><i class="fas fa-user-clock"></i> Pending Approvals (<span id="pending-count">0</span>)</h2>
-            <div id="pending-users-list">
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px;"></i>
-                    <p>Loading pending users...</p>
+        <!-- All Users Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <i class="fas fa-users"></i>
+                    All Users
+                    <span class="badge" id="users-count">0</span>
+                </h2>
+            </div>
+            <div class="panel-content">
+                <div class="stats-row">
+                    <div class="stat-mini">
+                        <div class="value" id="total-users">0</div>
+                        <div class="label">Total Users</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="value" id="approved-users">0</div>
+                        <div class="label">Approved</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="value" id="admin-users">0</div>
+                        <div class="label">Admins</div>
+                    </div>
+                </div>
+                <div id="all-users-list">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -243,6 +355,11 @@
 
     <script>
         let pendingUsers = [];
+        let allUsers = [];
+
+        async function loadData() {
+            await Promise.all([loadPendingUsers(), loadAllUsers()]);
+        }
 
         async function loadPendingUsers() {
             try {
@@ -268,10 +385,40 @@
                 document.getElementById('pending-users-list').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>Failed to load pending users</p>
+                        <p>Failed to load</p>
                     </div>
                 `;
             }
+        }
+
+        async function loadAllUsers() {
+            try {
+                const response = await fetch('/api/admin/all-users', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load users');
+
+                const data = await response.json();
+                allUsers = data.users;
+                
+                displayAllUsers();
+                updateStats();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('all-users-list').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('total-users').textContent = allUsers.length;
+            document.getElementById('approved-users').textContent = allUsers.filter(u => u.approved).length;
+            document.getElementById('admin-users').textContent = allUsers.filter(u => u.isAdmin).length;
         }
 
         function displayPendingUsers() {
@@ -290,35 +437,72 @@
                 return;
             }
 
-            container.innerHTML = `
-                <div class="pending-users-list">
-                    ${pendingUsers.map(user => `
-                        <div class="user-card" id="user-${user.id}">
-                            <div class="user-info">
-                                <div class="name">${user.displayName || user.username}</div>
-                                <div class="details">
-                                    <span class="username">@${user.username}</span> • ${user.email}
-                                </div>
-                                <div class="date">
-                                    Registered: ${new Date(user.createdAt).toLocaleString()}
-                                </div>
-                            </div>
-                            <div class="action-buttons">
-                                <button class="btn btn-approve" onclick="approveUser('${user.id}')">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                                <button class="btn btn-reject" onclick="rejectUser('${user.id}')">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
+            container.innerHTML = pendingUsers.map(user => `
+                <div class="user-card" id="pending-${user.id}">
+                    <div class="user-info-section">
+                        <div class="name">${user.displayName || user.username}</div>
+                        <div class="details">
+                            <span class="username">@${user.username}</span> • ${user.email}
                         </div>
-                    `).join('')}
+                        <div class="date">Registered: ${new Date(user.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-approve" onclick="approveUser('${user.id}')">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn btn-delete" onclick="rejectUser('${user.id}')">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>
                 </div>
-            `;
+            `).join('');
+        }
+
+        function displayAllUsers() {
+            const container = document.getElementById('all-users-list');
+            const countEl = document.getElementById('users-count');
+            
+            countEl.textContent = allUsers.length;
+
+            if (allUsers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users-slash"></i>
+                        <p>No users found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allUsers.map(user => `
+                <div class="user-card" id="user-${user.id}">
+                    <div class="user-info-section">
+                        <div class="name">
+                            ${user.displayName || user.username}
+                            ${user.isAdmin ? '<i class="fas fa-crown" style="color: #ffd700; margin-left: 8px;" title="Admin"></i>' : ''}
+                            ${!user.approved ? '<i class="fas fa-clock" style="color: #ff9800; margin-left: 8px;" title="Pending"></i>' : ''}
+                        </div>
+                        <div class="details">
+                            <span class="username">@${user.username}</span> • ${user.email}
+                        </div>
+                        <div class="date">
+                            Joined: ${new Date(user.createdAt).toLocaleDateString()} • 
+                            Quests: ${user.progress?.totalCompleted || 0}
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        ${!user.isAdmin ? `
+                            <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.username}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        ` : '<span style="color: #ffd700; font-size: 12px;">Protected</span>'}
+                    </div>
+                </div>
+            `).join('');
         }
 
         async function approveUser(userId) {
-            const card = document.getElementById(`user-${userId}`);
+            const card = document.getElementById(`pending-${userId}`);
             const buttons = card.querySelectorAll('button');
             buttons.forEach(btn => btn.disabled = true);
 
@@ -333,9 +517,8 @@
                 const data = await response.json();
                 showNotification(`✓ Approved: ${data.user.username}`, 'success');
                 
-                // Remove from pending list
-                pendingUsers = pendingUsers.filter(u => u.id !== userId);
-                displayPendingUsers();
+                // Reload both lists
+                await loadData();
             } catch (error) {
                 console.error('Error:', error);
                 showNotification('Failed to approve user', 'error');
@@ -345,13 +528,9 @@
 
         async function rejectUser(userId) {
             const user = pendingUsers.find(u => u.id === userId);
-            if (!confirm(`Are you sure you want to reject ${user.username}? This will delete their account.`)) {
+            if (!confirm(`Reject ${user.username}? This will delete their account.`)) {
                 return;
             }
-
-            const card = document.getElementById(`user-${userId}`);
-            const buttons = card.querySelectorAll('button');
-            buttons.forEach(btn => btn.disabled = true);
 
             try {
                 const response = await fetch(`/api/admin/reject-user/${userId}`, {
@@ -364,13 +543,36 @@
                 const data = await response.json();
                 showNotification(`✗ Rejected: ${data.user.username}`, 'success');
                 
-                // Remove from pending list
-                pendingUsers = pendingUsers.filter(u => u.id !== userId);
-                displayPendingUsers();
+                await loadData();
             } catch (error) {
                 console.error('Error:', error);
                 showNotification('Failed to reject user', 'error');
-                buttons.forEach(btn => btn.disabled = false);
+            }
+        }
+
+        async function deleteUser(userId, username) {
+            if (!confirm(`DELETE USER: ${username}?\n\nThis will permanently delete:\n- User account\n- All quest progress\n- All activities\n\nThis action CANNOT be undone!`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/delete-user/${userId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to delete user');
+                }
+
+                const data = await response.json();
+                showNotification(`🗑️ Deleted: ${username}`, 'success');
+                
+                await loadData();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(error.message, 'error');
             }
         }
 
@@ -385,12 +587,11 @@
             }, 3000);
         }
 
-        // Load pending users on page load
-        loadPendingUsers();
+        // Load data on page load
+        loadData();
 
         // Reload every 30 seconds
-        setInterval(loadPendingUsers, 30000);
+        setInterval(loadData, 30000);
     </script>
 </body>
 </html>
-

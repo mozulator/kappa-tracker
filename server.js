@@ -401,6 +401,72 @@ app.delete('/api/admin/reject-user/:userId', requireAdmin, async (req, res) => {
     }
 });
 
+// Get all users (admin only)
+app.get('/api/admin/all-users', requireAdmin, async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                displayName: true,
+                approved: true,
+                isAdmin: true,
+                createdAt: true,
+                progress: {
+                    select: {
+                        totalCompleted: true,
+                        completionRate: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        res.json({ users });
+    } catch (error) {
+        console.error('Error fetching all users:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
+// Delete user (admin only)
+app.delete('/api/admin/delete-user/:userId', requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Prevent deleting yourself
+        if (userId === req.user.id) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+        
+        // Check if user is admin
+        const targetUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isAdmin: true, username: true }
+        });
+        
+        if (!targetUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        if (targetUser.isAdmin) {
+            return res.status(403).json({ error: 'Cannot delete admin users' });
+        }
+        
+        // Delete user (cascade will delete progress and activities)
+        await prisma.user.delete({
+            where: { id: userId }
+        });
+        
+        console.log(`Admin ${req.user.username} deleted user: ${targetUser.username}`);
+        res.json({ message: 'User deleted successfully', username: targetUser.username });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
 // ============================================================================
 // USER PROFILE MANAGEMENT
 // ============================================================================

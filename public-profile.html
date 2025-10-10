@@ -62,9 +62,21 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .stat-card {
@@ -234,7 +246,11 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Prestige</div>
-                            <div class="stat-value">${progress.prestige || 0}</div>
+                            ${progress.prestige && progress.prestige > 0 ? `
+                                <img src="/imgs/prestige_${progress.prestige}.webp" 
+                                     alt="Prestige ${progress.prestige}" 
+                                     style="width: 60px; height: 60px; object-fit: contain; margin-top: 10px;">
+                            ` : `<div class="stat-value" style="color: #555;">None</div>`}
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Member Since</div>
