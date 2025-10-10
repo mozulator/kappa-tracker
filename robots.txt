@@ -1,0 +1,24 @@
+# robots.txt for OBS Kappa Tracker
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /prisma/
+Disallow: /node_modules/
+Disallow: /scripts/
+Disallow: /admin.html
+Disallow: /profile.html
+Disallow: /obs-overlay.html
+
+# Allow specific public pages
+Allow: /index.html
+Allow: /login.html
+Allow: /register.html
+Allow: /rankings.html
+Allow: /public-profile.html
+Allow: /collector-progress.html
+Allow: /kappa-overview.html
+
+# Sitemaps
+Sitemap: https://kappa-tracker.onrender.com/sitemap.xml
+

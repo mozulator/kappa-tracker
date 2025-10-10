@@ -3,7 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kappa Rankings - OBS Kappa Tracker</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Kappa Rankings - OBS Kappa Tracker | Tarkov Quest Leaderboard</title>
+    <meta name="title" content="Kappa Rankings - OBS Kappa Tracker">
+    <meta name="description" content="View the Escape From Tarkov Kappa quest leaderboard. See top players, compare progress, and track your ranking in the quest to obtain the Kappa Container.">
+    <meta name="keywords" content="Tarkov Leaderboard, Kappa Rankings, EFT Leaderboard, Tarkov Quest Rankings, Kappa Container Rankings">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kappa-tracker.onrender.com/rankings.html">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kappa-tracker.onrender.com/rankings.html">
+    <meta property="og:title" content="Kappa Rankings - OBS Kappa Tracker">
+    <meta property="og:description" content="View the Escape From Tarkov Kappa quest leaderboard. See top players and compare progress.">
+    <meta property="og:image" content="https://kappa-tracker.onrender.com/imgs/kaban.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://kappa-tracker.onrender.com/rankings.html">
+    <meta property="twitter:title" content="Kappa Rankings - OBS Kappa Tracker">
+    <meta property="twitter:description" content="View the Escape From Tarkov Kappa quest leaderboard.">
+    <meta property="twitter:image" content="https://kappa-tracker.onrender.com/imgs/kaban.png">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#c7aa6a">
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Kappa Rankings",
+      "description": "Leaderboard showing top Escape From Tarkov players by Kappa quest completion.",
+      "url": "https://kappa-tracker.onrender.com/rankings.html",
+      "isPartOf": {
+        "@type": "WebApplication",
+        "name": "OBS Kappa Tracker",
+        "url": "https://kappa-tracker.onrender.com/"
+      }
+    }
+    </script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -387,6 +428,7 @@
                                                 ${user.avatarUrl ? `
                                                     <img src="${user.avatarUrl}" alt="${displayName}" 
                                                          class="user-avatar" 
+                                                         loading="lazy"
                                                          onerror="this.style.display='none'">
                                                 ` : ''}
                                                 <div class="user-info">
@@ -415,7 +457,8 @@
                                             ${user.progress.prestige && user.progress.prestige > 0 ? `
                                                 <img src="/imgs/prestige_${user.progress.prestige}.webp" 
                                                      alt="Prestige ${user.progress.prestige}" 
-                                                     title="Prestige ${user.progress.prestige}">
+                                                     title="Prestige ${user.progress.prestige}"
+                                                     loading="lazy">
                                             ` : `<span style="color: #555;">-</span>`}
                                         </td>
                                         <td class="quests-completed">${user.progress.totalCompleted}</td>

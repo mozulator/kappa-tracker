@@ -1255,6 +1255,7 @@ class QuestTracker {
                                                     ${user.avatarUrl ? `
                                                         <img src="${user.avatarUrl}" alt="${displayName}" 
                                                              style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #c7aa6a;" 
+                                                             loading="lazy"
                                                              onerror="this.style.display='none'">
                                                     ` : ''}
                                                     <div>
@@ -1280,7 +1281,7 @@ class QuestTracker {
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.pmcLevel}</td>
                                             <td style="padding: 15px; text-align: center;">
                                                 ${user.progress.prestige && user.progress.prestige > 0 ? `
-                                                    <img src="/imgs/prestige_${user.progress.prestige}.webp" alt="Prestige ${user.progress.prestige}" style="width: 40px; height: 40px; object-fit: contain;" title="Prestige ${user.progress.prestige}" />
+                                                    <img src="/imgs/prestige_${user.progress.prestige}.webp" alt="Prestige ${user.progress.prestige}" style="width: 40px; height: 40px; object-fit: contain;" title="Prestige ${user.progress.prestige}" loading="lazy" />
                                                 ` : `<span style="color: #888; font-size: 14px;">-</span>`}
                                             </td>
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.totalCompleted}</td>

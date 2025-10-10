@@ -3,7 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Public Profile - Kappa Tracker</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Public Profile - OBS Kappa Tracker</title>
+    <meta name="title" content="Public Profile - OBS Kappa Tracker">
+    <meta name="description" content="View player profile on OBS Kappa Tracker. Check quest progress, prestige level, and Escape From Tarkov stats.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kappa-tracker.onrender.com/public-profile.html">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content="https://kappa-tracker.onrender.com/public-profile.html">
+    <meta property="og:title" content="Public Profile - OBS Kappa Tracker">
+    <meta property="og:description" content="View player profile on OBS Kappa Tracker.">
+    <meta property="og:image" content="https://kappa-tracker.onrender.com/imgs/kaban.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary">
+    <meta property="twitter:url" content="https://kappa-tracker.onrender.com/public-profile.html">
+    <meta property="twitter:title" content="Public Profile - OBS Kappa Tracker">
+    <meta property="twitter:description" content="View player profile on OBS Kappa Tracker.">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#c7aa6a">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -220,7 +243,7 @@
 
                 document.getElementById('profile-content').innerHTML = `
                     <div class="profile-header-section">
-                        ${user.avatarUrl ? `<img src="${user.avatarUrl}" alt="${displayName}" class="profile-avatar" onerror="this.style.display='none'">` : ''}
+                        ${user.avatarUrl ? `<img src="${user.avatarUrl}" alt="${displayName}" class="profile-avatar" loading="lazy" onerror="this.style.display='none'">` : ''}
                         <h1>${displayName}</h1>
                         <p style="color: #888; margin: 0 0 5px 0;">@${user.username}</p>
                         ${user.bio ? `<p style="color: #ccc; margin-top: 15px; line-height: 1.6;">${user.bio}</p>` : ''}
@@ -249,6 +272,7 @@
                             ${progress.prestige && progress.prestige > 0 ? `
                                 <img src="/imgs/prestige_${progress.prestige}.webp" 
                                      alt="Prestige ${progress.prestige}" 
+                                     loading="lazy"
                                      style="width: 60px; height: 60px; object-fit: contain; margin-top: 10px;">
                             ` : `<div class="stat-value" style="color: #555;">None</div>`}
                         </div>
