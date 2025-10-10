@@ -273,6 +273,36 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
     });
 });
 
+// Update Twitch name
+app.post('/api/user/update-twitch', requireAuth, async (req, res) => {
+    try {
+        const { twitchName } = req.body;
+        
+        // Validate Twitch name (alphanumeric and underscores only, 4-25 chars)
+        if (twitchName && (twitchName.length < 4 || twitchName.length > 25 || !/^[a-zA-Z0-9_]+$/.test(twitchName))) {
+            return res.status(400).json({ 
+                error: 'Invalid Twitch username. Must be 4-25 characters and contain only letters, numbers, and underscores.' 
+            });
+        }
+        
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: { 
+                twitchName: twitchName || null,
+                twitchUrl: twitchName ? `https://twitch.tv/${twitchName}` : null
+            }
+        });
+        
+        res.json({ 
+            success: true,
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error('Error updating Twitch name:', error);
+        res.status(500).json({ error: 'Failed to update Twitch name' });
+    }
+});
+
 app.get('/api/auth/status', (req, res) => {
     res.json({
         authenticated: req.isAuthenticated(),
@@ -561,6 +591,7 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
             select: {
                 username: true,
                 displayName: true,
+                twitchName: true,
                 twitchUrl: true,
                 progress: {
                     select: {

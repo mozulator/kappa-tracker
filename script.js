@@ -5,6 +5,7 @@ class QuestTracker {
         this.currentMap = 'Any Location';
         this.maps = [];
         this.viewMode = 'available'; // 'available' or 'finished'
+        this.currentView = 'dashboard'; // 'dashboard', 'finished', 'rankings', or 'profile'
         this.showFutureQuests = false; // Show all future quests mode
         this.init();
     }
@@ -71,6 +72,8 @@ class QuestTracker {
 
         const dashboardTab = document.getElementById('dashboard-tab');
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
+        const rankingsTab = document.getElementById('rankings-tab');
+        const profileTab = document.getElementById('profile-tab');
         
         dashboardTab.addEventListener('click', (e) => {
             e.preventDefault();
@@ -80,6 +83,16 @@ class QuestTracker {
         finishedQuestsTab.addEventListener('click', (e) => {
             e.preventDefault();
             this.switchToFinishedQuests();
+        });
+
+        rankingsTab.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.switchToRankings();
+        });
+
+        profileTab.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.switchToProfile();
         });
 
         const futureQuestsToggle = document.getElementById('show-future-quests');
@@ -303,28 +316,83 @@ class QuestTracker {
 
     switchToDashboard() {
         this.viewMode = 'available';
+        this.currentView = 'dashboard';
+        this.showView('dashboard');
         this.updateNavigationState();
         this.updateUI();
     }
 
     switchToFinishedQuests() {
         this.viewMode = 'finished';
+        this.currentView = 'finished';
+        this.showView('finished');
         this.updateNavigationState();
         this.updateUI();
+    }
+
+    switchToRankings() {
+        this.currentView = 'rankings';
+        this.showView('rankings');
+        this.updateNavigationState();
+        this.loadRankings();
+    }
+
+    switchToProfile() {
+        this.currentView = 'profile';
+        this.showView('profile');
+        this.updateNavigationState();
+        this.loadProfile();
+    }
+
+    showView(view) {
+        // Hide all sections
+        const questsSection = document.getElementById('quests-section');
+        const mapOverview = document.getElementById('map-overview');
+        const mapTabsSection = document.querySelector('.map-tabs-section');
+        const sidebar = document.querySelector('.sidebar');
+        const rankingsSection = document.getElementById('rankings-section');
+        const profileSection = document.getElementById('profile-section');
+
+        questsSection.style.display = 'none';
+        mapOverview.style.display = 'none';
+        mapTabsSection.style.display = 'none';
+        sidebar.style.display = 'none';
+        rankingsSection.style.display = 'none';
+        profileSection.style.display = 'none';
+
+        // Show relevant sections based on view
+        if (view === 'dashboard' || view === 'finished') {
+            questsSection.style.display = 'block';
+            mapOverview.style.display = 'block';
+            mapTabsSection.style.display = 'block';
+            sidebar.style.display = 'block';
+        } else if (view === 'rankings') {
+            rankingsSection.style.display = 'block';
+        } else if (view === 'profile') {
+            profileSection.style.display = 'block';
+        }
     }
 
     updateNavigationState() {
         const dashboardTab = document.getElementById('dashboard-tab');
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
+        const rankingsTab = document.getElementById('rankings-tab');
+        const profileTab = document.getElementById('profile-tab');
         
-        if (dashboardTab && finishedQuestsTab) {
-            if (this.viewMode === 'available') {
-                dashboardTab.classList.add('active');
-                finishedQuestsTab.classList.remove('active');
-            } else {
-                dashboardTab.classList.remove('active');
-                finishedQuestsTab.classList.add('active');
-            }
+        // Remove active class from all tabs
+        [dashboardTab, finishedQuestsTab, rankingsTab, profileTab].forEach(tab => {
+            if (tab) tab.classList.remove('active');
+        });
+        
+        // Add active class to current view
+        if (this.currentView === 'dashboard') {
+            dashboardTab?.classList.add('active');
+        } else if (this.currentView === 'finished') {
+            finishedQuestsTab?.classList.add('active');
+        } else if (this.currentView === 'rankings') {
+            rankingsTab?.classList.add('active');
+        } else if (this.currentView === 'profile') {
+            profileTab?.classList.add('active');
         }
     }
 
@@ -989,6 +1057,225 @@ class QuestTracker {
                 }
             }, 300);
         }, 3000);
+    }
+
+    async loadRankings() {
+        const container = document.getElementById('rankings-content');
+        container.innerHTML = '<div class="loading" style="padding: 60px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading rankings...</div>';
+        
+        try {
+            const response = await fetch('/api/rankings?limit=100', { credentials: 'include' });
+            const data = await response.json();
+            
+            if (!data.rankings || data.rankings.length === 0) {
+                container.innerHTML = '<div style="padding: 60px; text-align: center; color: #888;">No rankings yet</div>';
+                return;
+            }
+            
+            // Build rankings table HTML
+            container.innerHTML = `
+                <div style="padding: 20px;">
+                    <h2 style="color: #c7aa6a; font-size: 28px; margin-bottom: 20px;">
+                        <i class="fas fa-trophy"></i> Global Rankings
+                    </h2>
+                    <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; overflow: hidden;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: rgba(199, 170, 106, 0.1);">
+                                    <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Rank</th>
+                                    <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Player</th>
+                                    <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">PMC Level</th>
+                                    <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Quests Completed</th>
+                                    <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Completion %</th>
+                                    <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Last Active</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.rankings.map((user, index) => {
+                                    const rank = index + 1;
+                                    const displayName = user.displayName || user.username;
+                                    const rankColor = rank === 1 ? '#ffd700' : rank === 2 ? '#c0c0c0' : rank === 3 ? '#cd7f32' : '#c7aa6a';
+                                    const lastActive = user.progress.lastQuestDate 
+                                        ? this.formatTimeAgo(new Date(user.progress.lastQuestDate)) 
+                                        : 'Never';
+                                    
+                                    return `
+                                        <tr style="border-bottom: 1px solid #2a2a2a; transition: background 0.2s;">
+                                            <td style="padding: 15px; color: ${rankColor}; font-weight: 700; font-size: 18px;">#${rank}</td>
+                                            <td style="padding: 15px;">
+                                                <div style="color: #fff; font-weight: 600; font-size: 16px;">${displayName}</div>
+                                                <div style="color: #888; font-size: 14px;">@${user.username}</div>
+                                                ${user.twitchName ? `
+                                                    <div style="margin-top: 5px;">
+                                                        <a href="https://twitch.tv/${user.twitchName}" target="_blank" style="color: #6441a5; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                            <i class="fab fa-twitch"></i> twitch.tv/${user.twitchName}
+                                                        </a>
+                                                    </div>
+                                                ` : ''}
+                                            </td>
+                                            <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.pmcLevel}</td>
+                                            <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.totalCompleted}</td>
+                                            <td style="padding: 15px; text-align: center; color: #4CAF50; font-weight: 700; font-size: 18px;">${user.progress.completionRate.toFixed(1)}%</td>
+                                            <td style="padding: 15px; text-align: center; color: #888; font-size: 14px;">${lastActive}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error loading rankings:', error);
+            container.innerHTML = '<div style="padding: 60px; text-align: center; color: #ef4444;">Failed to load rankings</div>';
+        }
+    }
+
+    async loadProfile() {
+        const container = document.getElementById('profile-content');
+        container.innerHTML = '<div class="loading" style="padding: 60px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading profile...</div>';
+        
+        try {
+            const response = await fetch('/api/auth/me', { credentials: 'include' });
+            const data = await response.json();
+            const user = data.user;
+            
+            // Build profile HTML
+            container.innerHTML = `
+                <div style="padding: 20px;">
+                    <h2 style="color: #c7aa6a; font-size: 28px; margin-bottom: 20px;">
+                        <i class="fas fa-user"></i> My Profile
+                    </h2>
+                    
+                    <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
+                        <h3 style="color: #c7aa6a; font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">Account Information</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <div style="color: #888; font-size: 14px; margin-bottom: 5px;">Username</div>
+                                <div style="color: #fff; font-size: 18px; font-weight: 600;">${user.username}</div>
+                            </div>
+                            <div>
+                                <div style="color: #888; font-size: 14px; margin-bottom: 5px;">Display Name</div>
+                                <div style="color: #fff; font-size: 18px; font-weight: 600;">${user.displayName || 'Not set'}</div>
+                            </div>
+                            <div>
+                                <div style="color: #888; font-size: 14px; margin-bottom: 5px;">Email</div>
+                                <div style="color: #fff; font-size: 16px;">${user.email}</div>
+                            </div>
+                            <div>
+                                <div style="color: #888; font-size: 14px; margin-bottom: 5px;">Member Since</div>
+                                <div style="color: #fff; font-size: 16px;">${new Date(user.createdAt).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="border-top: 1px solid #3a3a3a; padding-top: 20px;">
+                            <h4 style="color: #c7aa6a; font-size: 16px; margin-bottom: 15px;">
+                                <i class="fab fa-twitch"></i> Twitch Integration
+                            </h4>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input 
+                                    type="text" 
+                                    id="twitch-name-input" 
+                                    value="${user.twitchName || ''}" 
+                                    placeholder="Enter your Twitch username"
+                                    style="flex: 1; padding: 10px 15px; background: rgba(20, 20, 20, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px;"
+                                />
+                                <button 
+                                    id="save-twitch-btn" 
+                                    style="padding: 10px 20px; background: #6441a5; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px; transition: background 0.2s;"
+                                    onmouseover="this.style.background='#7d5bbe'"
+                                    onmouseout="this.style.background='#6441a5'"
+                                >
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                            </div>
+                            ${user.twitchName ? `
+                                <div style="margin-top: 10px; color: #4CAF50; font-size: 14px;">
+                                    <i class="fas fa-check-circle"></i> 
+                                    Your Twitch: <a href="https://twitch.tv/${user.twitchName}" target="_blank" style="color: #6441a5; text-decoration: none; font-weight: 600;">twitch.tv/${user.twitchName}</a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; padding: 30px;">
+                        <h3 style="color: #c7aa6a; font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">Quest Progress</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                            <div style="background: rgba(199, 170, 106, 0.1); border: 2px solid #c7aa6a; border-radius: 8px; padding: 20px; text-align: center;">
+                                <div style="color: #888; font-size: 14px; margin-bottom: 10px;">PMC Level</div>
+                                <div style="color: #c7aa6a; font-size: 32px; font-weight: 700;">${this.userProgress.pmcLevel}</div>
+                            </div>
+                            <div style="background: rgba(76, 175, 80, 0.1); border: 2px solid #4CAF50; border-radius: 8px; padding: 20px; text-align: center;">
+                                <div style="color: #888; font-size: 14px; margin-bottom: 10px;">Quests Completed</div>
+                                <div style="color: #4CAF50; font-size: 32px; font-weight: 700;">${this.userProgress.completedQuests.length}</div>
+                            </div>
+                            <div style="background: rgba(255, 152, 0, 0.1); border: 2px solid #FF9800; border-radius: 8px; padding: 20px; text-align: center;">
+                                <div style="color: #888; font-size: 14px; margin-bottom: 10px;">Completion Rate</div>
+                                <div style="color: #FF9800; font-size: 32px; font-weight: 700;">${this.userProgress.completionRate.toFixed(1)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listener for save button
+            const saveTwitchBtn = document.getElementById('save-twitch-btn');
+            if (saveTwitchBtn) {
+                saveTwitchBtn.addEventListener('click', async () => {
+                    const twitchNameInput = document.getElementById('twitch-name-input');
+                    const twitchName = twitchNameInput.value.trim();
+                    
+                    try {
+                        saveTwitchBtn.disabled = true;
+                        saveTwitchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                        
+                        const response = await fetch('/api/user/update-twitch', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ twitchName })
+                        });
+                        
+                        if (response.ok) {
+                            this.showNotification('Twitch name saved successfully!', 'success');
+                            // Reload profile to show updated link
+                            setTimeout(() => this.loadProfile(), 500);
+                        } else {
+                            throw new Error('Failed to save');
+                        }
+                    } catch (error) {
+                        console.error('Error saving Twitch name:', error);
+                        this.showNotification('Failed to save Twitch name', 'error');
+                        saveTwitchBtn.disabled = false;
+                        saveTwitchBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            container.innerHTML = '<div style="padding: 60px; text-align: center; color: #ef4444;">Failed to load profile</div>';
+        }
+    }
+
+    formatTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        const intervals = [
+            { label: 'year', seconds: 31536000 },
+            { label: 'month', seconds: 2592000 },
+            { label: 'day', seconds: 86400 },
+            { label: 'hour', seconds: 3600 },
+            { label: 'minute', seconds: 60 }
+        ];
+        
+        for (const interval of intervals) {
+            const count = Math.floor(seconds / interval.seconds);
+            if (count >= 1) {
+                return count === 1 ? `1 ${interval.label} ago` : `${count} ${interval.label}s ago`;
+            }
+        }
+        
+        return 'just now';
     }
 }
 

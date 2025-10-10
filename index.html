@@ -14,18 +14,18 @@
             <nav class="nav">
                 <a href="#" class="nav-link active" id="dashboard-tab">Dashboard</a>
                 <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
-                <a href="/rankings" class="nav-link">Rankings</a>
-                <a href="/profile" class="nav-link">Profile</a>
+                <a href="#" class="nav-link" id="rankings-tab">Rankings</a>
+                <a href="#" class="nav-link" id="profile-tab">Profile</a>
             </nav>
         </div>
         <div class="header-right">
             <div class="user-info" id="user-info" style="display: none;">
                 <span class="user-welcome">Welcome, <span id="user-display-name">-</span></span>
             </div>
-            <button id="collector-progress-btn" class="collector-btn" title="Open Collector Progress">
+            <button id="collector-progress-btn" class="collector-btn" title="Open Collector Progress" style="background: #6441a5; color: #fff;">
                 <i class="fas fa-trophy"></i> COLLECTOR PROGRESS
             </button>
-            <button id="kappa-overview-btn" class="kappa-overview-btn" title="Open Kappa Quest Overview">
+            <button id="kappa-overview-btn" class="kappa-overview-btn" title="Open Kappa Quest Overview" style="background: #6441a5; color: #fff;">
                 <i class="fas fa-chart-bar"></i> KAPPA OVERVIEW
             </button>
             <button id="reset-progress-btn" class="reset-btn" title="Reset all progress">
@@ -101,10 +101,20 @@
             </section>
 
             <!-- Quests Section -->
-            <section class="quests-section">
+            <section class="quests-section" id="quests-section">
                 <div class="quests-grid" id="quests-grid">
                     <div class="loading">Loading quests...</div>
                 </div>
+            </section>
+
+            <!-- Rankings Section -->
+            <section class="rankings-section" id="rankings-section" style="display: none;">
+                <div id="rankings-content"></div>
+            </section>
+
+            <!-- Profile Section -->
+            <section class="profile-section" id="profile-section" style="display: none;">
+                <div id="profile-content"></div>
             </section>
         </main>
     </div>
