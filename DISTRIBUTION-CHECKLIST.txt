@@ -1,0 +1,94 @@
+===============================================================================
+DISTRIBUTION CHECKLIST - READ BEFORE SHARING
+===============================================================================
+
+Before sending this tracker to others, make sure:
+
+[✓] REQUIRED FILES ARE INCLUDED:
+    - install.bat
+    - start.bat
+    - package.json
+    - server.js
+    - index.html
+    - collector-progress.html
+    - kappa-overview.html
+    - obs-overlay.html
+    - script.js
+    - styles.css
+    - README.md
+    - SETUP-GUIDE.txt
+    - prisma/ folder with schema.prisma
+    - scripts/ folder with update-quests.js
+    - imgs/ folder with boss images (goons.png, kaban.png, killa.png, shturman.png, tagilla.png)
+
+[✓] REMOVE BEFORE SHARING:
+    - node_modules/ folder (too large, will be installed by install.bat)
+    - prisma/dev.db (your personal progress, will be created fresh)
+    - Any personal data or configurations
+
+[✓] OPTIONAL BUT RECOMMENDED:
+    - Test install.bat on a clean Windows PC
+    - Make sure SETUP-GUIDE.txt is easy to follow
+    - Include a link to Node.js download page if sharing online
+
+===============================================================================
+PACKAGING INSTRUCTIONS
+===============================================================================
+
+METHOD 1: ZIP FILE (Recommended)
+1. Delete node_modules/ folder if it exists
+2. Delete prisma/dev.db if it exists
+3. Select all project files
+4. Right-click > Send to > Compressed (zipped) folder
+5. Name it: "EFT-Kappa-Tracker-v1.0.zip"
+6. Share the zip file!
+
+METHOD 2: GITHUB
+1. Create a GitHub repository
+2. Push all files EXCEPT:
+   - node_modules/ (already in .gitignore)
+   - prisma/dev.db (already in .gitignore)
+3. Share the repository link
+
+===============================================================================
+WHAT YOUR FRIENDS NEED
+===============================================================================
+
+1. Windows PC (batch files are for Windows)
+2. Internet connection (for npm install)
+3. Node.js installed (or they follow the guide to install it)
+4. About 100MB free disk space
+
+===============================================================================
+FOR MAC/LINUX USERS
+===============================================================================
+
+If sharing with Mac/Linux users, they should:
+1. Install Node.js
+2. Open terminal in the project folder
+3. Run: npm install
+4. Run: npx prisma generate
+5. Run: npx prisma db push
+6. Run: npm start
+
+===============================================================================
+AFTER GAME VERSION 1.0 (Nov 15, 2025)
+===============================================================================
+
+When the game updates with new quests:
+1. Tell users to run: npm run update-quests
+2. This will fetch new quest data from Tarkov.dev
+3. It will scrape all details from the wiki
+4. Takes 5-10 minutes but updates everything automatically
+
+===============================================================================
+SUPPORT YOUR HOMIES
+===============================================================================
+
+Make sure to send them:
+- The SETUP-GUIDE.txt (simple instructions)
+- The README.md (detailed documentation)
+- Your Twitch link so they know who made it!
+
+===============================================================================
+

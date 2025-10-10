@@ -1,0 +1,92 @@
+===============================================================================
+EFT OBS KAPPA TRACKER - QUICK SETUP GUIDE
+===============================================================================
+
+FOR YOUR FRIENDS:
+Send them this entire folder and tell them to follow these simple steps:
+
+===============================================================================
+STEP 1: INSTALL NODE.JS (If not already installed)
+===============================================================================
+
+1. Go to: https://nodejs.org/
+2. Download the LTS (Long Term Support) version
+3. Run the installer and follow the prompts
+4. Restart your computer after installation
+
+===============================================================================
+STEP 2: INSTALL THE TRACKER
+===============================================================================
+
+1. Double-click "install.bat"
+2. Wait for it to complete (may take a few minutes)
+3. You should see "INSTALLATION COMPLETED SUCCESSFULLY!"
+
+If it fails:
+- Make sure Node.js is installed (open Command Prompt and type: node --version)
+- Make sure you have internet connection (needs to download packages)
+
+===============================================================================
+STEP 3: START THE TRACKER
+===============================================================================
+
+1. Double-click "start.bat"
+2. A window will open showing the server is running
+3. Open your browser and go to: http://localhost:3000
+4. Start tracking your Kappa quests!
+
+DON'T CLOSE THE WINDOW - it needs to stay open while you use the tracker!
+
+===============================================================================
+USING WITH OBS
+===============================================================================
+
+FOR COLLECTOR PROGRESS OVERLAY:
+1. In OBS, add a Browser Source
+2. URL: http://localhost:3000/obs-overlay.html
+3. Width: 1920, Height: 1080
+4. Done!
+
+FOR KAPPA OVERVIEW:
+1. In OBS, add a Browser Source
+2. URL: http://localhost:3000/kappa-overview.html
+3. Adjust size as needed
+4. Position it on your stream
+
+===============================================================================
+UPDATING QUEST DATA (After Game Updates)
+===============================================================================
+
+When new quests are added or changed (like after the 1.0 release):
+
+1. Open Command Prompt in this folder
+2. Type: npm run update-quests
+3. Press Enter
+4. Wait 5-10 minutes for it to scrape all data
+5. Done! Your quest data is now up to date
+
+===============================================================================
+TROUBLESHOOTING
+===============================================================================
+
+PROBLEM: "Node.js is not installed!"
+SOLUTION: Install Node.js from https://nodejs.org/
+
+PROBLEM: Server won't start
+SOLUTION: Make sure port 3000 isn't being used by another program
+
+PROBLEM: OBS doesn't show updates
+SOLUTION: Make sure start.bat is running. Refresh the browser source in OBS.
+
+PROBLEM: Quest data is old
+SOLUTION: Run: npm run update-quests
+
+===============================================================================
+CREDITS
+===============================================================================
+
+Made by twitch.tv/mozula for free!
+Feel free to drop a follow: https://twitch.tv/mozula
+
+===============================================================================
+

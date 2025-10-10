@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Kappa Tracker Overlay</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            overflow: hidden;
+        }
+        
+        #overlay-frame {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="overlay-frame" src="http://localhost:3000/collector-progress.html"></iframe>
+
+    <script>
+        let refreshInterval;
+        let frame = document.getElementById('overlay-frame');
+        let lastProgressData = null;
+        
+        // Function to refresh the iframe
+        function refreshOverlay() {
+            // Add timestamp to force cache refresh
+            const timestamp = new Date().getTime();
+            frame.src = `http://localhost:3000/collector-progress.html?t=${timestamp}`;
+        }
+        
+        // Function to check for progress updates
+        async function checkForUpdates() {
+            try {
+                const response = await fetch('http://localhost:3000/api/progress');
+                const currentProgress = await response.json();
+                const currentProgressString = JSON.stringify(currentProgress);
+                
+                // If progress has changed, refresh the overlay
+                if (lastProgressData && lastProgressData !== currentProgressString) {
+                    console.log('Progress change detected, refreshing overlay...');
+                    refreshOverlay();
+                }
+                
+                lastProgressData = currentProgressString;
+            } catch (error) {
+                console.log('Could not check for updates:', error.message);
+            }
+        }
+        
+        // Handle iframe load events
+        frame.addEventListener('load', function() {
+            console.log('Overlay refreshed at:', new Date().toLocaleTimeString());
+        });
+        
+        frame.addEventListener('error', function() {
+            console.error('Failed to load overlay, retrying in 5 seconds...');
+            setTimeout(refreshOverlay, 5000);
+        });
+
+        // Listen for force refresh messages from the iframe
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'forceRefresh') {
+                console.log('Force refresh requested from iframe, refreshing...');
+                refreshOverlay();
+            }
+        });
+        
+        // Load the overlay when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('OBS Overlay started');
+            
+            // Check for updates every 2 seconds
+            setInterval(checkForUpdates, 2000);
+            
+            // Initial check
+            checkForUpdates();
+        });
+        
+        // Optional: Manual refresh on click (for testing)
+        document.addEventListener('click', function() {
+            console.log('Manual refresh triggered');
+            refreshOverlay();
+        });
+        
+    </script>
+</body>
+</html>

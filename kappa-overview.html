@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kappa Quest Overview</title>
+    <style>
+        :root {
+            --font-primary: "Bender", sans-serif;
+            --background: #0b0b0c;
+            --background-secondary: #111213;
+            --background-tertiary: #161717;
+            --header-bg: #000;
+            --header-text: #9a8866;
+            --subtext: #aeaeb0;
+            --subtext-alt: #4e4636;
+            --text: #9a8866;
+            --text-highlight: #e6bc6a;
+            --text-alt-highlight: #b89e6a;
+            --post-bg: #111212;
+            --post-bg-secondary: #0d0e0e;
+            --post-border: rgba(232, 190, 107, 0.8);
+            --striped-pattern: repeating-linear-gradient(-45deg, rgba(78, 70, 54, 0.01), rgba(78, 70, 54, 0.01) 5px, rgba(154, 136, 102, 0.1) 5px, rgba(154, 136, 102, 0.1) 10px);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            font-family: var(--font-primary);
+            font-size: 16px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--header-bg);
+            padding: 24px;
+            text-align: center;
+            border-bottom: 1px solid var(--post-border);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--header-text);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-info {
+            font-size: 14px;
+            color: var(--text-highlight);
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        .maps-container {
+            flex: 1;
+            display: flex;
+            padding: 24px;
+            gap: 24px;
+            background: var(--background-tertiary);
+            align-items: baseline;
+        }
+
+        .map-column {
+            flex: 1;
+            background: var(--post-bg);
+            border: 1px dashed var(--post-border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+        }
+
+        .map-header {
+            text-align: left;
+            margin-bottom: 20px;
+            background: var(--striped-pattern);
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+
+        .map-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-highlight);
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .map-stats {
+            font-size: 14px;
+            color: var(--subtext);
+            font-weight: 400;
+        }
+
+        .quests-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .quest-item {
+            background: var(--post-bg-secondary);
+            padding: 8px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+        }
+
+        .quest-title {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+            color: var(--subtext);
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-highlight);
+            font-size: 16px;
+            padding: 40px;
+            font-weight: 400;
+        }
+
+        .error {
+            text-align: center;
+            color: var(--text-highlight);
+            font-size: 16px;
+            padding: 40px;
+            font-weight: 400;
+        }
+
+        /* Scrollbar styling */
+        .quests-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .quests-list::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        .quests-list::-webkit-scrollbar-thumb {
+            background: var(--subtext-alt);
+        }
+
+        .maps-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .maps-container::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        .maps-container::-webkit-scrollbar-thumb {
+            background: var(--subtext-alt);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Loading...</h1>
+        <div class="progress-info">KAPPA QUEST OVERVIEW</div>
+    </div>
+
+    <div class="maps-container" id="maps-container">
+        <div class="loading">Loading quests...</div>
+    </div>
+
+    <script>
+        let quests = [];
+        let userProgress = { completedQuests: [] };
+        let maps = [];
+
+        // Load data from API
+        async function loadData() {
+            try {
+                const [questsResponse, progressResponse] = await Promise.all([
+                    fetch('http://localhost:3000/api/quests'),
+                    fetch('http://localhost:3000/api/progress')
+                ]);
+
+                quests = await questsResponse.json();
+                userProgress = await progressResponse.json();
+                userProgress.completedQuests = JSON.parse(userProgress.completedQuests || '[]');
+
+                buildMapsList();
+                renderOverview();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('maps-container').innerHTML = 
+                    '<div class="error">Failed to load data. Make sure the server is running.</div>';
+            }
+        }
+
+        // Build list of maps from available incomplete quests only
+        function buildMapsList() {
+            const mapSet = new Set();
+            
+            quests.forEach(quest => {
+                if (quest.requiredForKappa && !userProgress.completedQuests.includes(quest.id) && isQuestAvailable(quest)) {
+                    const mapName = quest.mapName || 'Any Location';
+                    mapSet.add(mapName);
+                }
+            });
+            
+            maps = Array.from(mapSet).sort((a, b) => {
+                if (a === 'Any Location') return -1;
+                if (b === 'Any Location') return 1;
+                return a.localeCompare(b);
+            });
+        }
+
+        // Check if quest is available (unlocked and not completed)
+        function isQuestAvailable(quest) {
+            // Check level requirement
+            if (userProgress.pmcLevel < quest.level) {
+                return false;
+            }
+
+            // Check prerequisite quests
+            if (quest.prerequisiteQuests) {
+                try {
+                    const prerequisites = JSON.parse(quest.prerequisiteQuests);
+                    if (prerequisites && prerequisites.length > 0) {
+                        for (const prereqId of prerequisites) {
+                            if (!userProgress.completedQuests.includes(prereqId)) {
+                                return false;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`Failed to parse prerequisites for quest ${quest.name}:`, e);
+                }
+            }
+
+            return true;
+        }
+
+        // Render the overview
+        function renderOverview() {
+            const container = document.getElementById('maps-container');
+            
+            // Rebuild maps list to only include maps with incomplete quests
+            buildMapsList();
+            
+            if (maps.length === 0) {
+                container.innerHTML = '<div class="loading">All kappa quests completed!</div>';
+                return;
+            }
+
+            // Calculate kappa progress
+            const allKappaQuests = quests.filter(quest => quest.requiredForKappa);
+            const completedKappaQuests = allKappaQuests.filter(quest => 
+                userProgress.completedQuests.includes(quest.id)
+            ).length;
+            const kappaProgress = allKappaQuests.length > 0 ? 
+                ((completedKappaQuests / allKappaQuests.length) * 100).toFixed(1) : 0;
+
+            // Update header with progress
+            const progressInfo = document.querySelector('.progress-info');
+            const mainTitle = document.querySelector('.header h1');
+            if (progressInfo && mainTitle) {
+                progressInfo.textContent = 'KAPPA QUEST OVERVIEW';
+                mainTitle.textContent = `Kappa Progress: ${kappaProgress}% (${completedKappaQuests}/${allKappaQuests.length})`;
+            }
+
+            container.innerHTML = maps.map(mapName => {
+                const availableQuests = getAvailableQuestsForMap(mapName);
+                const allMapQuests = getAllQuestsForMap(mapName);
+                const completedCount = allMapQuests.filter(quest => 
+                    userProgress.completedQuests.includes(quest.id)
+                ).length;
+                const totalCount = allMapQuests.length;
+
+                return `
+                    <div class="map-column">
+                        <div class="map-header">
+                            <div class="map-name">${mapName}</div>
+                            <div class="map-stats">${completedCount}/${totalCount} completed</div>
+                        </div>
+                        <div class="quests-list">
+                            ${availableQuests.map(quest => `
+                                <div class="quest-item">
+                                    <div class="quest-title">${quest.name}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Get available (unlocked and incomplete) quests for a specific map
+        function getAvailableQuestsForMap(mapName) {
+            return quests.filter(quest => {
+                if (!quest.requiredForKappa) return false;
+                if (userProgress.completedQuests.includes(quest.id)) return false;
+                if (!isQuestAvailable(quest)) return false;
+                const questMap = quest.mapName || 'Any Location';
+                return questMap === mapName;
+            }).sort((a, b) => {
+                // Sort by level, then by name
+                if (a.level !== b.level) return a.level - b.level;
+                return a.name.localeCompare(b.name);
+            });
+        }
+
+        // Get all quests for a specific map (for counting total)
+        function getAllQuestsForMap(mapName) {
+            return quests.filter(quest => {
+                if (!quest.requiredForKappa) return false;
+                const questMap = quest.mapName || 'Any Location';
+                return questMap === mapName;
+            });
+        }
+
+
+        // Auto-refresh every 5 seconds
+        function startAutoRefresh() {
+            setInterval(async () => {
+                try {
+                    const response = await fetch('http://localhost:3000/api/progress');
+                    const newProgress = await response.json();
+                    newProgress.completedQuests = JSON.parse(newProgress.completedQuests || '[]');
+                    
+                    // Check if progress has changed
+                    const currentProgressString = JSON.stringify(userProgress.completedQuests.sort());
+                    const newProgressString = JSON.stringify(newProgress.completedQuests.sort());
+                    
+                    if (currentProgressString !== newProgressString) {
+                        userProgress = newProgress;
+                        renderOverview();
+                    }
+                } catch (error) {
+                    console.log('Auto-refresh failed:', error.message);
+                }
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            startAutoRefresh();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - EFT Kappa Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .profile-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, rgba(199, 170, 106, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+            border: 2px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-title {
+            color: #c7aa6a;
+            font-size: 28px;
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: rgba(199, 170, 106, 0.2);
+            border: 1px solid #c7aa6a;
+            border-radius: 6px;
+            padding: 10px 20px;
+            color: #c7aa6a;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(199, 170, 106, 0.3);
+        }
+
+        .profile-section {
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #c7aa6a;
+            font-size: 18px;
+            margin: 0 0 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #c7aa6a;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 12px;
+            color: #fff;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #c7aa6a;
+        }
+
+        .form-group small {
+            display: block;
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            text-transform: none;
+            font-weight: normal;
+            color: #aaa;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #c7aa6a, #9d8855);
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            color: #000;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(199, 170, 106, 0.4);
+        }
+
+        .save-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message,
+        .error-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid #22c55e;
+            color: #86efac;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        .success-message.show,
+        .error-message.show {
+            display: block;
+        }
+
+        .info-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .info-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .info-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-header">
+            <h1 class="profile-title">
+                <span><i class="fas fa-user"></i> My Profile</span>
+                <a href="/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            </h1>
+        </div>
+
+        <div class="success-message" id="success-message"></div>
+        <div class="error-message" id="error-message"></div>
+
+        <div class="profile-section">
+            <h2 class="section-title">Account Information</h2>
+            <div class="info-display" id="account-info">
+                <div class="info-item">
+                    <div class="info-label">Username</div>
+                    <div class="info-value" id="display-username">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="display-email">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Member Since</div>
+                    <div class="info-value" id="display-member-since">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h2 class="section-title">Edit Profile</h2>
+            <form id="profile-form">
+                <div class="form-group">
+                    <label for="displayName">Display Name</label>
+                    <input type="text" id="displayName" name="displayName" maxlength="50">
+                    <small>How your name appears on leaderboards</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio" maxlength="200"></textarea>
+                    <small>Tell others about yourself (max 200 characters)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="twitchUrl">Twitch URL</label>
+                    <input type="url" id="twitchUrl" name="twitchUrl" placeholder="https://twitch.tv/yourname">
+                    <small>Your Twitch channel (optional)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="discordTag">Discord Tag</label>
+                    <input type="text" id="discordTag" name="discordTag" placeholder="username#1234">
+                    <small>Your Discord username (optional)</small>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isPublic" name="isPublic">
+                        <label for="isPublic">Show my profile on public leaderboards</label>
+                    </div>
+                    <small>Uncheck to hide your progress from rankings</small>
+                </div>
+
+                <button type="submit" class="save-btn" id="save-btn">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUsername = '';
+
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const data = await response.json();
+                const user = data.user;
+                currentUsername = user.username;
+
+                // Display account info
+                document.getElementById('display-username').textContent = user.username;
+                document.getElementById('display-email').textContent = user.email;
+                document.getElementById('display-member-since').textContent = new Date(user.createdAt).toLocaleDateString();
+
+                // Fill form
+                document.getElementById('displayName').value = user.displayName || '';
+                document.getElementById('bio').value = user.bio || '';
+                document.getElementById('twitchUrl').value = user.twitchUrl || '';
+                document.getElementById('discordTag').value = user.discordTag || '';
+                document.getElementById('isPublic').checked = user.isPublic;
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showError('Failed to load profile');
+            }
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('save-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const formData = {
+                displayName: document.getElementById('displayName').value,
+                bio: document.getElementById('bio').value,
+                twitchUrl: document.getElementById('twitchUrl').value,
+                discordTag: document.getElementById('discordTag').value,
+                isPublic: document.getElementById('isPublic').checked
+            };
+
+            try {
+                const response = await fetch(`/api/users/${currentUsername}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    showSuccess('Profile updated successfully!');
+                } else {
+                    const data = await response.json();
+                    showError(data.error || 'Failed to update profile');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showError('An error occurred while updating your profile');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            }
+        });
+
+        function showSuccess(message) {
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            successMsg.textContent = message;
+            successMsg.classList.add('show');
+            errorMsg.classList.remove('show');
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 5000);
+        }
+
+        function showError(message) {
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            errorMsg.textContent = message;
+            errorMsg.classList.add('show');
+            successMsg.classList.remove('show');
+            setTimeout(() => {
+                errorMsg.classList.remove('show');
+            }, 5000);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+</body>
+</html>
+

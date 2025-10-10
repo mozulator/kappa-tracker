@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:tarkov.dev)",
+      "WebFetch(domain:tarkov101.com)",
+      "WebFetch(domain:api.tarkov.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm start)",
+      "Bash(pkill:*)",
+      "Bash(ss:*)",
+      "Bash(node server.js)",
+      "Bash(curl:*)",
+      "Bash(true)",
+      "Bash(ls:*)",
+      "Bash(node:*)",
+      "Bash(python:*)",
+      "Bash(grep:*)",
+      "Bash(awk:*)",
+      "WebFetch(domain:escapefromtarkov.fandom.com)"
+    ],
+    "deny": []
+  }
+}

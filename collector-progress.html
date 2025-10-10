@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collector Progress - Kappa Tracker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap');
+        
+        /* OBS Overlay Styles */
+        body {
+            background: #000000; /* Black background */
+            margin: 0;
+            font-family: 'Bender', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            outline: 6px solid black;
+            outline-offset: -6px;
+            position: relative;
+        }
+
+        /* Background slideshow container */
+        .background-slideshow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        /* Individual background images */
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-position: center center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+
+        /* Active background image */
+        .background-image.active {
+            opacity: 1;
+        }
+
+        /* Gradient overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.75) 25%, rgba(0, 0, 0, 0.75) 35%, rgba(0, 0, 0, 0) 100%);
+            z-index: -1;
+        }
+
+        html {
+            overflow: hidden;
+        }
+
+        .collector-progress-bar {
+            width: 100%;
+            height: 100px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            box-sizing: border-box;
+            padding-left: 32px;
+        }
+
+        .collector-progress-text {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            text-align: left;
+            z-index: 10;
+            pointer-events: none;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .collector-progress-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .collector-progress-label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            z-index: 10;
+            pointer-events: none;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background slideshow -->
+    <div class="background-slideshow">
+        <div class="background-image" style="background-image: url('imgs/shturman.png');" data-image="shturman"></div>
+        <div class="background-image" style="background-image: url('imgs/goons.png');" data-image="goons"></div>
+        <div class="background-image" style="background-image: url('imgs/kaban.png');" data-image="kaban"></div>
+        <div class="background-image" style="background-image: url('imgs/killa.png');" data-image="killa"></div>
+        <div class="background-image" style="background-image: url('imgs/tagilla.png');" data-image="tagilla"></div>
+    </div>
+
+    <div class="collector-progress-container">
+        <div class="collector-progress-bar">
+            <div class="collector-progress-label">KAPPA PROGRESS</div>
+            <div class="collector-progress-text" id="collector-progress-text">0% (0/0)</div>
+        </div>
+    </div>
+
+    <script>
+        let lastUpdateTime = 0;
+        let currentData = null;
+        let lastProgressState = null;
+
+        // Background slideshow functionality
+        let currentImageIndex = 0;
+        const backgroundImages = document.querySelectorAll('.background-image');
+        const totalImages = backgroundImages.length;
+
+        // Initialize slideshow
+        function initSlideshow() {
+            // Set first image as active
+            if (backgroundImages.length > 0) {
+                backgroundImages[0].classList.add('active');
+            }
+            
+            // Start the slideshow timer
+            setInterval(changeBackground, 60000); // Change every 1 minute
+        }
+
+        // Change to next background image
+        function changeBackground() {
+            // Remove active class from current image
+            backgroundImages[currentImageIndex].classList.remove('active');
+            
+            // Move to next image (loop back to 0 if at end)
+            currentImageIndex = (currentImageIndex + 1) % totalImages;
+            
+            // Add active class to new image
+            backgroundImages[currentImageIndex].classList.add('active');
+        }
+
+        // Preload all images for seamless transitions
+        function preloadImages() {
+            const imageUrls = [
+                'imgs/shturman.png',
+                'imgs/goons.png', 
+                'imgs/kaban.png',
+                'imgs/killa.png',
+                'imgs/tagilla.png'
+            ];
+            
+            imageUrls.forEach(url => {
+                const img = new Image();
+                img.src = url;
+            });
+        }
+
+        // Load progress data from parent window or API
+        async function loadCollectorProgress() {
+            try {
+                // Try to get data from parent window first
+                if (window.opener && window.opener.questTracker) {
+                    const tracker = window.opener.questTracker;
+                    currentData = { quests: tracker.quests, userProgress: tracker.userProgress };
+                    updateCollectorUI(tracker.quests, tracker.userProgress);
+                    return;
+                }
+
+                // Fallback to API if no parent window
+                const [questsResponse, progressResponse] = await Promise.all([
+                    fetch('/api/quests'),
+                    fetch('/api/progress')
+                ]);
+
+                const quests = await questsResponse.json();
+                const userProgress = await progressResponse.json();
+                userProgress.completedQuests = JSON.parse(userProgress.completedQuests || '[]');
+
+                currentData = { quests, userProgress };
+                updateCollectorUI(quests, userProgress);
+            } catch (error) {
+                console.error('Error loading collector progress:', error);
+                document.getElementById('collector-progress-text').textContent = 'Error loading data';
+            }
+        }
+
+        function updateCollectorUI(quests, userProgress) {
+            const kappaQuests = quests.filter(quest => quest.requiredForKappa);
+            const totalKappaQuests = kappaQuests.length;
+            const completedKappaQuests = kappaQuests.filter(quest => 
+                userProgress.completedQuests.includes(quest.id)
+            ).length;
+            
+            const percentage = totalKappaQuests > 0 ? (completedKappaQuests / totalKappaQuests) * 100 : 0;
+
+            // Check if progress has actually changed
+            const currentProgressState = `${completedKappaQuests}/${totalKappaQuests}`;
+            const hasProgressChanged = lastProgressState !== currentProgressState;
+            
+            if (hasProgressChanged) {
+                console.log('Progress changed:', lastProgressState, '->', currentProgressState);
+                lastProgressState = currentProgressState;
+                
+                // Update only progress text
+                const progressText = document.getElementById('collector-progress-text');
+                progressText.textContent = `${percentage.toFixed(1)}% (${completedKappaQuests}/${totalKappaQuests})`;
+                
+                // Add a subtle visual change to force OBS update
+                const progressBar = document.querySelector('.collector-progress-bar');
+                progressBar.style.transform = 'scale(1.001)';
+                setTimeout(() => {
+                    progressBar.style.transform = 'scale(1)';
+                }, 50);
+            }
+        }
+
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            preloadImages(); // Preload all background images
+            initSlideshow(); // Initialize the slideshow
+            loadCollectorProgress(); // Load the quest progress data
+        });
+
+        // Listen for updates from parent window
+        window.addEventListener('message', function(event) {
+            console.log('Collector received message:', event.data);
+            if (event.data.type === 'progressUpdate') {
+                console.log('Progress update received, updating UI...');
+                currentData = { quests: event.data.quests, userProgress: event.data.userProgress };
+                updateCollectorUI(event.data.quests, event.data.userProgress);
+                
+                // Force immediate visual update for OBS when quest is completed
+                const progressBar = document.querySelector('.collector-progress-bar');
+                progressBar.style.transform = 'scale(1.001)';
+                setTimeout(() => {
+                    progressBar.style.transform = 'scale(1)';
+                }, 50);
+                
+                // Force cache reset for OBS by adding timestamp to iframe src
+                if (window.parent !== window) {
+                    // We're in an iframe, notify parent to refresh
+                    window.parent.postMessage({
+                        type: 'forceRefresh',
+                        timestamp: Date.now()
+                    }, '*');
+                } else {
+                    // We're the main window, force refresh ourselves
+                    forceCacheRefresh();
+                }
+            }
+        });
+
+        // Function to force cache refresh for OBS
+        function forceCacheRefresh() {
+            // Add timestamp to current URL to force cache refresh
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('t', Date.now());
+            
+            // Only refresh if we're in an iframe context (OBS)
+            if (window.parent !== window) {
+                window.location.href = currentUrl.toString();
+            }
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://kappauser:kappapass@db:5432/kappatracker
+      - SESSION_SECRET=${SESSION_SECRET:-change-this-secret}
+    depends_on:
+      - db
+    volumes:
+      - ./prisma:/app/prisma
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=kappauser
+      - POSTGRES_PASSWORD=kappapass
+      - POSTGRES_DB=kappatracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+

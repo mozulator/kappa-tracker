@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EFT Kappa Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: rgba(30, 30, 30, 0.95);
+            border: 2px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h1 {
+            color: #c7aa6a;
+            font-size: 32px;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .auth-header p {
+            color: #888;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: #c7aa6a;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 12px 16px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #c7aa6a;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #c7aa6a, #9d8855);
+            border: none;
+            border-radius: 6px;
+            padding: 14px;
+            color: #000;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(199, 170, 106, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #3a3a3a;
+        }
+
+        .auth-footer p {
+            color: #888;
+            font-size: 14px;
+            margin: 0 0 10px 0;
+        }
+
+        .auth-footer a {
+            color: #c7aa6a;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .auth-footer a:hover {
+            color: #fff;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 6px;
+            padding: 12px;
+            color: #fca5a5;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .public-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .public-links a {
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .public-links a:hover {
+            color: #c7aa6a;
+        }
+
+        .features-list {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .features-list h3 {
+            color: #c7aa6a;
+            font-size: 16px;
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .features-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .features-list li {
+            color: #aaa;
+            font-size: 14px;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .features-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #c7aa6a;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h1><i class="fas fa-trophy"></i> Kappa Tracker</h1>
+                <p>Track your progress, compete with others</p>
+            </div>
+
+            <div class="error-message" id="error-message"></div>
+
+            <form class="auth-form" id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account?</p>
+                <a href="/register"><i class="fas fa-user-plus"></i> Create Account</a>
+            </div>
+
+            <div class="public-links">
+                <a href="/rankings"><i class="fas fa-trophy"></i> View Rankings</a>
+            </div>
+
+            <div class="features-list">
+                <h3>What you'll get:</h3>
+                <ul>
+                    <li>Track all Kappa-required quests</li>
+                    <li>Filter by map and view requirements</li>
+                    <li>OBS overlay integration</li>
+                    <li>Public profile & leaderboard ranking</li>
+                    <li>Compare progress with others</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMessage = document.getElementById('error-message');
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    showError(data.error || 'Login failed');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('An error occurred. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            }
+        });
+
+        // Check if already logged in
+        fetch('/api/auth/status', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.authenticated) {
+                    window.location.href = '/dashboard';
+                }
+            })
+            .catch(err => console.error('Auth check error:', err));
+    </script>
+</body>
+</html>
+

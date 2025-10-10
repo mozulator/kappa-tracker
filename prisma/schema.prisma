@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  displayName   String?
+  passwordHash  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Profile settings
+  isPublic      Boolean  @default(true)
+  bio           String?
+  twitchUrl     String?
+  discordTag    String?
+  
+  // Relations
+  progress      UserProgress?
+  activities    QuestActivity[]
+  
+  @@map("users")
+}
+
+model Quest {
+  id                String   @id
+  name              String
+  trader            String
+  level             Int
+  objectives        String // JSON string of objectives
+  prerequisiteQuests String? // JSON array of quest IDs
+  traderLoyalty     Int      @default(1)
+  requiredForKappa  Boolean  @default(false)
+  wikiLink          String?
+  mapName           String?  // Map where quest takes place
+  requiredItems     String   @default("[]") // JSON array of required items with counts
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("quests")
+}
+
+model UserProgress {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  pmcLevel        Int      @default(1)
+  completedQuests String   @default("[]") // JSON array of completed quest IDs
+  
+  // Cached stats for rankings
+  completionRate  Float    @default(0)
+  totalCompleted  Int      @default(0)
+  lastQuestDate   DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_progress")
+}
+
+model QuestActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questId   String
+  questName String
+  action    String   // "completed" | "uncompleted"
+  timestamp DateTime @default(now())
+  
+  @@index([userId])
+  @@index([timestamp])
+  @@map("quest_activities")
+}

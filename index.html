@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EFT OBS Kappa Tracker - Quest Progress Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <h1 class="title">EFT OBS KAPPA TRACKER</h1>
+            <nav class="nav">
+                <a href="#" class="nav-link active" id="dashboard-tab">Dashboard</a>
+                <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
+                <a href="/rankings" class="nav-link">Rankings</a>
+                <a href="/profile" class="nav-link">Profile</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="user-info" id="user-info" style="display: none;">
+                <span class="user-welcome">Welcome, <span id="user-display-name">-</span></span>
+            </div>
+            <button id="collector-progress-btn" class="collector-btn" title="Open Collector Progress">
+                <i class="fas fa-trophy"></i> COLLECTOR PROGRESS
+            </button>
+            <button id="kappa-overview-btn" class="kappa-overview-btn" title="Open Kappa Quest Overview">
+                <i class="fas fa-chart-bar"></i> KAPPA OVERVIEW
+            </button>
+            <button id="reset-progress-btn" class="reset-btn" title="Reset all progress">
+                <i class="fas fa-redo"></i> RESET PROGRESS
+            </button>
+            <button id="logout-btn" class="reset-btn" title="Logout" style="margin-left: 10px;">
+                <i class="fas fa-sign-out-alt"></i> LOGOUT
+            </button>
+        </div>
+    </header>
+    
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <div class="level-section">
+                    <label for="pmc-level">PMC LEVEL:</label>
+                    <input type="number" id="pmc-level" min="1" max="79" value="1" class="level-input">
+                </div>
+                <div class="progress-section">
+                    <div class="progress-label">COLLECTOR PROGRESS</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">0% (0/0 quests)</div>
+                </div>
+                <div class="quest-mode-section">
+                    <label class="quest-mode-toggle">
+                        <input type="checkbox" id="show-future-quests" class="quest-mode-checkbox">
+                        <span class="quest-mode-slider"></span>
+                        <span class="quest-mode-label">Show All Future Quests</span>
+                    </label>
+                </div>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <!-- Map Overview Section -->
+            <section class="map-overview" id="map-overview">
+                <div class="overview-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Markers needed:</span>
+                        <span class="stat-value" id="markers-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Jammers needed:</span>
+                        <span class="stat-value" id="jammers-count">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Cameras needed:</span>
+                        <span class="stat-value" id="cameras-count">0</span>
+                    </div>
+                    <div class="stat-item keys-list-item">
+                        <div class="stat-header">
+                            <span class="stat-label">Keys needed:</span>
+                            <span class="stat-value" id="keys-count">0</span>
+                        </div>
+                        <div class="keys-list" id="keys-list">None</div>
+                    </div>
+                    <div class="stat-item fir-list-item">
+                        <div class="stat-header">
+                            <span class="stat-label">FIR items needed:</span>
+                        </div>
+                        <div class="fir-list" id="fir-list">None</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Map Tabs Section -->
+            <section class="map-tabs-section">
+                <div class="map-tabs" id="map-tabs">
+                    <div class="loading">Loading maps...</div>
+                </div>
+            </section>
+
+            <!-- Quests Section -->
+            <section class="quests-section">
+                <div class="quests-grid" id="quests-grid">
+                    <div class="loading">Loading quests...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer Status Bar -->
+    <footer class="footer-statusbar">
+        <p>Made by <a href="https://twitch.tv/mozula" target="_blank" rel="noopener noreferrer">twitch.tv/mozula</a> for free. Feel free to drop a follow!</p>
+    </footer>
+
+    <!-- Reset Progress Warning Dialog -->
+    <div id="reset-dialog" class="dialog-overlay">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>⚠️ Reset Progress Warning</h3>
+            </div>
+            <div class="dialog-body">
+                <p><strong>Are you sure you want to reset your progress?</strong></p>
+                <p>This action will:</p>
+                <ul>
+                    <li>Reset your PMC level to 1</li>
+                    <li>Clear all completed quests</li>
+                    <li>Remove all progress tracking data</li>
+                </ul>
+                <p><strong>This action cannot be undone!</strong></p>
+            </div>
+            <div class="dialog-footer">
+                <button id="cancel-reset" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="confirm-reset" class="dialog-btn confirm-btn">Reset Progress</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Quest Confirmation Dialog -->
+    <div id="complete-quest-dialog" class="dialog-overlay">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>Complete Quest</h3>
+            </div>
+            <div class="dialog-body">
+                <p><strong>Are you sure you want to mark this quest as complete?</strong></p>
+                <p id="complete-quest-name" class="quest-name-display"></p>
+            </div>
+            <div class="dialog-footer">
+                <button id="cancel-complete" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="confirm-complete" class="dialog-btn confirm-btn">Complete Quest</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Check authentication on page load
+        fetch('/api/auth/status', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    window.location.href = '/login';
+                } else {
+                    // Show user info
+                    const userInfo = document.getElementById('user-info');
+                    const displayName = document.getElementById('user-display-name');
+                    if (userInfo && displayName) {
+                        displayName.textContent = data.user.displayName || data.user.username;
+                        userInfo.style.display = 'block';
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Auth check error:', err);
+                window.location.href = '/login';
+            });
+
+        // Logout functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async () => {
+                    await fetch('/api/auth/logout', { 
+                        method: 'POST', 
+                        credentials: 'include' 
+                    });
+                    window.location.href = '/login';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
