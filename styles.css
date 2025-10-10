@@ -1079,3 +1079,35 @@ body {
     color: var(--text-alt-highlight);
     text-decoration: underline;
 }
+
+/* Gunsmith Build Button */
+.gunsmith-build-btn {
+    background: linear-gradient(135deg, #c7aa6a 0%, #a08850 100%);
+    color: #1a1a1a;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gunsmith-build-btn:hover {
+    background: linear-gradient(135deg, #d4b978 0%, #b09660 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(199, 170, 106, 0.3);
+}
+
+.gunsmith-build-btn:active {
+    transform: translateY(0);
+}
+
+.gunsmith-build-btn i {
+    font-size: 0.85rem;
+}

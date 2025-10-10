@@ -185,6 +185,19 @@
         </div>
     </div>
 
+    <!-- Gunsmith Build Image Dialog -->
+    <div id="gunsmith-dialog" class="dialog-overlay">
+        <div class="dialog-content" style="max-width: 90%; max-height: 90vh;">
+            <div class="dialog-header">
+                <h3 id="gunsmith-title">Gunsmith Build</h3>
+                <button id="close-gunsmith" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0; margin-left: auto;">&times;</button>
+            </div>
+            <div class="dialog-body" style="overflow-y: auto; max-height: 75vh;">
+                <div id="gunsmith-images" style="display: flex; flex-direction: column; gap: 15px; align-items: center;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Report Dialog (Bug/Feature) -->
     <div id="report-dialog" class="dialog-overlay">
         <div class="dialog-content" style="max-width: 500px;">
@@ -290,6 +303,24 @@
                 completeAllDialog.addEventListener('click', (e) => {
                     if (e.target === completeAllDialog) {
                         completeAllDialog.style.display = 'none';
+                    }
+                });
+            }
+
+            // Gunsmith build dialog functionality
+            const gunsmithDialog = document.getElementById('gunsmith-dialog');
+            const closeGunsmithBtn = document.getElementById('close-gunsmith');
+            
+            if (closeGunsmithBtn) {
+                closeGunsmithBtn.addEventListener('click', () => {
+                    gunsmithDialog.style.display = 'none';
+                });
+            }
+            
+            if (gunsmithDialog) {
+                gunsmithDialog.addEventListener('click', (e) => {
+                    if (e.target === gunsmithDialog) {
+                        gunsmithDialog.style.display = 'none';
                     }
                 });
             }

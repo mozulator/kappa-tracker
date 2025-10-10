@@ -11,6 +11,35 @@ class QuestTracker {
     }
 
     async init() {
+        // Initialize Gunsmith build images mapping
+        this.gunsmithBuilds = {
+            'Gunsmith - Part 1': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/6a/Gunsmithpart1Modding.png'],
+            'Gunsmith - Part 2': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/3/36/Gunsmithpart2Modding.png'],
+            'Gunsmith - Part 3': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/25/Gunsmithpart3Modding.png'],
+            'Gunsmith - Part 4': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/23/GunSmithPart4Guide.png'],
+            'Gunsmith - Part 5': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/62/Gunsmith7M870.PNG'],
+            'Gunsmith - Part 6': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/4/4d/Gunsmith8AKM.png'],
+            'Gunsmith - Part 7': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/9/92/Gunsmith4100RoundModding.png'],
+            'Gunsmith - Part 8': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/e/ee/Gunsmith9AK74.png'],
+            'Gunsmith - Part 9': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/f/f7/Gunsmith9P226RMod.png'],
+            'Gunsmith - Part 10': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/8/88/Gunsmith10AK105.png'],
+            'Gunsmith - Part 11': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/f/f2/Gunsmith11VectorMod.png'],
+            'Gunsmith - Part 12': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/0/0e/GunsmithPart13Mods2.png'],
+            'Gunsmith - Part 13': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/e/e6/GunsmithPart13AlternateModdingScreen.png'],
+            'Gunsmith - Part 14': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/1/1f/GS14_Mods.png'],
+            'Gunsmith - Part 15': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/2d/Gunsmith11ASVAL.png'],
+            'Gunsmith - Part 16': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/9/92/GunsmithPart5Guide.png'],
+            'Gunsmith - Part 17': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/1/11/Gunsmith17Mods.png'],
+            'Gunsmith - Part 18': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/3/3c/GunsmithPart14Mods2.png'],
+            'Gunsmith - Part 19': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/d/dd/GS19_Mods.png'],
+            'Gunsmith - Part 20': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/66/GunsmithPart15Mods2.png'],
+            'Gunsmith - Part 21': [
+                'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/7/75/GS21_Mods_M700.png',
+                'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/29/GS21_Mods_1911.png'
+            ],
+            'Gunsmith - Part 22': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/b/bd/GunsmithPart16Mods2.png']
+        };
+        
         await this.loadProgress();
         await this.loadQuests();
         this.setupEventListeners();
@@ -382,6 +411,40 @@ class QuestTracker {
         }
     }
 
+    showGunsmithBuild(questName) {
+        const imageUrls = this.gunsmithBuilds[questName];
+        if (!imageUrls || imageUrls.length === 0) {
+            console.error('No build images found for', questName);
+            return;
+        }
+
+        // Update dialog title
+        const titleElement = document.getElementById('gunsmith-title');
+        if (titleElement) {
+            titleElement.textContent = `${questName} Build`;
+        }
+
+        // Update dialog images
+        const imagesContainer = document.getElementById('gunsmith-images');
+        if (imagesContainer) {
+            imagesContainer.innerHTML = imageUrls.map((url, index) => `
+                <div style="width: 100%; text-align: center;">
+                    ${imageUrls.length > 1 ? `<h4 style="color: #c7aa6a; margin-bottom: 10px;">Build ${index + 1}</h4>` : ''}
+                    <img src="${url}" 
+                         alt="${questName} Build ${index + 1}" 
+                         style="max-width: 100%; height: auto; border: 2px solid #2a2a2a; border-radius: 4px;"
+                         onerror="this.parentElement.innerHTML='<p style=\\'color: #f44336;\\'>Failed to load image</p>'">
+                </div>
+            `).join('');
+        }
+
+        // Show dialog
+        const dialog = document.getElementById('gunsmith-dialog');
+        if (dialog) {
+            dialog.style.display = 'flex';
+        }
+    }
+
     toggleViewMode() {
         this.viewMode = this.viewMode === 'available' ? 'finished' : 'available';
         this.updateNavigationState();
@@ -582,11 +645,17 @@ class QuestTracker {
                 questCardClass = 'completed-quest';
             }
 
+            // Check if this is a Gunsmith quest with build images
+            const hasGunsmithBuild = this.gunsmithBuilds[quest.name] !== undefined;
+            
             return `
                 <div class="quest-card ${questCardClass}" data-quest-id="${quest.id}">
                     <div class="quest-header">
                         <div class="quest-name">${quest.name}</div>
                         <div class="quest-actions">
+                            ${hasGunsmithBuild ? `<button class="gunsmith-build-btn" onclick="window.tracker.showGunsmithBuild('${quest.name.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-tools"></i> Build
+                            </button>` : ''}
                             ${quest.wikiLink ? `<a href="${quest.wikiLink}" target="_blank" class="wiki-link" title="Open Wiki" onclick="questTracker.handleWikiClick('${quest.id}')">Wiki</a>` : ''}
                             <div class="quest-level-req">L${quest.level}</div>
                         </div>
