@@ -1,5 +1,5 @@
 @echo off
-title Kappa Tracker Launcher
+title OBS Kappa Tracker Launcher
 
 :: Change to the script directory
 cd /d "%~dp0"

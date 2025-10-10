@@ -1,6 +1,6 @@
-# EFT Kappa Tracker - Multi-User Edition 🎮
+# OBS Kappa Tracker - Multi-User Edition 🎮
 
-A comprehensive Escape from Tarkov Kappa quest tracking application with **user accounts**, **public rankings**, and **social features**. Perfect for streamers and the EFT community!
+A comprehensive Escape from Tarkov Kappa quest tracking application with **user accounts**, **public rankings**, and **social features**. Perfect for streamers and the EFT community! Optimized for OBS integration.
 
 ## 🆕 New Features
 
@@ -35,7 +35,7 @@ A comprehensive Escape from Tarkov Kappa quest tracking application with **user 
 1. **Clone or download the repository**
    ```bash
    git clone <your-repo-url>
-   cd kappa-tracker
+   cd obs-kappa-tracker
    ```
 
 2. **Install dependencies**
@@ -204,7 +204,7 @@ If you're upgrading from the original single-user version, see [MIGRATION-GUIDE.
 ### Project Structure
 
 ```
-kappa-tracker/
+obs-kappa-tracker/
 ├── server.js              # Express server with auth
 ├── prisma/
 │   ├── schema.prisma      # Database schema

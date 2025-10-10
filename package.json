@@ -1,5 +1,5 @@
 {
-  "name": "kappa-tracker",
+  "name": "obs-kappa-tracker",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "OBS Kappa Tracker - Multi-User EFT Quest Tracking Application",
   "dependencies": {
     "@prisma/client": "^6.11.1",
     "axios": "^1.12.2",
