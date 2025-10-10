@@ -471,7 +471,7 @@ class QuestTracker {
             questsSection.style.display = 'block';
             mapOverview.style.display = 'block';
             mapTabsSection.style.display = 'block';
-            sidebar.style.display = 'block';
+            sidebar.style.display = 'flex'; // Use flex to maintain sidebar layout
         } else if (view === 'rankings') {
             rankingsSection.style.display = 'block';
         } else if (view === 'profile') {
