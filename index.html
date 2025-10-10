@@ -26,10 +26,10 @@
                         OBS Integration <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
                     </a>
                     <div class="dropdown-menu" id="obs-dropdown">
-                        <a href="#" class="dropdown-item" id="collector-progress-link">
+                        <a href="/collector-progress.html" target="_blank" class="dropdown-item" id="collector-progress-link">
                             <i class="fas fa-trophy"></i> Collector Progress
                         </a>
-                        <a href="#" class="dropdown-item" id="kappa-overview-link">
+                        <a href="/kappa-overview.html" target="_blank" class="dropdown-item" id="kappa-overview-link">
                             <i class="fas fa-chart-bar"></i> Kappa Overview
                         </a>
                     </div>
@@ -347,20 +347,15 @@
                 });
             }
             
-            // Open Collector Progress window
+            // Close dropdown when clicking links
             if (collectorProgressLink) {
-                collectorProgressLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.open('/collector-progress.html', 'CollectorProgress', 'width=600,height=400');
+                collectorProgressLink.addEventListener('click', () => {
                     obsDropdown.classList.remove('show');
                 });
             }
             
-            // Open Kappa Overview window
             if (kappaOverviewLink) {
-                kappaOverviewLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.open('/kappa-overview.html', 'KappaOverview', 'width=800,height=600');
+                kappaOverviewLink.addEventListener('click', () => {
                     obsDropdown.classList.remove('show');
                 });
             }
