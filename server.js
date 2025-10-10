@@ -25,6 +25,9 @@ let prisma;
 const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'kappa-tracker-secret-change-in-production';
 
+// Trust proxy for Render (required for rate limiting)
+app.set('trust proxy', 1);
+
 // Initialize Prisma with error handling
 try {
     prisma = new PrismaClient();
@@ -1016,8 +1019,9 @@ app.get('/', (req, res) => {
     }
 });
 
-app.get('/dashboard', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+app.get('/dashboard', (req, res) => {
+    // Redirect to main page instead of requiring auth
+    res.redirect('/');
 });
 
 app.get('/login', (req, res) => {
