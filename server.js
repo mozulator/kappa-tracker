@@ -215,8 +215,10 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
         // Auto login
         req.login(user, (err) => {
             if (err) {
+                console.error('Auto-login failed after registration:', err);
                 return res.status(500).json({ error: 'Registration successful but login failed' });
             }
+            console.log('User auto-logged in after registration:', user.username);
             res.json({
                 message: 'Registration successful',
                 user
