@@ -182,14 +182,18 @@
         // Load data from API
         async function loadData() {
             try {
+                // Extract userId from URL path (format: /kappa/:userId/:token)
+                const pathParts = window.location.pathname.split('/');
+                const userId = pathParts[2]; // Get userId from URL
+
                 const [questsResponse, progressResponse] = await Promise.all([
-                    fetch('http://localhost:3000/api/quests'),
-                    fetch('http://localhost:3000/api/progress')
+                    fetch('/api/quests'),
+                    fetch(`/api/progress/${userId}`)
                 ]);
 
                 quests = await questsResponse.json();
                 userProgress = await progressResponse.json();
-                userProgress.completedQuests = JSON.parse(userProgress.completedQuests || '[]');
+                // completedQuests is already parsed by server
 
                 buildMapsList();
                 renderOverview();

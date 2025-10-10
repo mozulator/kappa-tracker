@@ -62,6 +62,7 @@ model UserProgress {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   pmcLevel        Int      @default(1)
+  prestige        Int      @default(0)
   completedQuests String   @default("[]") // JSON array of completed quest IDs
   
   // Cached stats for rankings

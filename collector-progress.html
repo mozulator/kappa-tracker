@@ -115,11 +115,11 @@
 <body>
     <!-- Background slideshow -->
     <div class="background-slideshow">
-        <div class="background-image" style="background-image: url('imgs/shturman.png');" data-image="shturman"></div>
-        <div class="background-image" style="background-image: url('imgs/goons.png');" data-image="goons"></div>
-        <div class="background-image" style="background-image: url('imgs/kaban.png');" data-image="kaban"></div>
-        <div class="background-image" style="background-image: url('imgs/killa.png');" data-image="killa"></div>
-        <div class="background-image" style="background-image: url('imgs/tagilla.png');" data-image="tagilla"></div>
+        <div class="background-image" style="background-image: url('/imgs/shturman.png');" data-image="shturman"></div>
+        <div class="background-image" style="background-image: url('/imgs/goons.png');" data-image="goons"></div>
+        <div class="background-image" style="background-image: url('/imgs/kaban.png');" data-image="kaban"></div>
+        <div class="background-image" style="background-image: url('/imgs/killa.png');" data-image="killa"></div>
+        <div class="background-image" style="background-image: url('/imgs/tagilla.png');" data-image="tagilla"></div>
     </div>
 
     <div class="collector-progress-container">
@@ -165,11 +165,11 @@
         // Preload all images for seamless transitions
         function preloadImages() {
             const imageUrls = [
-                'imgs/shturman.png',
-                'imgs/goons.png', 
-                'imgs/kaban.png',
-                'imgs/killa.png',
-                'imgs/tagilla.png'
+                '/imgs/shturman.png',
+                '/imgs/goons.png', 
+                '/imgs/kaban.png',
+                '/imgs/killa.png',
+                '/imgs/tagilla.png'
             ];
             
             imageUrls.forEach(url => {

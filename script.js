@@ -73,6 +73,22 @@ class QuestTracker {
             e.target.disabled = false;
         });
 
+        const prestigeInput = document.getElementById('prestige-level');
+        prestigeInput.value = this.userProgress.prestige || 0;
+        prestigeInput.addEventListener('change', async (e) => {
+            // Add visual feedback
+            e.target.style.opacity = '0.6';
+            e.target.disabled = true;
+            
+            this.userProgress.prestige = parseInt(e.target.value);
+            await this.saveProgress();
+            this.updateUI();
+            
+            // Restore visual state
+            e.target.style.opacity = '1';
+            e.target.disabled = false;
+        });
+
         const dashboardTab = document.getElementById('dashboard-tab');
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
         const rankingsTab = document.getElementById('rankings-tab');

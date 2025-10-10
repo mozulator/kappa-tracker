@@ -572,7 +572,7 @@ app.get('/api/progress/:userId', async (req, res) => {
 
 app.post('/api/progress', requireAuth, async (req, res) => {
     try {
-        const { pmcLevel, completedQuests } = req.body;
+        const { pmcLevel, prestige, completedQuests } = req.body;
 
         // Calculate stats
         const allQuests = await prisma.quest.findMany({
@@ -630,6 +630,7 @@ app.post('/api/progress', requireAuth, async (req, res) => {
                 data: {
                     userId: req.user.id,
                     pmcLevel: pmcLevel || 1,
+                    prestige: prestige || 0,
                     completedQuests: JSON.stringify(completedQuests || []),
                     completionRate,
                     totalCompleted: completedCount,
@@ -641,6 +642,7 @@ app.post('/api/progress', requireAuth, async (req, res) => {
                 where: { userId: req.user.id },
                 data: {
                     pmcLevel: pmcLevel !== undefined ? pmcLevel : progress.pmcLevel,
+                    prestige: prestige !== undefined ? prestige : progress.prestige,
                     completedQuests: JSON.stringify(completedQuests || []),
                     completionRate,
                     totalCompleted: completedCount,
@@ -932,7 +934,7 @@ async function fetchTarkovQuests() {
 
 // Normalize map names to avoid duplicates
 function normalizeMapName(mapName) {
-    if (!mapName) return 'General';
+    if (!mapName) return 'Any Location';
     
     const normalizedName = mapName.trim();
     
@@ -976,7 +978,9 @@ function extractMapFromQuest(task) {
         'a shooter born in heaven',
         'shooter born in heaven',
         'general wares',
-        'peacekeeping mission'
+        'peacekeeping mission',
+        'fishing place',
+        'colleagues - part 3'
     ];
     
     for (const multiMapQuest of multiMapQuests) {
