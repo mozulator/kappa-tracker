@@ -303,6 +303,82 @@ app.post('/api/user/update-twitch', requireAuth, async (req, res) => {
     }
 });
 
+// Generate unique overlay URL for collector progress
+app.get('/api/user/collector-url', requireAuth, async (req, res) => {
+    try {
+        const crypto = require('crypto');
+        
+        // Check if user already has a valid token
+        let token = await prisma.overlayToken.findFirst({
+            where: {
+                userId: req.user.id,
+                type: 'collector',
+                expiresAt: { gt: new Date() }
+            }
+        });
+        
+        // If no valid token, create one (expires in 10 years)
+        if (!token) {
+            const tokenString = crypto.randomBytes(32).toString('hex');
+            const expiresAt = new Date();
+            expiresAt.setFullYear(expiresAt.getFullYear() + 10);
+            
+            token = await prisma.overlayToken.create({
+                data: {
+                    token: tokenString,
+                    userId: req.user.id,
+                    type: 'collector',
+                    expiresAt
+                }
+            });
+        }
+        
+        const url = `${req.protocol}://${req.get('host')}/collector/${req.user.id}/${token.token}`;
+        res.json({ url });
+    } catch (error) {
+        console.error('Error generating collector URL:', error);
+        res.status(500).json({ error: 'Failed to generate URL' });
+    }
+});
+
+// Generate unique overlay URL for kappa overview
+app.get('/api/user/kappa-url', requireAuth, async (req, res) => {
+    try {
+        const crypto = require('crypto');
+        
+        // Check if user already has a valid token
+        let token = await prisma.overlayToken.findFirst({
+            where: {
+                userId: req.user.id,
+                type: 'kappa',
+                expiresAt: { gt: new Date() }
+            }
+        });
+        
+        // If no valid token, create one (expires in 10 years)
+        if (!token) {
+            const tokenString = crypto.randomBytes(32).toString('hex');
+            const expiresAt = new Date();
+            expiresAt.setFullYear(expiresAt.getFullYear() + 10);
+            
+            token = await prisma.overlayToken.create({
+                data: {
+                    token: tokenString,
+                    userId: req.user.id,
+                    type: 'kappa',
+                    expiresAt
+                }
+            });
+        }
+        
+        const url = `${req.protocol}://${req.get('host')}/kappa/${req.user.id}/${token.token}`;
+        res.json({ url });
+    } catch (error) {
+        console.error('Error generating kappa URL:', error);
+        res.status(500).json({ error: 'Failed to generate URL' });
+    }
+});
+
 app.get('/api/auth/status', (req, res) => {
     res.json({
         authenticated: req.isAuthenticated(),
@@ -1036,6 +1112,64 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development'
     });
+});
+
+// ============================================================================
+// OVERLAY PAGES (with token authentication)
+// ============================================================================
+
+// Collector Progress overlay
+app.get('/collector/:userId/:token', async (req, res) => {
+    try {
+        const { userId, token } = req.params;
+        
+        // Validate token
+        const overlayToken = await prisma.overlayToken.findFirst({
+            where: {
+                userId,
+                token,
+                type: 'collector',
+                expiresAt: { gt: new Date() }
+            }
+        });
+        
+        if (!overlayToken) {
+            return res.status(401).send('Invalid or expired token');
+        }
+        
+        // Serve collector-progress.html
+        res.sendFile(path.join(__dirname, 'collector-progress.html'));
+    } catch (error) {
+        console.error('Error serving collector overlay:', error);
+        res.status(500).send('Error loading overlay');
+    }
+});
+
+// Kappa Overview overlay
+app.get('/kappa/:userId/:token', async (req, res) => {
+    try {
+        const { userId, token } = req.params;
+        
+        // Validate token
+        const overlayToken = await prisma.overlayToken.findFirst({
+            where: {
+                userId,
+                token,
+                type: 'kappa',
+                expiresAt: { gt: new Date() }
+            }
+        });
+        
+        if (!overlayToken) {
+            return res.status(401).send('Invalid or expired token');
+        }
+        
+        // Serve kappa-overview.html
+        res.sendFile(path.join(__dirname, 'kappa-overview.html'));
+    } catch (error) {
+        console.error('Error serving kappa overlay:', error);
+        res.status(500).send('Error loading overlay');
+    }
 });
 
 // ============================================================================

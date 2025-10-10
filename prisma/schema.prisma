@@ -33,6 +33,7 @@ model User {
   // Relations
   progress      UserProgress?
   activities    QuestActivity[]
+  overlayTokens OverlayToken[]
   
   @@map("users")
 }
@@ -86,4 +87,18 @@ model QuestActivity {
   @@index([userId])
   @@index([timestamp])
   @@map("quest_activities")
+}
+
+model OverlayToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // "collector" | "kappa"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@map("overlay_tokens")
 }

@@ -980,32 +980,47 @@ class QuestTracker {
         }
     }
 
-    openCollectorProgress() {
-        // Open collector progress in a new window
-        const collectorWindow = window.open(
-            'collector-progress.html',
-            'collectorProgress',
-            'width=600,height=500,scrollbars=no,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
-        );
-
-        // Store reference for updates
-        window.collectorWindow = collectorWindow;
-
-        // Send initial data to the new window
-        if (collectorWindow) {
-            collectorWindow.addEventListener('load', () => {
-                collectorWindow.postMessage({
-                    type: 'progressUpdate',
-                    quests: this.quests,
-                    userProgress: this.userProgress
-                }, '*');
-            });
+    async openCollectorProgress() {
+        try {
+            // Fetch unique URL from server
+            const response = await fetch('/api/user/collector-url', { credentials: 'include' });
+            const data = await response.json();
+            
+            if (data.url) {
+                // Open collector progress with unique URL
+                const collectorWindow = window.open(
+                    data.url,
+                    'collectorProgress',
+                    'width=600,height=500,scrollbars=no,resizable=yes,menubar=no,toolbar=no,location=no,status=no'
+                );
+                
+                // Store reference for updates
+                window.collectorWindow = collectorWindow;
+            } else {
+                this.showNotification('Failed to generate collector URL', 'error');
+            }
+        } catch (error) {
+            console.error('Error opening collector progress:', error);
+            this.showNotification('Error opening collector progress', 'error');
         }
     }
 
-    openKappaOverview() {
-        // Open kappa overview in a new tab
-        window.open('kappa-overview.html', '_blank');
+    async openKappaOverview() {
+        try {
+            // Fetch unique URL from server
+            const response = await fetch('/api/user/kappa-url', { credentials: 'include' });
+            const data = await response.json();
+            
+            if (data.url) {
+                // Open kappa overview with unique URL in new tab
+                window.open(data.url, '_blank');
+            } else {
+                this.showNotification('Failed to generate kappa overview URL', 'error');
+            }
+        } catch (error) {
+            console.error('Error opening kappa overview:', error);
+            this.showNotification('Error opening kappa overview', 'error');
+        }
     }
 
     showNotification(message, type = 'info') {
