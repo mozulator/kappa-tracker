@@ -189,15 +189,19 @@
                     return;
                 }
 
+                // Extract userId from URL path (format: /collector/:userId/:token)
+                const pathParts = window.location.pathname.split('/');
+                const userId = pathParts[2]; // Get userId from URL
+
                 // Fallback to API if no parent window
                 const [questsResponse, progressResponse] = await Promise.all([
                     fetch('/api/quests'),
-                    fetch('/api/progress')
+                    fetch(`/api/progress/${userId}`)
                 ]);
 
                 const quests = await questsResponse.json();
                 const userProgress = await progressResponse.json();
-                userProgress.completedQuests = JSON.parse(userProgress.completedQuests || '[]');
+                // completedQuests is already parsed by server
 
                 currentData = { quests, userProgress };
                 updateCollectorUI(quests, userProgress);

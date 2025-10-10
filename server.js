@@ -539,6 +539,37 @@ app.get('/api/progress', requireAuth, async (req, res) => {
     }
 });
 
+// Public endpoint for getting user progress by userId (for overlay pages)
+app.get('/api/progress/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        let progress = await prisma.userProgress.findUnique({
+            where: { userId }
+        });
+
+        if (!progress) {
+            // Return empty progress if user doesn't exist
+            return res.json({
+                pmcLevel: 1,
+                completedQuests: [],
+                completionRate: 0,
+                totalCompleted: 0
+            });
+        }
+
+        // Parse completedQuests before sending
+        const responseData = {
+            ...progress,
+            completedQuests: JSON.parse(progress.completedQuests || '[]')
+        };
+        res.json(responseData);
+    } catch (error) {
+        console.error('Error fetching public progress:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.post('/api/progress', requireAuth, async (req, res) => {
     try {
         const { pmcLevel, completedQuests } = req.body;

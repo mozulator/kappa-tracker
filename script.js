@@ -768,9 +768,19 @@ class QuestTracker {
     renderObjectives(objectives) {
         if (!objectives || objectives.length === 0) return '';
         
-        const objectivesList = objectives.map(obj => 
-            `<li>${obj}</li>`
-        ).join('');
+        const objectivesList = objectives.map(obj => {
+            // Handle both string and object objectives
+            let text = '';
+            if (typeof obj === 'string') {
+                text = obj;
+            } else if (typeof obj === 'object' && obj !== null) {
+                // Extract description from object
+                text = obj.description || obj.text || obj.name || JSON.stringify(obj);
+            } else {
+                text = String(obj);
+            }
+            return `<li>${text}</li>`;
+        }).join('');
         
         const uniqueId = `objectives-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         
