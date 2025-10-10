@@ -1625,57 +1625,75 @@ async function initializeQuests(force = false) {
 
 // Fix specific quest prerequisites that differ from API data
 async function applyQuestFixes() {
-    try {
-        // Introduction quest should only rely on level 2, not Gunsmith Part 1 completion
-        await prisma.quest.update({
-            where: { id: '5d2495a886f77425cd51e403' },
+    const fixes = [
+        {
+            name: 'Introduction',
+            id: '5d2495a886f77425cd51e403',
             data: { prerequisiteQuests: '[]' }
-        });
-        
-        // Bad Rep Evidence - should be Any Location, not Factory
-        await prisma.quest.update({
-            where: { id: '5967530a86f77462ba22226b' },
+        },
+        {
+            name: 'Bad Rep Evidence',
+            id: '5967530a86f77462ba22226b',
             data: { mapName: 'Any Location' }
-        });
-        
-        // The Walls Have Eyes - should require 3 WiFi cameras, not 1
-        await prisma.quest.update({
-            where: { id: '669fa39c64ea11e84c0642a6' },
+        },
+        {
+            name: 'The Walls Have Eyes',
+            id: '669fa39c64ea11e84c0642a6',
             data: { requiredItems: JSON.stringify([{"name":"WI-FI Camera","count":3,"category":"fir","type":"plantItem"}]) }
-        });
-        
-        // Rough Tarkov - should be Any Location
-        await prisma.quest.update({
-            where: { id: '66b38c7bf85b8bf7250f9cb6' },
+        },
+        {
+            name: 'Rough Tarkov',
+            id: '66b38c7bf85b8bf7250f9cb6',
             data: { mapName: 'Any Location' }
-        });
-        
-        // The Guide - should be Any Location, not Woods
-        await prisma.quest.update({
-            where: { id: '5c0d4e61d09282029f53920e' },
+        },
+        {
+            name: 'The Guide',
+            id: '5c0d4e61d09282029f53920e',
             data: { mapName: 'Any Location' }
-        });
-        
-        // Informed Means Armed - should be Any Location, not Woods
-        // Should require 3 WiFi cameras to plant, not 1 FIR
-        await prisma.quest.update({
-            where: { id: '669f8d43e1bc2a1a6c04bcf9' },
+        },
+        {
+            name: 'Informed Means Armed',
+            id: '669f8d43e1bc2a1a6c04bcf9',
             data: { 
                 mapName: 'Any Location',
                 requiredItems: JSON.stringify([{"name":"WI-FI Camera","count":3,"category":"any","type":"plantItem"}])
             }
-        });
-        
-        // Lend Lease - Part 1 - should be Any Location, not Woods
-        await prisma.quest.update({
-            where: { id: '656f9d5ff3a29858a60214a4' },
+        },
+        {
+            name: 'Lend Lease - Part 1',
+            id: '656f9d5ff3a29858a60214a4',
             data: { mapName: 'Any Location' }
-        });
-        
-        console.log('Applied quest data fixes');
-    } catch (error) {
-        console.error('Error applying quest fixes:', error);
+        }
+    ];
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const fix of fixes) {
+        try {
+            // Check if quest exists first
+            const questExists = await prisma.quest.findUnique({
+                where: { id: fix.id },
+                select: { id: true }
+            });
+
+            if (questExists) {
+                await prisma.quest.update({
+                    where: { id: fix.id },
+                    data: fix.data
+                });
+                successCount++;
+            } else {
+                console.log(`⚠️  Quest not found: ${fix.name} (${fix.id})`);
+                failCount++;
+            }
+        } catch (error) {
+            console.error(`❌ Error fixing quest ${fix.name}:`, error.message);
+            failCount++;
+        }
     }
+
+    console.log(`✅ Applied quest data fixes: ${successCount} successful, ${failCount} failed/not found`);
 }
 
 // ============================================================================
