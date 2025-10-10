@@ -23,8 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
-app.use(session({
-    store: new SQLiteStore({ db: 'sessions.db', dir: './prisma' }),
+const sessionConfig = {
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -33,7 +32,17 @@ app.use(session({
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production'
     }
-}));
+};
+
+// Use SQLite store for development, memory store for production
+if (process.env.NODE_ENV === 'production') {
+    // Production: use memory store (sessions will reset on restart)
+    app.use(session(sessionConfig));
+} else {
+    // Development: use SQLite store
+    sessionConfig.store = new SQLiteStore({ db: 'sessions.db', dir: './prisma' });
+    app.use(session(sessionConfig));
+}
 
 // Passport configuration
 app.use(passport.initialize());
