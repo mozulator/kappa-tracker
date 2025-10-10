@@ -21,26 +21,27 @@
                 <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
                 <a href="#" class="nav-link" id="rankings-tab">Rankings</a>
                 <a href="#" class="nav-link" id="profile-tab">Profile</a>
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link" id="obs-integration-tab">
+                        OBS Integration <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+                    </a>
+                    <div class="dropdown-menu" id="obs-dropdown">
+                        <a href="#" class="dropdown-item" id="collector-progress-link">
+                            <i class="fas fa-trophy"></i> Collector Progress
+                        </a>
+                        <a href="#" class="dropdown-item" id="kappa-overview-link">
+                            <i class="fas fa-chart-bar"></i> Kappa Overview
+                        </a>
+                    </div>
+                </div>
             </nav>
         </div>
         <div class="header-right">
-            <button id="collector-progress-btn" class="collector-btn" title="Open Collector Progress" style="background: #6441a5; color: #fff;">
-                <i class="fas fa-trophy"></i> COLLECTOR PROGRESS
+            <button id="report-bug-btn" class="reset-btn report-bug" title="Report a Bug">
+                <i class="fas fa-bug"></i> REPORT BUG
             </button>
-            <button id="kappa-overview-btn" class="kappa-overview-btn" title="Open Kappa Quest Overview" style="background: #6441a5; color: #fff;">
-                <i class="fas fa-chart-bar"></i> KAPPA OVERVIEW
-            </button>
-            <button id="report-bug-btn" class="reset-btn" title="Report a Bug" style="background: #f44336; color: #fff;">
-                <i class="fas fa-bug"></i>
-            </button>
-            <button id="request-feature-btn" class="reset-btn" title="Request a Feature" style="background: #4CAF50; color: #fff;">
-                <i class="fas fa-lightbulb"></i>
-            </button>
-            <button id="complete-all-btn" class="reset-btn" title="Complete all 261 Kappa quests" style="background: #4CAF50; color: #fff; margin-left: 10px;">
-                <i class="fas fa-check-double"></i> COMPLETE ALL
-            </button>
-            <button id="reset-progress-btn" class="reset-btn" title="Reset all progress">
-                <i class="fas fa-redo"></i> RESET PROGRESS
+            <button id="request-feature-btn" class="reset-btn request-feature" title="Request a Feature">
+                <i class="fas fa-lightbulb"></i> REQUEST FEATURE
             </button>
             <button id="logout-btn" class="reset-btn" title="Logout" style="margin-left: 10px;">
                 <i class="fas fa-sign-out-alt"></i> LOGOUT
@@ -51,28 +52,57 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-content">
-                <div class="level-section">
-                    <label for="pmc-level">PMC LEVEL:</label>
-                    <input type="number" id="pmc-level" min="1" max="79" value="1" class="level-input">
-                </div>
-                <div class="level-section">
-                    <label for="prestige-level">PRESTIGE:</label>
-                    <input type="number" id="prestige-level" min="0" max="4" value="0" class="level-input">
-                </div>
-                <div class="progress-section">
-                    <div class="progress-label">COLLECTOR PROGRESS</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-fill"></div>
+                <!-- Player Stats Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">
+                        <i class="fas fa-user"></i> PLAYER STATS
                     </div>
-                    <div class="progress-text" id="progress-text">0% (0/0 quests)</div>
+                    <div class="level-section">
+                        <label for="pmc-level">PMC Level</label>
+                        <input type="number" id="pmc-level" min="1" max="79" value="1" class="level-input">
+                    </div>
+                    <div class="level-section">
+                        <label for="prestige-level">Prestige</label>
+                        <input type="number" id="prestige-level" min="0" max="4" value="0" class="level-input">
+                    </div>
                 </div>
-                <div class="quest-mode-section">
-                    <label class="quest-mode-toggle">
-                        <input type="checkbox" id="show-future-quests" class="quest-mode-checkbox">
-                        <span class="quest-mode-slider"></span>
-                        <span class="quest-mode-label">Show All Future Quests</span>
-                    </label>
+
+                <!-- Progress Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">
+                        <i class="fas fa-chart-line"></i> KAPPA PROGRESS
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="progress-text">0% (0/0 quests)</div>
+                    </div>
                 </div>
+
+                <!-- View Options Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">
+                        <i class="fas fa-eye"></i> VIEW OPTIONS
+                    </div>
+                    <div class="quest-mode-section">
+                        <label class="quest-mode-toggle">
+                            <input type="checkbox" id="show-future-quests" class="quest-mode-checkbox">
+                            <span class="quest-mode-slider"></span>
+                            <span class="quest-mode-label">Show All Future Quests</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="sidebar-footer">
+                <button id="complete-all-btn-sidebar" class="sidebar-action-btn complete-all-action" title="Complete all 261 Kappa quests">
+                    <i class="fas fa-check-double"></i> Complete All
+                </button>
+                <button id="reset-progress-btn-sidebar" class="sidebar-action-btn reset-action" title="Reset all progress">
+                    <i class="fas fa-redo"></i> Reset Progress
+                </button>
             </div>
         </aside>
         
@@ -185,19 +215,6 @@
         </div>
     </div>
 
-    <!-- Gunsmith Build Image Dialog -->
-    <div id="gunsmith-dialog" class="dialog-overlay">
-        <div class="dialog-content" style="max-width: 90%; max-height: 90vh;">
-            <div class="dialog-header">
-                <h3 id="gunsmith-title">Gunsmith Build</h3>
-                <button id="close-gunsmith" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0; margin-left: auto;">&times;</button>
-            </div>
-            <div class="dialog-body" style="overflow-y: auto; max-height: 75vh;">
-                <div id="gunsmith-images" style="display: flex; flex-direction: column; gap: 15px; align-items: center;"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- Report Dialog (Bug/Feature) -->
     <div id="report-dialog" class="dialog-overlay">
         <div class="dialog-content" style="max-width: 500px;">
@@ -261,12 +278,13 @@
 
             // Complete All dialog functionality
             const completeAllDialog = document.getElementById('complete-all-dialog');
-            const completeAllBtn = document.getElementById('complete-all-btn');
+            const completeAllBtnSidebar = document.getElementById('complete-all-btn-sidebar');
             const cancelCompleteAllBtn = document.getElementById('cancel-complete-all');
             const confirmCompleteAllBtn = document.getElementById('confirm-complete-all');
             
-            if (completeAllBtn) {
-                completeAllBtn.addEventListener('click', () => {
+            // Connect sidebar Complete All button
+            if (completeAllBtnSidebar) {
+                completeAllBtnSidebar.addEventListener('click', () => {
                     completeAllDialog.style.display = 'flex';
                 });
             }
@@ -307,21 +325,43 @@
                 });
             }
 
-            // Gunsmith build dialog functionality
-            const gunsmithDialog = document.getElementById('gunsmith-dialog');
-            const closeGunsmithBtn = document.getElementById('close-gunsmith');
+            // OBS Integration dropdown functionality
+            const obsIntegrationTab = document.getElementById('obs-integration-tab');
+            const obsDropdown = document.getElementById('obs-dropdown');
+            const collectorProgressLink = document.getElementById('collector-progress-link');
+            const kappaOverviewLink = document.getElementById('kappa-overview-link');
             
-            if (closeGunsmithBtn) {
-                closeGunsmithBtn.addEventListener('click', () => {
-                    gunsmithDialog.style.display = 'none';
+            if (obsIntegrationTab && obsDropdown) {
+                // Toggle dropdown on click
+                obsIntegrationTab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    obsDropdown.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!obsIntegrationTab.contains(e.target) && !obsDropdown.contains(e.target)) {
+                        obsDropdown.classList.remove('show');
+                    }
                 });
             }
             
-            if (gunsmithDialog) {
-                gunsmithDialog.addEventListener('click', (e) => {
-                    if (e.target === gunsmithDialog) {
-                        gunsmithDialog.style.display = 'none';
-                    }
+            // Open Collector Progress window
+            if (collectorProgressLink) {
+                collectorProgressLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.open('/collector-progress.html', 'CollectorProgress', 'width=600,height=400');
+                    obsDropdown.classList.remove('show');
+                });
+            }
+            
+            // Open Kappa Overview window
+            if (kappaOverviewLink) {
+                kappaOverviewLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.open('/kappa-overview.html', 'KappaOverview', 'width=800,height=600');
+                    obsDropdown.classList.remove('show');
                 });
             }
 

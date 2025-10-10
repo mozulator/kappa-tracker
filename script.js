@@ -177,23 +177,13 @@ class QuestTracker {
             this.updateUI();
         });
 
-        // Reset progress button
-        const resetBtn = document.getElementById('reset-progress-btn');
-        resetBtn.addEventListener('click', () => {
-            this.showResetDialog();
-        });
-
-        // Collector progress button
-        const collectorBtn = document.getElementById('collector-progress-btn');
-        collectorBtn.addEventListener('click', () => {
-            this.openCollectorProgress();
-        });
-
-        // Kappa overview button
-        const kappaOverviewBtn = document.getElementById('kappa-overview-btn');
-        kappaOverviewBtn.addEventListener('click', () => {
-            this.openKappaOverview();
-        });
+        // Reset progress button (now in sidebar)
+        const resetBtnSidebar = document.getElementById('reset-progress-btn-sidebar');
+        if (resetBtnSidebar) {
+            resetBtnSidebar.addEventListener('click', () => {
+                this.showResetDialog();
+            });
+        }
 
         // Dialog buttons
         const cancelResetBtn = document.getElementById('cancel-reset');
@@ -418,31 +408,10 @@ class QuestTracker {
             return;
         }
 
-        // Update dialog title
-        const titleElement = document.getElementById('gunsmith-title');
-        if (titleElement) {
-            titleElement.textContent = `${questName} Build`;
-        }
-
-        // Update dialog images
-        const imagesContainer = document.getElementById('gunsmith-images');
-        if (imagesContainer) {
-            imagesContainer.innerHTML = imageUrls.map((url, index) => `
-                <div style="width: 100%; text-align: center;">
-                    ${imageUrls.length > 1 ? `<h4 style="color: #c7aa6a; margin-bottom: 10px;">Build ${index + 1}</h4>` : ''}
-                    <img src="${url}" 
-                         alt="${questName} Build ${index + 1}" 
-                         style="max-width: 100%; height: auto; border: 2px solid #2a2a2a; border-radius: 4px;"
-                         onerror="this.parentElement.innerHTML='<p style=\\'color: #f44336;\\'>Failed to load image</p>'">
-                </div>
-            `).join('');
-        }
-
-        // Show dialog
-        const dialog = document.getElementById('gunsmith-dialog');
-        if (dialog) {
-            dialog.style.display = 'flex';
-        }
+        // Open each image URL in a new tab
+        imageUrls.forEach(url => {
+            window.open(url, '_blank');
+        });
     }
 
     toggleViewMode() {
