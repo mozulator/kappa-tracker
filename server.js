@@ -9,10 +9,30 @@ const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const SQLiteStore = require('connect-sqlite3')(session);
 
+// Add error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+
 const app = express();
-const prisma = new PrismaClient();
+let prisma;
 const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'kappa-tracker-secret-change-in-production';
+
+// Initialize Prisma with error handling
+try {
+    prisma = new PrismaClient();
+    console.log('Prisma client initialized successfully');
+} catch (error) {
+    console.error('Failed to initialize Prisma client:', error);
+    process.exit(1);
+}
 
 // Middleware
 app.use(cors({
@@ -1018,12 +1038,12 @@ app.get('/profile', requireAuth, (req, res) => {
 // START SERVER
 // ============================================================================
 
-async function start() {
+function start() {
+    console.log('Starting OBS Kappa Tracker server...');
+    console.log(`Port: ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    
     try {
-        console.log('Starting OBS Kappa Tracker server...');
-        console.log(`Port: ${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-        
         // Start the server
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`
@@ -1050,10 +1070,12 @@ async function start() {
         
         // Initialize quests in the background (non-blocking)
         console.log('Initializing quest data in background...');
-        initializeQuests().catch(error => {
-            console.error('Failed to initialize quests:', error);
-            console.log('Server will continue running, quests can be initialized later via API');
-        });
+        if (typeof initializeQuests === 'function') {
+            initializeQuests().catch(error => {
+                console.error('Failed to initialize quests:', error);
+                console.log('Server will continue running, quests can be initialized later via API');
+            });
+        }
         
     } catch (error) {
         console.error('Failed to start server:', error);
