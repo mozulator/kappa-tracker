@@ -30,6 +30,12 @@
             <button id="kappa-overview-btn" class="kappa-overview-btn" title="Open Kappa Quest Overview" style="background: #6441a5; color: #fff;">
                 <i class="fas fa-chart-bar"></i> KAPPA OVERVIEW
             </button>
+            <button id="report-bug-btn" class="reset-btn" title="Report a Bug" style="background: #f44336; color: #fff;">
+                <i class="fas fa-bug"></i>
+            </button>
+            <button id="request-feature-btn" class="reset-btn" title="Request a Feature" style="background: #4CAF50; color: #fff;">
+                <i class="fas fa-lightbulb"></i>
+            </button>
             <button id="reset-progress-btn" class="reset-btn" title="Reset all progress">
                 <i class="fas fa-redo"></i> RESET PROGRESS
             </button>
@@ -153,19 +159,27 @@
         </div>
     </div>
 
-    <!-- Complete Quest Confirmation Dialog -->
-    <div id="complete-quest-dialog" class="dialog-overlay">
-        <div class="dialog-content">
+    <!-- Report Dialog (Bug/Feature) -->
+    <div id="report-dialog" class="dialog-overlay">
+        <div class="dialog-content" style="max-width: 500px;">
             <div class="dialog-header">
-                <h3>Complete Quest</h3>
+                <h3 id="report-dialog-title">Report Bug</h3>
             </div>
             <div class="dialog-body">
-                <p><strong>Are you sure you want to mark this quest as complete?</strong></p>
-                <p id="complete-quest-name" class="quest-name-display"></p>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; color: #c7aa6a; margin-bottom: 5px; font-weight: 600;">Title:</label>
+                    <input type="text" id="report-title" placeholder="Brief description" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #3a3a3a; border-radius: 6px; color: #fff;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; color: #c7aa6a; margin-bottom: 5px; font-weight: 600;">Description:</label>
+                    <textarea id="report-description" placeholder="Provide details..." rows="5" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #3a3a3a; border-radius: 6px; color: #fff; resize: vertical;"></textarea>
+                </div>
+                <div id="report-error" style="display: none; color: #ff6b6b; font-size: 14px; margin-bottom: 10px;"></div>
+                <div id="report-success" style="display: none; color: #51cf66; font-size: 14px; margin-bottom: 10px;"></div>
             </div>
             <div class="dialog-footer">
-                <button id="cancel-complete" class="dialog-btn cancel-btn">Cancel</button>
-                <button id="confirm-complete" class="dialog-btn confirm-btn">Complete Quest</button>
+                <button id="cancel-report" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="submit-report" class="dialog-btn confirm-btn">Submit</button>
             </div>
         </div>
     </div>
@@ -205,6 +219,97 @@
                     window.location.href = '/login';
                 });
             }
+
+            // Report dialog functionality
+            const reportDialog = document.getElementById('report-dialog');
+            const reportBugBtn = document.getElementById('report-bug-btn');
+            const requestFeatureBtn = document.getElementById('request-feature-btn');
+            const cancelReportBtn = document.getElementById('cancel-report');
+            const submitReportBtn = document.getElementById('submit-report');
+            const reportTitle = document.getElementById('report-title');
+            const reportDescription = document.getElementById('report-description');
+            const reportError = document.getElementById('report-error');
+            const reportSuccess = document.getElementById('report-success');
+            const reportDialogTitle = document.getElementById('report-dialog-title');
+            
+            let currentReportType = 'bug';
+            
+            function openReportDialog(type) {
+                currentReportType = type;
+                reportDialogTitle.textContent = type === 'bug' ? 'Report a Bug' : 'Request a Feature';
+                reportTitle.value = '';
+                reportDescription.value = '';
+                reportError.style.display = 'none';
+                reportSuccess.style.display = 'none';
+                reportDialog.style.display = 'flex';
+            }
+            
+            function closeReportDialog() {
+                reportDialog.style.display = 'none';
+            }
+            
+            reportBugBtn.addEventListener('click', () => openReportDialog('bug'));
+            requestFeatureBtn.addEventListener('click', () => openReportDialog('feature'));
+            cancelReportBtn.addEventListener('click', closeReportDialog);
+            
+            reportDialog.addEventListener('click', (e) => {
+                if (e.target === reportDialog) closeReportDialog();
+            });
+            
+            submitReportBtn.addEventListener('click', async () => {
+                const title = reportTitle.value.trim();
+                const description = reportDescription.value.trim();
+                
+                reportError.style.display = 'none';
+                reportSuccess.style.display = 'none';
+                
+                if (!title || title.length < 3) {
+                    reportError.textContent = 'Title must be at least 3 characters';
+                    reportError.style.display = 'block';
+                    return;
+                }
+                
+                if (!description || description.length < 10) {
+                    reportError.textContent = 'Description must be at least 10 characters';
+                    reportError.style.display = 'block';
+                    return;
+                }
+                
+                submitReportBtn.disabled = true;
+                submitReportBtn.textContent = 'Submitting...';
+                
+                try {
+                    const response = await fetch('/api/reports', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ type: currentReportType, title, description })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        reportSuccess.textContent = 'Thank you! Your report has been submitted.';
+                        reportSuccess.style.display = 'block';
+                        setTimeout(() => {
+                            closeReportDialog();
+                        }, 2000);
+                    } else {
+                        reportError.textContent = data.error || 'Failed to submit report';
+                        reportError.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error submitting report:', error);
+                    reportError.textContent = 'An error occurred. Please try again.';
+                    reportError.style.display = 'block';
+                } finally {
+                    submitReportBtn.disabled = false;
+                    submitReportBtn.textContent = 'Submit';
+                }
+            });
+
+            // Initialize the quest tracker
+            window.tracker = new QuestTracker();
         });
     </script>
 </body>

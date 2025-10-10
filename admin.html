@@ -64,7 +64,7 @@
         .dashboard-container {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
             padding: 20px;
             overflow: hidden;
@@ -281,11 +281,84 @@
             margin-top: 4px;
         }
 
+        @media (max-width: 1600px) {
+            .dashboard-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         @media (max-width: 1200px) {
             .dashboard-container {
                 grid-template-columns: 1fr;
                 overflow-y: auto;
             }
+        }
+
+        .report-type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .report-type-bug {
+            background: #f44336;
+            color: #fff;
+        }
+
+        .report-type-feature {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .report-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        .status-pending {
+            background: #ff9800;
+            color: #000;
+        }
+
+        .status-reviewed {
+            background: #2196F3;
+            color: #fff;
+        }
+
+        .status-resolved {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .status-closed {
+            background: #666;
+            color: #fff;
+        }
+
+        .btn-resolve {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .btn-resolve:hover {
+            background: #45a049;
+        }
+
+        .btn-close {
+            background: #666;
+            color: #fff;
+        }
+
+        .btn-close:hover {
+            background: #555;
         }
     </style>
 </head>
@@ -351,14 +424,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- Reports Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <i class="fas fa-flag"></i>
+                    Bug Reports & Features
+                    <span class="badge" id="reports-count">0</span>
+                </h2>
+            </div>
+            <div class="panel-content">
+                <div class="stats-row">
+                    <div class="stat-mini">
+                        <div class="value" id="pending-reports">0</div>
+                        <div class="label">Pending</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="value" id="bug-reports">0</div>
+                        <div class="label">Bugs</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="value" id="feature-reports">0</div>
+                        <div class="label">Features</div>
+                    </div>
+                </div>
+                <div id="reports-list">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         let pendingUsers = [];
         let allUsers = [];
+        let reports = [];
 
         async function loadData() {
-            await Promise.all([loadPendingUsers(), loadAllUsers()]);
+            await Promise.all([loadPendingUsers(), loadAllUsers(), loadReports()]);
         }
 
         async function loadPendingUsers() {
@@ -573,6 +680,150 @@
             } catch (error) {
                 console.error('Error:', error);
                 showNotification(error.message, 'error');
+            }
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/admin/reports', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to load reports');
+
+                const data = await response.json();
+                reports = data.reports;
+                
+                displayReports();
+                updateReportStats();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('reports-list').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateReportStats() {
+            document.getElementById('reports-count').textContent = reports.length;
+            document.getElementById('pending-reports').textContent = reports.filter(r => r.status === 'pending').length;
+            document.getElementById('bug-reports').textContent = reports.filter(r => r.type === 'bug').length;
+            document.getElementById('feature-reports').textContent = reports.filter(r => r.type === 'feature').length;
+        }
+
+        function displayReports() {
+            const container = document.getElementById('reports-list');
+            
+            if (reports.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No reports</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = reports.map(report => {
+                const typeBadge = report.type === 'bug' ? 'report-type-bug' : 'report-type-feature';
+                const statusClass = `status-${report.status}`;
+                const userName = report.user.displayName || report.user.username;
+                
+                return `
+                    <div class="user-card" id="report-${report.id}">
+                        <div class="user-info-section" style="flex: 1;">
+                            <div class="name">
+                                <span class="report-type-badge ${typeBadge}">${report.type}</span>
+                                <span class="report-status ${statusClass}">${report.status}</span>
+                                ${report.title}
+                            </div>
+                            <div class="details" style="margin-top: 8px;">
+                                ${report.description}
+                            </div>
+                            <div class="date" style="margin-top: 6px;">
+                                By: <span style="color: #c7aa6a;">${userName}</span> • 
+                                ${new Date(report.createdAt).toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            ${report.status !== 'resolved' ? `
+                                <button class="btn btn-resolve" onclick="resolveReport('${report.id}')">
+                                    <i class="fas fa-check"></i> Resolve
+                                </button>
+                            ` : ''}
+                            ${report.status !== 'closed' ? `
+                                <button class="btn btn-close" onclick="closeReport('${report.id}')">
+                                    <i class="fas fa-times"></i> Close
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-delete" onclick="deleteReport('${report.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function resolveReport(reportId) {
+            try {
+                const response = await fetch(`/api/admin/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: 'resolved' })
+                });
+
+                if (!response.ok) throw new Error('Failed to resolve report');
+
+                showNotification('✓ Report marked as resolved', 'success');
+                await loadReports();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to resolve report', 'error');
+            }
+        }
+
+        async function closeReport(reportId) {
+            try {
+                const response = await fetch(`/api/admin/reports/${reportId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: 'closed' })
+                });
+
+                if (!response.ok) throw new Error('Failed to close report');
+
+                showNotification('✓ Report closed', 'success');
+                await loadReports();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to close report', 'error');
+            }
+        }
+
+        async function deleteReport(reportId) {
+            if (!confirm('Delete this report permanently?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/reports/${reportId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to delete report');
+
+                showNotification('🗑️ Report deleted', 'success');
+                await loadReports();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to delete report', 'error');
             }
         }
 

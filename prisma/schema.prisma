@@ -40,6 +40,7 @@ model User {
   progress      UserProgress?
   activities    QuestActivity[]
   overlayTokens OverlayToken[]
+  reports       Report[]
   
   @@map("users")
 }
@@ -108,4 +109,22 @@ model OverlayToken {
   @@index([token])
   @@index([userId])
   @@map("overlay_tokens")
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "bug" | "feature"
+  title       String
+  description String
+  status      String   @default("pending") // "pending" | "reviewed" | "resolved" | "closed"
+  adminNotes  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@map("reports")
 }

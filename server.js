@@ -511,6 +511,136 @@ app.delete('/api/admin/delete-user/:userId', requireAdmin, async (req, res) => {
 });
 
 // ============================================================================
+// REPORT SYSTEM
+// ============================================================================
+
+// Submit a report (bug or feature)
+app.post('/api/reports', requireAuth, async (req, res) => {
+    try {
+        const { type, title, description } = req.body;
+        
+        // Validation
+        if (!type || !['bug', 'feature'].includes(type)) {
+            return res.status(400).json({ error: 'Type must be "bug" or "feature"' });
+        }
+        
+        if (!title || title.trim().length < 3) {
+            return res.status(400).json({ error: 'Title must be at least 3 characters' });
+        }
+        
+        if (!description || description.trim().length < 10) {
+            return res.status(400).json({ error: 'Description must be at least 10 characters' });
+        }
+        
+        const report = await prisma.report.create({
+            data: {
+                userId: req.user.id,
+                type,
+                title: title.trim(),
+                description: description.trim(),
+                status: 'pending'
+            },
+            include: {
+                user: {
+                    select: {
+                        username: true,
+                        displayName: true
+                    }
+                }
+            }
+        });
+        
+        console.log(`New ${type} report from ${req.user.username}: ${title}`);
+        res.json({ message: 'Report submitted successfully', report });
+    } catch (error) {
+        console.error('Error submitting report:', error);
+        res.status(500).json({ error: 'Failed to submit report' });
+    }
+});
+
+// Get all reports (admin only)
+app.get('/api/admin/reports', requireAdmin, async (req, res) => {
+    try {
+        const { status, type } = req.query;
+        
+        const where = {};
+        if (status) where.status = status;
+        if (type) where.type = type;
+        
+        const reports = await prisma.report.findMany({
+            where,
+            include: {
+                user: {
+                    select: {
+                        username: true,
+                        displayName: true,
+                        email: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        res.json({ reports });
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+        res.status(500).json({ error: 'Failed to fetch reports' });
+    }
+});
+
+// Update report status (admin only)
+app.put('/api/admin/reports/:reportId', requireAdmin, async (req, res) => {
+    try {
+        const { reportId } = req.params;
+        const { status, adminNotes } = req.body;
+        
+        if (status && !['pending', 'reviewed', 'resolved', 'closed'].includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+        
+        const updateData = {};
+        if (status) updateData.status = status;
+        if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
+        
+        const report = await prisma.report.update({
+            where: { id: reportId },
+            data: updateData,
+            include: {
+                user: {
+                    select: {
+                        username: true,
+                        displayName: true
+                    }
+                }
+            }
+        });
+        
+        console.log(`Admin ${req.user.username} updated report ${reportId} to ${status}`);
+        res.json({ message: 'Report updated', report });
+    } catch (error) {
+        console.error('Error updating report:', error);
+        res.status(500).json({ error: 'Failed to update report' });
+    }
+});
+
+// Delete report (admin only)
+app.delete('/api/admin/reports/:reportId', requireAdmin, async (req, res) => {
+    try {
+        const { reportId } = req.params;
+        
+        await prisma.report.delete({
+            where: { id: reportId }
+        });
+        
+        console.log(`Admin ${req.user.username} deleted report ${reportId}`);
+        res.json({ message: 'Report deleted' });
+    } catch (error) {
+        console.error('Error deleting report:', error);
+        res.status(500).json({ error: 'Failed to delete report' });
+    }
+});
+
+// ============================================================================
 // USER PROFILE MANAGEMENT
 // ============================================================================
 

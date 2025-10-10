@@ -291,38 +291,57 @@ class QuestTracker {
         return questMap === this.currentMap;
     }
 
-    async completeQuest(questId) {
-        if (!this.userProgress.completedQuests.includes(questId)) {
-            // Store questId for later confirmation
+    async completeQuest(questId, event) {
+        if (this.userProgress.completedQuests.includes(questId)) return;
+        
+        const button = event ? event.target : document.querySelector(`[data-quest-id="${questId}"] .complete-btn`);
+        if (!button) return;
+        
+        // Check if button is already in confirmation state
+        if (button.classList.contains('confirm-state')) {
+            // Second click - actually complete the quest
+            button.disabled = true;
+            
+            // Add visual feedback
+            const questCard = document.querySelector(`[data-quest-id="${questId}"]`);
+            if (questCard) {
+                questCard.style.opacity = '0.6';
+                questCard.style.pointerEvents = 'none';
+            }
+            
+            this.userProgress.completedQuests.push(questId);
+            await this.saveProgress();
+            this.updateUI();
+            this.refreshOBSOverlays();
+            
+            // Reset pending quest
+            this.pendingCompleteQuestId = null;
+        } else {
+            // First click - show confirmation
+            // Reset any other confirmation buttons
+            document.querySelectorAll('.complete-btn.confirm-state').forEach(btn => {
+                btn.classList.remove('confirm-state');
+                btn.textContent = 'COMPLETE QUEST';
+                btn.style.background = '';
+            });
+            
+            // Set this button to confirmation state
+            button.classList.add('confirm-state');
+            button.textContent = 'ARE YOU SURE?';
+            button.style.background = '#f44336';
+            
             this.pendingCompleteQuestId = questId;
             
-            // Get quest name for display
-            const quest = this.quests.find(q => q.id === questId);
-            const questName = quest ? quest.name : 'Unknown Quest';
-            
-            // Show confirmation dialog
-            this.showCompleteQuestDialog(questName);
+            // Reset confirmation state after 3 seconds of no action
+            setTimeout(() => {
+                if (button.classList.contains('confirm-state')) {
+                    button.classList.remove('confirm-state');
+                    button.textContent = 'COMPLETE QUEST';
+                    button.style.background = '';
+                    this.pendingCompleteQuestId = null;
+                }
+            }, 3000);
         }
-    }
-
-    async confirmCompleteQuest() {
-        const questId = this.pendingCompleteQuestId;
-        if (!questId) return;
-        
-        // Add visual feedback
-        const questCard = document.querySelector(`[data-quest-id="${questId}"]`);
-        if (questCard) {
-            questCard.style.opacity = '0.6';
-            questCard.style.pointerEvents = 'none';
-        }
-        
-        this.userProgress.completedQuests.push(questId);
-        await this.saveProgress();
-        this.updateUI();
-        this.refreshOBSOverlays(); // Force OBS to refresh overlays
-        
-        this.hideCompleteQuestDialog();
-        this.pendingCompleteQuestId = null;
     }
 
     async uncompleteQuest(questId) {
@@ -542,11 +561,11 @@ class QuestTracker {
                         additionalInfo = `<div class="quest-locked"><i class="fas fa-lock"></i> Complete: ${prereqNames}${morePrereqs}</div>`;
                     }
                 }
-                buttonHtml = `<button class="complete-btn" onclick="questTracker.completeQuest('${quest.id}')">
+                buttonHtml = `<button class="complete-btn" onclick="questTracker.completeQuest('${quest.id}', event)">
                                  COMPLETE QUEST
                                </button>`;
             } else {
-                buttonHtml = `<button class="complete-btn" onclick="questTracker.completeQuest('${quest.id}')">
+                buttonHtml = `<button class="complete-btn" onclick="questTracker.completeQuest('${quest.id}', event)">
                                  COMPLETE QUEST
                                </button>`;
             }
