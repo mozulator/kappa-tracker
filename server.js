@@ -971,6 +971,18 @@ async function initializeQuests(force = false) {
 }
 
 // ============================================================================
+// HEALTH CHECK
+// ============================================================================
+
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// ============================================================================
 // STATIC PAGES
 // ============================================================================
 
@@ -1008,12 +1020,16 @@ app.get('/profile', requireAuth, (req, res) => {
 
 async function start() {
     try {
-        // Start the server first
-        app.listen(PORT, () => {
+        console.log('Starting OBS Kappa Tracker server...');
+        console.log(`Port: ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        
+        // Start the server
+        const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`
 ╔════════════════════════════════════════════════════╗
 ║  🎮 OBS Kappa Tracker - Multi-User Edition       ║
-║  Server running on http://localhost:${PORT}        ║
+║  Server running on port ${PORT}                    ║
 ║                                                    ║
 ║  Features:                                         ║
 ║  ✓ User Authentication & Profiles                 ║
@@ -1026,12 +1042,19 @@ async function start() {
             `);
         });
         
+        // Handle server errors
+        server.on('error', (error) => {
+            console.error('Server error:', error);
+            process.exit(1);
+        });
+        
         // Initialize quests in the background (non-blocking)
         console.log('Initializing quest data in background...');
         initializeQuests().catch(error => {
             console.error('Failed to initialize quests:', error);
             console.log('Server will continue running, quests can be initialized later via API');
         });
+        
     } catch (error) {
         console.error('Failed to start server:', error);
         process.exit(1);
