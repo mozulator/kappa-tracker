@@ -1656,6 +1656,16 @@ async function applyQuestFixes() {
             data: { mapName: 'Any Location' }
         });
         
+        // Informed Means Armed - should be Any Location, not Woods
+        // Should require 3 WiFi cameras to plant, not 1 FIR
+        await prisma.quest.update({
+            where: { id: '669f8d43e1bc2a1a6c04bcf9' },
+            data: { 
+                mapName: 'Any Location',
+                requiredItems: JSON.stringify([{"name":"WI-FI Camera","count":3,"category":"any","type":"plantItem"}])
+            }
+        });
+        
         console.log('Applied quest data fixes');
     } catch (error) {
         console.error('Error applying quest fixes:', error);

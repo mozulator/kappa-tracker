@@ -342,6 +342,31 @@ class QuestTracker {
         }
     }
 
+    async completeAllQuests() {
+        try {
+            // Get all Kappa-required quest IDs
+            const allKappaQuests = this.quests.filter(q => q.requiredForKappa);
+            const allKappaQuestIds = allKappaQuests.map(q => q.id);
+            
+            // Set all quests as completed
+            this.userProgress.completedQuests = allKappaQuestIds;
+            
+            // Save progress
+            await this.saveProgress();
+            
+            // Update UI
+            this.updateUI();
+            this.refreshOBSOverlays();
+            
+            // Show success notification
+            this.showNotification(`Successfully completed all ${allKappaQuestIds.length} Kappa quests!`, 'success');
+        } catch (error) {
+            console.error('Error completing all quests:', error);
+            this.showNotification('Failed to complete all quests', 'error');
+            throw error;
+        }
+    }
+
     handleWikiClick(questId) {
         // Find the quest by ID
         const quest = this.quests.find(q => q.id === questId);
@@ -734,11 +759,18 @@ class QuestTracker {
             try {
                 const requiredItems = JSON.parse(quest.requiredItems || '[]');
                 requiredItems.forEach(item => {
-                    if (item.type === 'markers') counts.markers += item.count;
-                    if (item.type === 'jammers') counts.jammers += item.count;
-                    if (item.type === 'cameras') counts.cameras += item.count;
-                    if (item.type === 'key') counts.keys += 1; // Keys are counted as 1 each
-                    if (item.category === 'fir') counts.fir += item.count;
+                    // Check category first, then fallback to type and name checking
+                    // For plantItem types, we need to check the item name
+                    const isMarker = item.category === 'markers' || (item.type === 'plantItem' && (item.name.includes('Marker') || item.name.includes('MS2000')));
+                    const isJammer = item.category === 'jammers' || (item.type === 'plantItem' && (item.name.includes('Jammer') || item.name.includes('SJ')));
+                    const isCamera = item.category === 'cameras' || (item.type === 'plantItem' && (item.name.includes('Camera') || item.name.includes('WI-FI')));
+                    const isKey = item.category === 'keys' || item.type === 'key';
+                    
+                    if (isMarker) counts.markers += item.count || 1;
+                    if (isJammer) counts.jammers += item.count || 1;
+                    if (isCamera) counts.cameras += item.count || 1;
+                    if (isKey) counts.keys += 1; // Keys are counted as 1 each
+                    if (item.category === 'fir') counts.fir += item.count || 1;
                 });
             } catch (e) {
                 // Invalid JSON, skip
@@ -866,11 +898,12 @@ class QuestTracker {
     renderRequiredItems(items) {
         if (!items || items.length === 0) return '';
         
-        // Separate items by type
-        const keys = items.filter(item => item.type === 'key');
-        const markers = items.filter(item => item.type === 'markers');
-        const jammers = items.filter(item => item.type === 'jammers');
-        const cameras = items.filter(item => item.type === 'cameras');
+        // Separate items by category (not type)
+        // type is the objective type (plantItem, etc), category is the item category (markers, jammers, cameras, keys)
+        const keys = items.filter(item => item.category === 'keys' || item.type === 'key');
+        const markers = items.filter(item => item.category === 'markers' || item.type === 'plantItem' && (item.name.includes('Marker') || item.name.includes('MS2000')));
+        const jammers = items.filter(item => item.category === 'jammers' || item.type === 'plantItem' && (item.name.includes('Jammer') || item.name.includes('SJ')));
+        const cameras = items.filter(item => item.category === 'cameras' || item.type === 'plantItem' && (item.name.includes('Camera') || item.name.includes('WI-FI')));
         
         let html = '';
         

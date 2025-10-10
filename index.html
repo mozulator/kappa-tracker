@@ -36,6 +36,9 @@
             <button id="request-feature-btn" class="reset-btn" title="Request a Feature" style="background: #4CAF50; color: #fff;">
                 <i class="fas fa-lightbulb"></i>
             </button>
+            <button id="complete-all-btn" class="reset-btn" title="Complete all 261 Kappa quests" style="background: #4CAF50; color: #fff; margin-left: 10px;">
+                <i class="fas fa-check-double"></i> COMPLETE ALL
+            </button>
             <button id="reset-progress-btn" class="reset-btn" title="Reset all progress">
                 <i class="fas fa-redo"></i> RESET PROGRESS
             </button>
@@ -159,6 +162,29 @@
         </div>
     </div>
 
+    <!-- Complete All Confirmation Dialog -->
+    <div id="complete-all-dialog" class="dialog-overlay">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>✓ Complete All Quests</h3>
+            </div>
+            <div class="dialog-body">
+                <p><strong>Are you sure you want to complete all 261 Kappa quests?</strong></p>
+                <p>This will:</p>
+                <ul>
+                    <li>Mark all 261 Kappa-required quests as completed</li>
+                    <li>Update your completion rate to 100%</li>
+                    <li>Update your rankings position</li>
+                </ul>
+                <p><strong>This action can be undone by uncompleting quests individually or using Reset Progress.</strong></p>
+            </div>
+            <div class="dialog-footer">
+                <button id="cancel-complete-all" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="confirm-complete-all" class="dialog-btn confirm-btn">Complete All</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Report Dialog (Bug/Feature) -->
     <div id="report-dialog" class="dialog-overlay">
         <div class="dialog-content" style="max-width: 500px;">
@@ -217,6 +243,54 @@
                         credentials: 'include' 
                     });
                     window.location.href = '/login';
+                });
+            }
+
+            // Complete All dialog functionality
+            const completeAllDialog = document.getElementById('complete-all-dialog');
+            const completeAllBtn = document.getElementById('complete-all-btn');
+            const cancelCompleteAllBtn = document.getElementById('cancel-complete-all');
+            const confirmCompleteAllBtn = document.getElementById('confirm-complete-all');
+            
+            if (completeAllBtn) {
+                completeAllBtn.addEventListener('click', () => {
+                    completeAllDialog.style.display = 'flex';
+                });
+            }
+            
+            if (cancelCompleteAllBtn) {
+                cancelCompleteAllBtn.addEventListener('click', () => {
+                    completeAllDialog.style.display = 'none';
+                });
+            }
+            
+            if (confirmCompleteAllBtn) {
+                confirmCompleteAllBtn.addEventListener('click', async () => {
+                    confirmCompleteAllBtn.disabled = true;
+                    confirmCompleteAllBtn.textContent = 'Completing...';
+                    
+                    try {
+                        // Call the Complete All function on the tracker
+                        if (window.tracker) {
+                            await window.tracker.completeAllQuests();
+                        }
+                        completeAllDialog.style.display = 'none';
+                    } catch (error) {
+                        console.error('Error completing all quests:', error);
+                        alert('Failed to complete all quests. Please try again.');
+                    } finally {
+                        confirmCompleteAllBtn.disabled = false;
+                        confirmCompleteAllBtn.textContent = 'Complete All';
+                    }
+                });
+            }
+            
+            // Click outside to close
+            if (completeAllDialog) {
+                completeAllDialog.addEventListener('click', (e) => {
+                    if (e.target === completeAllDialog) {
+                        completeAllDialog.style.display = 'none';
+                    }
                 });
             }
 
