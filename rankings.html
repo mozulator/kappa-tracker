@@ -9,124 +9,149 @@
     <style>
         body {
             background: #0d0d0d;
-            min-height: 100vh;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
         }
 
         .rankings-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         .rankings-header {
             background: linear-gradient(135deg, rgba(199, 170, 106, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
             border: 2px solid #3a3a3a;
             border-radius: 12px;
-            padding: 30px;
+            padding: 40px;
             margin-bottom: 30px;
             text-align: center;
         }
 
         .rankings-header h1 {
             color: #c7aa6a;
-            font-size: 36px;
+            font-size: 42px;
             margin: 0 0 10px 0;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            font-weight: 700;
         }
 
         .rankings-header p {
             color: #888;
-            font-size: 16px;
-            margin: 0;
+            font-size: 18px;
+            margin: 0 0 25px 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .nav-links a {
+            color: #c7aa6a;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(199, 170, 106, 0.1);
+            border: 1px solid #c7aa6a;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(199, 170, 106, 0.2);
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin: 20px 0;
+            margin: 25px 0;
         }
 
         .stat-card {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid #3a3a3a;
             border-radius: 8px;
-            padding: 15px;
+            padding: 20px;
             text-align: center;
         }
 
         .stat-card .stat-value {
             color: #c7aa6a;
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .stat-card .stat-label {
             color: #888;
-            font-size: 12px;
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .nav-links {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .nav-links a {
-            color: #888;
-            text-decoration: none;
-            margin: 0 15px;
-            font-size: 14px;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: #c7aa6a;
-        }
-
-        .rankings-list {
+        .rankings-table-container {
             background: rgba(30, 30, 30, 0.8);
             border: 2px solid #3a3a3a;
             border-radius: 12px;
             overflow: hidden;
         }
 
-        .ranking-item {
-            display: grid;
-            grid-template-columns: 60px 1fr 120px 120px 150px;
-            gap: 15px;
-            padding: 20px;
-            border-bottom: 1px solid #2a2a2a;
-            align-items: center;
-            transition: background 0.3s ease;
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .ranking-item:hover {
+        thead tr {
+            background: rgba(199, 170, 106, 0.1);
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            color: #c7aa6a;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #3a3a3a;
+        }
+
+        th.center {
+            text-align: center;
+        }
+
+        td {
+            padding: 18px 15px;
+            border-bottom: 1px solid #2a2a2a;
+            vertical-align: middle;
+        }
+
+        tr:hover {
             background: rgba(199, 170, 106, 0.05);
         }
 
-        .ranking-item:last-child {
-            border-bottom: none;
-        }
-
         .rank {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: #c7aa6a;
-            text-align: center;
         }
 
         .rank.top1 { color: #ffd700; }
         .rank.top2 { color: #c0c0c0; }
         .rank.top3 { color: #cd7f32; }
 
-        .user-info {
+        .user-cell {
             display: flex;
-            gap: 15px;
             align-items: center;
+            gap: 15px;
         }
 
         .user-avatar {
@@ -135,174 +160,144 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #c7aa6a;
+            flex-shrink: 0;
         }
 
-        .user-details {
+        .user-info {
             display: flex;
             flex-direction: column;
             gap: 5px;
         }
 
-        .username {
+        .user-name {
             color: #fff;
-            font-size: 18px;
             font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-name a {
+            color: #fff;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .user-name a:hover {
+            color: #c7aa6a;
+        }
+
+        .user-username {
+            color: #888;
+            font-size: 14px;
         }
 
         .user-links {
             display: flex;
-            gap: 10px;
-            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .user-links a {
             color: #888;
             text-decoration: none;
-            font-size: 12px;
-            transition: color 0.3s ease;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
         }
 
         .user-links a:hover {
             color: #c7aa6a;
         }
 
-        .pmc-level {
-            background: rgba(199, 170, 106, 0.2);
-            border: 1px solid #c7aa6a;
-            border-radius: 6px;
-            padding: 8px 12px;
-            text-align: center;
-        }
-
-        .pmc-level .label {
-            color: #888;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .pmc-level .value {
-            color: #c7aa6a;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .completion {
-            text-align: center;
-        }
-
-        .completion .percentage {
-            color: #fff;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .completion .count {
-            color: #888;
+        .user-links a i {
             font-size: 12px;
         }
 
-        .progress-bar-container {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 4px;
-            height: 8px;
-            overflow: hidden;
-            margin-top: 5px;
+        .pmc-level {
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+            text-align: center;
         }
 
-        .progress-bar-fill {
-            background: linear-gradient(90deg, #c7aa6a, #9d8855);
-            height: 100%;
-            transition: width 0.3s ease;
+        .prestige-badge img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+
+        .quests-completed {
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .completion-rate {
+            color: #4CAF50;
+            font-weight: 700;
+            font-size: 20px;
+            text-align: center;
         }
 
         .last-active {
-            color: #666;
-            font-size: 12px;
-            text-align: right;
+            color: #888;
+            font-size: 13px;
+            text-align: center;
         }
 
-        .loading {
+        .loading, .empty-state {
             text-align: center;
-            padding: 60px;
+            padding: 80px 20px;
             color: #888;
             font-size: 18px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            color: #888;
-        }
-
-        .empty-state i {
+        .loading i {
             font-size: 48px;
             margin-bottom: 20px;
-            color: #555;
+            display: block;
         }
 
-        .recent-activity {
-            background: rgba(30, 30, 30, 0.8);
-            border: 2px solid #3a3a3a;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 30px;
-        }
-
-        .recent-activity h2 {
-            color: #c7aa6a;
-            font-size: 20px;
-            margin: 0 0 20px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .activity-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-text {
-            color: #aaa;
-            font-size: 14px;
-        }
-
-        .activity-text .username {
-            color: #c7aa6a;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .activity-text .quest-name {
-            color: #fff;
-            font-weight: 600;
-        }
-
-        .activity-time {
+        footer {
+            text-align: center;
+            padding: 30px 20px;
             color: #666;
-            font-size: 12px;
+            font-size: 14px;
+        }
+
+        footer a {
+            color: #c7aa6a;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
         }
 
         @media (max-width: 768px) {
-            .ranking-item {
-                grid-template-columns: 40px 1fr;
+            .rankings-header h1 {
+                font-size: 28px;
+            }
+
+            .user-cell {
                 gap: 10px;
             }
 
-            .pmc-level, .last-active {
-                display: none;
+            .user-avatar {
+                width: 40px;
+                height: 40px;
             }
 
-            .completion {
-                grid-column: 1 / -1;
-                margin-top: 10px;
+            th, td {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+
+            .user-links {
+                flex-direction: column;
+                gap: 5px;
             }
         }
     </style>
@@ -310,8 +305,8 @@
 <body>
     <div class="rankings-container">
         <div class="rankings-header">
-            <h1><i class="fas fa-trophy"></i> Kappa Rankings</h1>
-            <p>Global leaderboard of quest completion</p>
+            <h1><i class="fas fa-trophy"></i> KAPPA RANKINGS</h1>
+            <p>Global Leaderboard of Quest Completion</p>
 
             <div class="stats-grid" id="stats-grid">
                 <div class="stat-card">
@@ -319,36 +314,35 @@
                     <div class="stat-label">Total Trackers</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="active-users">-</div>
-                    <div class="stat-label">Active Users</div>
-                </div>
-                <div class="stat-card">
                     <div class="stat-value" id="avg-completion">-</div>
                     <div class="stat-label">Avg Completion</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="total-completed">-</div>
-                    <div class="stat-label">Quests Completed</div>
+                    <div class="stat-label">Total Quests Completed</div>
                 </div>
             </div>
 
             <div class="nav-links">
+                <a href="/"><i class="fas fa-home"></i> Home</a>
                 <a href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
                 <a href="/register"><i class="fas fa-user-plus"></i> Register</a>
             </div>
         </div>
 
-        <div class="rankings-list" id="rankings-list">
-            <div class="loading">
-                <i class="fas fa-spinner fa-spin"></i> Loading rankings...
+        <div class="rankings-table-container">
+            <div id="rankings-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading rankings...
+                </div>
             </div>
         </div>
-
-        <div class="recent-activity" id="recent-activity" style="display: none;">
-            <h2><i class="fas fa-bolt"></i> Recent Activity</h2>
-            <div id="activity-list"></div>
-        </div>
     </div>
+
+    <footer>
+        <p>Made by <a href="https://twitch.tv/mozula" target="_blank" rel="noopener noreferrer">twitch.tv/mozula</a> for free. Feel free to drop a follow!</p>
+    </footer>
 
     <script>
         async function loadRankings() {
@@ -356,61 +350,87 @@
                 const response = await fetch('/api/rankings?limit=100');
                 const data = await response.json();
 
-                const listContainer = document.getElementById('rankings-list');
-
-                if (data.rankings.length === 0) {
-                    listContainer.innerHTML = `
+                if (!data.rankings || data.rankings.length === 0) {
+                    document.getElementById('rankings-list').innerHTML = `
                         <div class="empty-state">
                             <i class="fas fa-trophy"></i>
-                            <p>No rankings yet. Be the first to track your Kappa progress!</p>
+                            <p>No rankings yet. Be the first!</p>
                         </div>
                     `;
                     return;
                 }
 
-                listContainer.innerHTML = data.rankings.map((user, index) => {
-                    const rank = index + 1;
-                    let rankClass = '';
-                    if (rank === 1) rankClass = 'top1';
-                    else if (rank === 2) rankClass = 'top2';
-                    else if (rank === 3) rankClass = 'top3';
+                const tableHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Rank</th>
+                                <th>Player</th>
+                                <th class="center" style="width: 120px;">PMC Level</th>
+                                <th class="center" style="width: 120px;">Prestige</th>
+                                <th class="center" style="width: 150px;">Quests</th>
+                                <th class="center" style="width: 130px;">Completion</th>
+                                <th class="center" style="width: 150px;">Last Active</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.rankings.map((user, index) => {
+                                const rank = index + 1;
+                                const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+                                const displayName = user.displayName || user.username;
+                                const lastActive = user.progress.lastQuestDate 
+                                    ? formatTimeAgo(new Date(user.progress.lastQuestDate))
+                                    : 'Never';
 
-                    const displayName = user.displayName || user.username;
-                    const lastActive = user.progress.lastQuestDate
-                        ? formatTimeAgo(new Date(user.progress.lastQuestDate))
-                        : 'Never';
+                                return `
+                                    <tr>
+                                        <td><span class="rank ${rankClass}">#${rank}</span></td>
+                                        <td>
+                                            <div class="user-cell">
+                                                ${user.avatarUrl ? `
+                                                    <img src="${user.avatarUrl}" alt="${displayName}" 
+                                                         class="user-avatar" 
+                                                         onerror="this.style.display='none'">
+                                                ` : ''}
+                                                <div class="user-info">
+                                                    <div class="user-name">
+                                                        <a href="/public-profile.html?user=${user.username}">${displayName}</a>
+                                                    </div>
+                                                    <div class="user-username">@${user.username}</div>
+                                                    <div class="user-links">
+                                                        ${user.twitchUrl ? `
+                                                            <a href="${user.twitchUrl}" target="_blank">
+                                                                <i class="fab fa-twitch"></i> Twitch
+                                                            </a>
+                                                        ` : ''}
+                                                        ${user.tarkovDevId ? `
+                                                            <a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank">
+                                                                <i class="fas fa-gamepad"></i> Tarkov.dev
+                                                            </a>
+                                                        ` : ''}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="pmc-level">${user.progress.pmcLevel}</td>
+                                        <td class="center prestige-badge">
+                                            ${user.progress.prestige && user.progress.prestige > 0 ? `
+                                                <img src="/imgs/prestige_${user.progress.prestige}.webp" 
+                                                     alt="Prestige ${user.progress.prestige}" 
+                                                     title="Prestige ${user.progress.prestige}">
+                                            ` : `<span style="color: #555;">-</span>`}
+                                        </td>
+                                        <td class="quests-completed">${user.progress.totalCompleted}</td>
+                                        <td class="completion-rate">${user.progress.completionRate.toFixed(1)}%</td>
+                                        <td class="last-active">${lastActive}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
 
-                    return `
-                        <div class="ranking-item">
-                            <div class="rank ${rankClass}">#${rank}</div>
-                            <div class="user-info">
-                                ${user.avatarUrl ? `<img src="${user.avatarUrl}" alt="${displayName}" class="user-avatar" onerror="this.style.display='none'">` : ''}
-                                <div class="user-details">
-                                    <div class="username">${displayName}</div>
-                                    <div class="user-links">
-                                        <a href="/public-profile.html?user=${user.username}">
-                                            <i class="fas fa-user"></i> @${user.username}
-                                        </a>
-                                        ${user.twitchUrl ? `<a href="${user.twitchUrl}" target="_blank"><i class="fab fa-twitch"></i> Twitch</a>` : ''}
-                                        ${user.tarkovDevId ? `<a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank"><i class="fas fa-gamepad"></i> Tarkov.dev</a>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="pmc-level">
-                                <div class="label">PMC Level</div>
-                                <div class="value">${user.progress.pmcLevel}</div>
-                            </div>
-                            <div class="completion">
-                                <div class="percentage">${user.progress.completionRate.toFixed(1)}%</div>
-                                <div class="count">${user.progress.totalCompleted} quests</div>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar-fill" style="width: ${user.progress.completionRate}%"></div>
-                                </div>
-                            </div>
-                            <div class="last-active">${lastActive}</div>
-                        </div>
-                    `;
-                }).join('');
+                document.getElementById('rankings-list').innerHTML = tableHTML;
             } catch (error) {
                 console.error('Error loading rankings:', error);
                 document.getElementById('rankings-list').innerHTML = `
@@ -428,29 +448,8 @@
                 const data = await response.json();
 
                 document.getElementById('total-users').textContent = data.totalUsers.toLocaleString();
-                document.getElementById('active-users').textContent = data.activeUsers.toLocaleString();
                 document.getElementById('avg-completion').textContent = data.avgCompletion + '%';
                 document.getElementById('total-completed').textContent = data.totalQuestsCompleted.toLocaleString();
-
-                // Show recent activity if available
-                if (data.recentActivities && data.recentActivities.length > 0) {
-                    const activitySection = document.getElementById('recent-activity');
-                    const activityList = document.getElementById('activity-list');
-
-                    activitySection.style.display = 'block';
-                    activityList.innerHTML = data.recentActivities.map(activity => {
-                        const displayName = activity.user.displayName || activity.user.username;
-                        return `
-                            <div class="activity-item">
-                                <div class="activity-text">
-                                    <span class="username">${displayName}</span> completed
-                                    <span class="quest-name">${activity.questName}</span>
-                                </div>
-                                <div class="activity-time">${formatTimeAgo(new Date(activity.timestamp))}</div>
-                            </div>
-                        `;
-                    }).join('');
-                }
             } catch (error) {
                 console.error('Error loading stats:', error);
             }
@@ -459,38 +458,30 @@
         function formatTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
             
-            if (seconds < 60) return 'Just now';
-            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
-            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
-            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
-            return Math.floor(seconds / 604800) + 'w ago';
+            const intervals = [
+                { label: 'year', seconds: 31536000 },
+                { label: 'month', seconds: 2592000 },
+                { label: 'week', seconds: 604800 },
+                { label: 'day', seconds: 86400 },
+                { label: 'hour', seconds: 3600 },
+                { label: 'minute', seconds: 60 }
+            ];
+
+            for (const interval of intervals) {
+                const count = Math.floor(seconds / interval.seconds);
+                if (count >= 1) {
+                    return count === 1 
+                        ? `${count} ${interval.label} ago`
+                        : `${count} ${interval.label}s ago`;
+                }
+            }
+
+            return 'Just now';
         }
 
         // Load data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadRankings();
-            loadGlobalStats();
-        });
-
-        // Check if user is logged in and update nav links
-        fetch('/api/auth/status', { credentials: 'include' })
-            .then(res => res.json())
-            .then(data => {
-                if (data.authenticated) {
-                    document.querySelector('.nav-links').innerHTML = `
-                        <a href="/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
-                        <a href="/profile"><i class="fas fa-user"></i> Profile</a>
-                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    `;
-                }
-            })
-            .catch(err => console.error('Auth check error:', err));
-
-        async function logout() {
-            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-            window.location.reload();
-        }
+        loadRankings();
+        loadGlobalStats();
     </script>
 </body>
 </html>
-
