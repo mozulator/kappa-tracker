@@ -46,16 +46,8 @@ async function updateAllUserAvatars() {
 
         let updated = 0;
         let failed = 0;
-        let skipped = 0;
 
         for (const user of users) {
-            // Check if they already have an avatar
-            if (user.avatarUrl) {
-                console.log(`⏭️  Skipping ${user.username} - already has avatar`);
-                skipped++;
-                continue;
-            }
-
             console.log(`🔄 Fetching avatar for ${user.username} (Twitch: ${user.twitchName})...`);
 
             const avatarUrl = await fetchTwitchAvatar(user.twitchName);
@@ -78,7 +70,6 @@ async function updateAllUserAvatars() {
 
         console.log('\n📊 Summary:');
         console.log(`   ✅ Updated: ${updated}`);
-        console.log(`   ⏭️  Skipped: ${skipped} (already had avatar)`);
         console.log(`   ❌ Failed: ${failed}`);
         console.log('\n🎉 Done!');
 
