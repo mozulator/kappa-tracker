@@ -202,6 +202,10 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
             return res.status(400).json({ error: 'Tarkov.dev Profile ID is required' });
         }
 
+        if (!twitchUsername || twitchUsername.trim() === '') {
+            return res.status(400).json({ error: 'Twitch Username is required' });
+        }
+
         if (password.length < 6) {
             return res.status(400).json({ error: 'Password must be at least 6 characters' });
         }
@@ -975,11 +979,7 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
         const allRankings = await prisma.user.findMany({
             where: {
                 isPublic: true,
-                progress: {
-                    totalCompleted: {
-                        gt: 0
-                    }
-                }
+                approved: true // Only show approved users
             },
             select: {
                 username: true,
@@ -1054,11 +1054,7 @@ app.get('/api/rankings/map/:mapName', apiLimiter, async (req, res) => {
         const users = await prisma.user.findMany({
             where: {
                 isPublic: true,
-                progress: {
-                    totalCompleted: {
-                        gt: 0
-                    }
-                }
+                approved: true
             },
             select: {
                 username: true,

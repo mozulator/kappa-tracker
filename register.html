@@ -238,8 +238,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="twitchUsername">Twitch Username (Optional)</label>
-                    <input type="text" id="twitchUsername" name="twitchUsername" placeholder="your_twitch_name">
+                    <label for="twitchUsername">Twitch Username *</label>
+                    <input type="text" id="twitchUsername" name="twitchUsername" required placeholder="your_twitch_name">
                     <small>We'll automatically fetch your Twitch avatar</small>
                 </div>
 
@@ -311,6 +311,12 @@
             // Validate Tarkov.dev ID (should be numeric or alphanumeric)
             if (!tarkovDevId) {
                 showError('Tarkov.dev Profile ID is required');
+                return;
+            }
+
+            // Validate Twitch username
+            if (!twitchUsername) {
+                showError('Twitch Username is required');
                 return;
             }
 
