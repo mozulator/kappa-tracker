@@ -1,7 +1,7 @@
 /* Font Face Declarations */
 @font-face {
     font-family: 'Bender';
-    src: local('Bender'), 
+    src: url('/fonts/Bender.woff2') format('woff2'),
          url('/fonts/Bender.woff') format('woff');
     font-weight: 400;
     font-style: normal;
@@ -10,7 +10,7 @@
 
 @font-face {
     font-family: 'Bender';
-    src: local('Bender Bold'), 
+    src: url('/fonts/Bender-Bold.woff2') format('woff2'),
          url('/fonts/Bender-Bold.woff') format('woff');
     font-weight: 700;
     font-style: normal;
@@ -19,7 +19,7 @@
 
 @font-face {
     font-family: 'Bender';
-    src: local('Bender Light'), 
+    src: url('/fonts/Bender-Light.woff2') format('woff2'),
          url('/fonts/Bender-Light.woff') format('woff');
     font-weight: 300;
     font-style: normal;
@@ -28,7 +28,7 @@
 
 @font-face {
     font-family: 'Bender';
-    src: local('Bender Black'), 
+    src: url('/fonts/Bender-Black.woff2') format('woff2'),
          url('/fonts/Bender-Black.woff') format('woff');
     font-weight: 900;
     font-style: normal;
@@ -37,7 +37,7 @@
 
 @font-face {
     font-family: 'Bender';
-    src: local('Bender Italic'), 
+    src: url('/fonts/Bender-Italic.woff2') format('woff2'),
          url('/fonts/Bender-Italic.woff') format('woff');
     font-weight: 400;
     font-style: italic;
@@ -46,7 +46,7 @@
 
 @font-face {
     font-family: 'Bender';
-    src: local('Bender Bold Italic'), 
+    src: url('/fonts/Bender-BoldItalic.woff2') format('woff2'),
          url('/fonts/Bender-BoldItalic.woff') format('woff');
     font-weight: 700;
     font-style: italic;
@@ -55,7 +55,7 @@
 
 @font-face {
     font-family: 'Bender';
-    src: local('Bender Light Italic'), 
+    src: url('/fonts/Bender-LightItalic.woff2') format('woff2'),
          url('/fonts/Bender-LightItalic.woff') format('woff');
     font-weight: 300;
     font-style: italic;
@@ -64,7 +64,7 @@
 
 @font-face {
     font-family: 'Bender';
-    src: local('Bender Black Italic'), 
+    src: url('/fonts/Bender-BlackItalic.woff2') format('woff2'),
          url('/fonts/Bender-BlackItalic.woff') format('woff');
     font-weight: 900;
     font-style: italic;
