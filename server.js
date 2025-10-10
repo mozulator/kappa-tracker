@@ -132,9 +132,6 @@ const apiLimiter = rateLimit({
     max: 100
 });
 
-// Static files
-app.use(express.static('.'));
-
 // Auth middleware
 function requireAuth(req, res, next) {
     if (!req.isAuthenticated()) {
@@ -1171,6 +1168,11 @@ app.get('/kappa/:userId/:token', async (req, res) => {
         res.status(500).send('Error loading overlay');
     }
 });
+
+// ============================================================================
+// STATIC FILES (must be after API routes)
+// ============================================================================
+app.use(express.static('.'));
 
 // ============================================================================
 // STATIC PAGES
