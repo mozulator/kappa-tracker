@@ -1008,11 +1008,11 @@ app.get('/profile', requireAuth, (req, res) => {
 
 async function start() {
     try {
-        await initializeQuests();
+        // Start the server first
         app.listen(PORT, () => {
             console.log(`
 ╔════════════════════════════════════════════════════╗
-║  🎮 EFT Kappa Tracker - Multi-User Edition       ║
+║  🎮 OBS Kappa Tracker - Multi-User Edition       ║
 ║  Server running on http://localhost:${PORT}        ║
 ║                                                    ║
 ║  Features:                                         ║
@@ -1024,6 +1024,13 @@ async function start() {
 ║  Made by twitch.tv/mozula                         ║
 ╚════════════════════════════════════════════════════╝
             `);
+        });
+        
+        // Initialize quests in the background (non-blocking)
+        console.log('Initializing quest data in background...');
+        initializeQuests().catch(error => {
+            console.error('Failed to initialize quests:', error);
+            console.log('Server will continue running, quests can be initialized later via API');
         });
     } catch (error) {
         console.error('Failed to start server:', error);
