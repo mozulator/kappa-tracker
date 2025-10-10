@@ -1103,6 +1103,8 @@ async function initializeQuests(force = false) {
     const existingQuests = await prisma.quest.count();
     if (existingQuests > 0 && !force) {
         console.log('Quests already initialized');
+        // Still apply fixes to existing quests
+        await applyQuestFixes();
         return;
     }
     
@@ -1144,6 +1146,23 @@ async function initializeQuests(force = false) {
     }
 
     console.log(`Initialized ${tasks.length} quests`);
+    
+    // Apply quest prerequisite fixes
+    await applyQuestFixes();
+}
+
+// Fix specific quest prerequisites that differ from API data
+async function applyQuestFixes() {
+    try {
+        // Introduction quest should only rely on level 2, not Gunsmith Part 1 completion
+        await prisma.quest.update({
+            where: { id: '5d2495a886f77425cd51e403' },
+            data: { prerequisiteQuests: '[]' }
+        });
+        console.log('Applied quest prerequisite fixes');
+    } catch (error) {
+        console.error('Error applying quest fixes:', error);
+    }
 }
 
 // ============================================================================
