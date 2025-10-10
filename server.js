@@ -691,7 +691,8 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
     try {
         const { limit = 50, offset = 0 } = req.query;
 
-        const rankings = await prisma.user.findMany({
+        // Fetch all rankings without pagination first (to sort properly)
+        const allRankings = await prisma.user.findMany({
             where: {
                 isPublic: true,
                 progress: {
@@ -708,32 +709,36 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
                 progress: {
                     select: {
                         pmcLevel: true,
+                        prestige: true,
                         completionRate: true,
                         totalCompleted: true,
                         lastQuestDate: true
                     }
                 }
-            },
-            orderBy: {
-                progress: {
-                    completionRate: 'desc'
-                }
-            },
-            take: parseInt(limit),
-            skip: parseInt(offset)
-        });
-
-        // Get total count
-        const total = await prisma.user.count({
-            where: {
-                isPublic: true,
-                progress: {
-                    totalCompleted: {
-                        gt: 0
-                    }
-                }
             }
         });
+
+        // Sort by prestige (descending), then by completionRate (descending)
+        const sortedRankings = allRankings.sort((a, b) => {
+            const prestigeA = a.progress?.prestige || 0;
+            const prestigeB = b.progress?.prestige || 0;
+            
+            // First, compare prestige (higher is better)
+            if (prestigeB !== prestigeA) {
+                return prestigeB - prestigeA;
+            }
+            
+            // If prestige is equal, compare completion rate (higher is better)
+            const rateA = a.progress?.completionRate || 0;
+            const rateB = b.progress?.completionRate || 0;
+            return rateB - rateA;
+        });
+
+        // Apply pagination after sorting
+        const rankings = sortedRankings.slice(parseInt(offset), parseInt(offset) + parseInt(limit));
+
+        // Get total count
+        const total = allRankings.length;
 
         res.json({
             rankings,
@@ -982,7 +987,8 @@ function extractMapFromQuest(task) {
         'general wares',
         'peacekeeping mission',
         'fishing place',
-        'colleagues - part 3'
+        'colleagues - part 3',
+        'the cult - part 2'
     ];
     
     for (const multiMapQuest of multiMapQuests) {

@@ -1138,6 +1138,7 @@ class QuestTracker {
                                     <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Rank</th>
                                     <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Player</th>
                                     <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">PMC Level</th>
+                                    <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Prestige</th>
                                     <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Quests Completed</th>
                                     <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Completion %</th>
                                     <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Last Active</th>
@@ -1167,6 +1168,7 @@ class QuestTracker {
                                                 ` : ''}
                                             </td>
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.pmcLevel}</td>
+                                            <td style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 700; font-size: 18px;">${user.progress.prestige || 0}</td>
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.totalCompleted}</td>
                                             <td style="padding: 15px; text-align: center; color: #4CAF50; font-weight: 700; font-size: 18px;">${user.progress.completionRate.toFixed(1)}%</td>
                                             <td style="padding: 15px; text-align: center; color: #888; font-size: 14px;">${lastActive}</td>
