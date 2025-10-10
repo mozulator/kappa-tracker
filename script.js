@@ -1168,7 +1168,14 @@ class QuestTracker {
                                                 ` : ''}
                                             </td>
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.pmcLevel}</td>
-                                            <td style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 700; font-size: 18px;">${user.progress.prestige || 0}</td>
+                                            <td style="padding: 15px; text-align: center;">
+                                                ${user.progress.prestige && user.progress.prestige > 0 ? `
+                                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                                        <img src="/imgs/prestige_${user.progress.prestige}.webp" alt="Prestige ${user.progress.prestige}" style="width: 32px; height: 32px; object-fit: contain;" />
+                                                        <span style="color: #c7aa6a; font-weight: 700; font-size: 18px;">${user.progress.prestige}</span>
+                                                    </div>
+                                                ` : `<span style="color: #888; font-size: 14px;">-</span>`}
+                                            </td>
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.totalCompleted}</td>
                                             <td style="padding: 15px; text-align: center; color: #4CAF50; font-weight: 700; font-size: 18px;">${user.progress.completionRate.toFixed(1)}%</td>
                                             <td style="padding: 15px; text-align: center; color: #888; font-size: 14px;">${lastActive}</td>

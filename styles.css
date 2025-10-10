@@ -850,7 +850,6 @@ body {
 .collector-btn {
     background: #9a8866;
     color: var(--header-bg);
-    border: 2px solid #9a8866;
     padding: 8px 16px;
     border-radius: 6px;
     font-size: 12px;
@@ -865,13 +864,11 @@ body {
 
 .collector-btn:hover {
     background: #8a7856;
-    border-color: #8a7856;
 }
 
 .kappa-overview-btn {
     background: #9a8866;
     color: var(--header-bg);
-    border: 2px solid #9a8866;
     padding: 8px 16px;
     border-radius: 6px;
     font-size: 12px;
@@ -886,7 +883,6 @@ body {
 
 .kappa-overview-btn:hover {
     background: #8a7856;
-    border-color: #8a7856;
 }
 
 /* Dialog Styles */
