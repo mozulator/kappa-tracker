@@ -864,12 +864,15 @@ app.get('/api/users/:username', optionalAuth, async (req, res) => {
             return res.status(403).json({ error: 'Profile is private' });
         }
 
-        // Parse completed quests for own profile
-        if (isOwnProfile && user.progress) {
-            user.progress.completedQuests = JSON.parse(user.progress.completedQuests || '[]');
-        } else {
-            // Don't send detailed quest list for other users
-            delete user.progress?.completedQuests;
+        // Parse completed quests
+        // If public profile or own profile, include completed quests for OBS overlays
+        if (user.progress) {
+            if (user.isPublic || isOwnProfile) {
+                user.progress.completedQuests = JSON.parse(user.progress.completedQuests || '[]');
+            } else {
+                // Don't send detailed quest list for private profiles
+                delete user.progress.completedQuests;
+            }
         }
 
         res.json(user);

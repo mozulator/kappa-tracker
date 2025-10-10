@@ -199,20 +199,40 @@
                     username ? fetch(`/api/users/${username}`) : fetch('/api/progress')
                 ]);
 
+                // Check for errors in responses
+                if (!questsResponse.ok || !progressResponse.ok) {
+                    console.error('Error fetching data:', questsResponse.status, progressResponse.status);
+                    // Don't update UI if there was an error - keep showing existing data
+                    return;
+                }
+
                 const quests = await questsResponse.json();
                 const progressData = await progressResponse.json();
+                
+                // Check if we got an error response
+                if (progressData.error) {
+                    console.error('API returned error:', progressData.error);
+                    // Don't update UI - keep showing existing data
+                    return;
+                }
                 
                 // Handle different response formats
                 // /api/users/:username returns {user, progress: {...}}
                 // /api/progress returns {...} directly
                 const userProgress = progressData.progress || progressData;
+                
+                // Validate we have the required data
+                if (!userProgress || !userProgress.completedQuests) {
+                    console.error('Missing required progress data');
+                    return;
+                }
+                
                 // completedQuests is already parsed by server
-
                 currentData = { quests, userProgress };
                 updateCollectorUI(quests, userProgress);
             } catch (error) {
                 console.error('Error loading collector progress:', error);
-                document.getElementById('collector-progress-text').textContent = 'Error loading data';
+                // Don't update UI on error - keep showing existing data
             }
         }
 
