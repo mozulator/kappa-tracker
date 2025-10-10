@@ -1,7 +1,7 @@
 class QuestTracker {
     constructor() {
         this.quests = [];
-        this.userProgress = { pmcLevel: 1, completedQuests: [] };
+        this.userProgress = { pmcLevel: 1, prestige: 0, completedQuests: [] };
         this.currentMap = 'Any Location';
         this.maps = [];
         this.viewMode = 'available'; // 'available' or 'finished'
@@ -35,6 +35,13 @@ class QuestTracker {
             // completedQuests is already parsed by the server
             if (!Array.isArray(this.userProgress.completedQuests)) {
                 this.userProgress.completedQuests = [];
+            }
+            // Ensure defaults for new fields
+            if (typeof this.userProgress.pmcLevel !== 'number') {
+                this.userProgress.pmcLevel = 1;
+            }
+            if (typeof this.userProgress.prestige !== 'number') {
+                this.userProgress.prestige = 0;
             }
         } catch (error) {
             console.error('Error loading progress:', error);
@@ -985,11 +992,13 @@ class QuestTracker {
             // Reset local progress
             this.userProgress = {
                 pmcLevel: 1,
+                prestige: 0,
                 completedQuests: []
             };
 
             // Update UI
             document.getElementById('pmc-level').value = 1;
+            document.getElementById('prestige-level').value = 0;
             this.updateUI();
 
             // Hide dialog
