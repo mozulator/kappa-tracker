@@ -626,7 +626,7 @@ class QuestTracker {
                                 <i class="fas fa-tools"></i> Build
                             </button>` : ''}
                             ${quest.wikiLink ? `<a href="${quest.wikiLink}" target="_blank" class="wiki-link" title="Open Wiki" onclick="questTracker.handleWikiClick('${quest.id}')">Wiki</a>` : ''}
-                            <div class="quest-level-req">L${quest.level}</div>
+                            ${this.showFutureQuests ? `<div class="quest-level-req">L${quest.level}</div>` : ''}
                         </div>
                     </div>
                     <div class="quest-trader">${quest.trader}</div>
