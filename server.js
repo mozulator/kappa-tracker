@@ -109,8 +109,11 @@ passport.deserializeUser(async (id, done) => {
                 displayName: true,
                 isPublic: true,
                 bio: true,
+                twitchName: true,
                 twitchUrl: true,
                 discordTag: true,
+                tarkovDevId: true,
+                avatarUrl: true,
                 createdAt: true
             }
         });
@@ -264,10 +267,32 @@ app.post('/api/auth/logout', (req, res) => {
     });
 });
 
-app.get('/api/auth/me', requireAuth, (req, res) => {
-    res.json({
-        user: req.user
-    });
+app.get('/api/auth/me', requireAuth, async (req, res) => {
+    try {
+        // Fetch fresh user data from database to get latest updates
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                displayName: true,
+                isPublic: true,
+                bio: true,
+                twitchName: true,
+                twitchUrl: true,
+                discordTag: true,
+                tarkovDevId: true,
+                avatarUrl: true,
+                createdAt: true
+            }
+        });
+        
+        res.json({ user });
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({ error: 'Failed to fetch user data' });
+    }
 });
 
 // Update Twitch name
