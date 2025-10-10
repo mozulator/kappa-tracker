@@ -214,8 +214,8 @@
                 userProgress = progressData.progress || progressData;
                 
                 // Validate we have the required data
-                if (!userProgress || !userProgress.completedQuests) {
-                    console.error('Missing required progress data');
+                if (!userProgress || !userProgress.completedQuests || !Array.isArray(userProgress.completedQuests)) {
+                    console.error('Missing or invalid progress data:', userProgress);
                     return;
                 }
                 
@@ -351,17 +351,38 @@
         }
 
 
-        // Auto-refresh every 5 seconds
+        // Auto-refresh every 3 seconds
         function startAutoRefresh() {
             setInterval(async () => {
                 try {
-                    // Extract userId from URL path (format: /kappa/:userId/:token)
-                    const pathParts = window.location.pathname.split('/');
-                    const userId = pathParts[2]; // Get userId from URL
+                    // Extract username from URL query parameter (format: ?username=XXX)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const username = urlParams.get('username');
                     
-                    const response = await fetch(`/api/progress/${userId}`);
-                    const newProgress = await response.json();
-                    // completedQuests is already parsed by server
+                    const response = await fetch(username ? `/api/users/${username}` : '/api/progress');
+                    
+                    // Check for errors in response
+                    if (!response.ok) {
+                        console.error('Auto-refresh error:', response.status);
+                        return; // Don't update UI - keep showing existing data
+                    }
+                    
+                    const progressData = await response.json();
+                    
+                    // Check if we got an error response
+                    if (progressData.error) {
+                        console.error('Auto-refresh API returned error:', progressData.error);
+                        return; // Don't update UI - keep showing existing data
+                    }
+                    
+                    // Handle different response formats
+                    const newProgress = progressData.progress || progressData;
+                    
+                    // Validate we have the required data
+                    if (!newProgress || !newProgress.completedQuests || !Array.isArray(newProgress.completedQuests)) {
+                        console.error('Auto-refresh: Missing or invalid progress data');
+                        return; // Don't update UI - keep showing existing data
+                    }
                     
                     // Check if progress has changed
                     const currentProgressString = JSON.stringify(userProgress.completedQuests.sort());
@@ -369,12 +390,14 @@
                     
                     if (currentProgressString !== newProgressString) {
                         userProgress = newProgress;
+                        buildMapsList();
                         renderOverview();
                     }
                 } catch (error) {
-                    console.log('Auto-refresh failed:', error.message);
+                    console.error('Auto-refresh failed:', error);
+                    // Don't update UI on error - keep showing existing data
                 }
-            }, 3000); // Reduced to 3 seconds to match collector progress
+            }, 3000);
         }
 
         // Initialize when page loads
