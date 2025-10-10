@@ -12,33 +12,32 @@ class QuestTracker {
 
     async init() {
         // Initialize Gunsmith build images mapping
-        // Using /revision/latest to ensure full-size images are loaded
         this.gunsmithBuilds = {
-            'Gunsmith - Part 1': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/6a/Gunsmithpart1Modding.png/revision/latest'],
-            'Gunsmith - Part 2': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/3/36/Gunsmithpart2Modding.png/revision/latest'],
-            'Gunsmith - Part 3': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/25/Gunsmithpart3Modding.png/revision/latest'],
-            'Gunsmith - Part 4': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/23/GunSmithPart4Guide.png/revision/latest'],
-            'Gunsmith - Part 5': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/62/Gunsmith7M870.PNG/revision/latest'],
-            'Gunsmith - Part 6': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/4/4d/Gunsmith8AKM.png/revision/latest'],
-            'Gunsmith - Part 7': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/9/92/Gunsmith4100RoundModding.png/revision/latest'],
-            'Gunsmith - Part 8': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/e/ee/Gunsmith9AK74.png/revision/latest'],
-            'Gunsmith - Part 9': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/f/f7/Gunsmith9P226RMod.png/revision/latest'],
-            'Gunsmith - Part 10': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/8/88/Gunsmith10AK105.png/revision/latest'],
-            'Gunsmith - Part 11': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/f/f2/Gunsmith11VectorMod.png/revision/latest'],
-            'Gunsmith - Part 12': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/0/0e/GunsmithPart13Mods2.png/revision/latest'],
-            'Gunsmith - Part 13': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/e/e6/GunsmithPart13AlternateModdingScreen.png/revision/latest'],
-            'Gunsmith - Part 14': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/1/1f/GS14_Mods.png/revision/latest'],
-            'Gunsmith - Part 15': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/2d/Gunsmith11ASVAL.png/revision/latest'],
-            'Gunsmith - Part 16': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/9/92/GunsmithPart5Guide.png/revision/latest'],
-            'Gunsmith - Part 17': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/1/11/Gunsmith17Mods.png/revision/latest'],
-            'Gunsmith - Part 18': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/3/3c/GunsmithPart14Mods2.png/revision/latest'],
-            'Gunsmith - Part 19': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/d/dd/GS19_Mods.png/revision/latest'],
-            'Gunsmith - Part 20': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/66/GunsmithPart15Mods2.png/revision/latest'],
+            'Gunsmith - Part 1': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/6a/Gunsmithpart1Modding.png'],
+            'Gunsmith - Part 2': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/3/36/Gunsmithpart2Modding.png'],
+            'Gunsmith - Part 3': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/25/Gunsmithpart3Modding.png'],
+            'Gunsmith - Part 4': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/23/GunSmithPart4Guide.png'],
+            'Gunsmith - Part 5': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/62/Gunsmith7M870.PNG'],
+            'Gunsmith - Part 6': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/4/4d/Gunsmith8AKM.png'],
+            'Gunsmith - Part 7': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/9/92/Gunsmith4100RoundModding.png'],
+            'Gunsmith - Part 8': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/e/ee/Gunsmith9AK74.png'],
+            'Gunsmith - Part 9': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/f/f7/Gunsmith9P226RMod.png'],
+            'Gunsmith - Part 10': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/8/88/Gunsmith10AK105.png'],
+            'Gunsmith - Part 11': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/f/f2/Gunsmith11VectorMod.png'],
+            'Gunsmith - Part 12': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/0/0e/GunsmithPart13Mods2.png'],
+            'Gunsmith - Part 13': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/e/e6/GunsmithPart13AlternateModdingScreen.png'],
+            'Gunsmith - Part 14': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/1/1f/GS14_Mods.png'],
+            'Gunsmith - Part 15': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/2d/Gunsmith11ASVAL.png'],
+            'Gunsmith - Part 16': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/9/92/GunsmithPart5Guide.png'],
+            'Gunsmith - Part 17': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/1/11/Gunsmith17Mods.png'],
+            'Gunsmith - Part 18': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/3/3c/GunsmithPart14Mods2.png'],
+            'Gunsmith - Part 19': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/d/dd/GS19_Mods.png'],
+            'Gunsmith - Part 20': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/6/66/GunsmithPart15Mods2.png'],
             'Gunsmith - Part 21': [
-                'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/7/75/GS21_Mods_M700.png/revision/latest',
-                'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/29/GS21_Mods_1911.png/revision/latest'
+                'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/7/75/GS21_Mods_M700.png',
+                'https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/2/29/GS21_Mods_1911.png'
             ],
-            'Gunsmith - Part 22': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/b/bd/GunsmithPart16Mods2.png/revision/latest']
+            'Gunsmith - Part 22': ['https://static.wikia.nocookie.net/escapefromtarkov_gamepedia/images/b/bd/GunsmithPart16Mods2.png']
         };
         
         await this.loadProgress();

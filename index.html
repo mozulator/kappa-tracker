@@ -347,6 +347,22 @@
                 });
             }
             
+            // Update links with current username and handle clicks
+            fetch('/api/auth/me', { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user && data.user.username) {
+                        const username = data.user.username;
+                        if (collectorProgressLink) {
+                            collectorProgressLink.href = `/collector-progress.html?username=${username}`;
+                        }
+                        if (kappaOverviewLink) {
+                            kappaOverviewLink.href = `/kappa-overview.html?username=${username}`;
+                        }
+                    }
+                })
+                .catch(err => console.error('Failed to get username:', err));
+            
             // Close dropdown when clicking links
             if (collectorProgressLink) {
                 collectorProgressLink.addEventListener('click', () => {
