@@ -331,9 +331,13 @@
         function startAutoRefresh() {
             setInterval(async () => {
                 try {
-                    const response = await fetch('http://localhost:3000/api/progress');
+                    // Extract userId from URL path (format: /kappa/:userId/:token)
+                    const pathParts = window.location.pathname.split('/');
+                    const userId = pathParts[2]; // Get userId from URL
+                    
+                    const response = await fetch(`/api/progress/${userId}`);
                     const newProgress = await response.json();
-                    newProgress.completedQuests = JSON.parse(newProgress.completedQuests || '[]');
+                    // completedQuests is already parsed by server
                     
                     // Check if progress has changed
                     const currentProgressString = JSON.stringify(userProgress.completedQuests.sort());
@@ -346,7 +350,7 @@
                 } catch (error) {
                     console.log('Auto-refresh failed:', error.message);
                 }
-            }, 5000);
+            }, 3000); // Reduced to 3 seconds to match collector progress
         }
 
         // Initialize when page loads

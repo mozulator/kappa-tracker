@@ -71,7 +71,7 @@
 
 :root {
     /* Tarkov Community Design System */
-    --font-primary: "Bender", sans-serif;
+    --font-primary: "Bender", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --background: #0b0b0c;
     --background-secondary: #111213;
     --background-tertiary: #161717;

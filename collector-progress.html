@@ -247,6 +247,11 @@
             preloadImages(); // Preload all background images
             initSlideshow(); // Initialize the slideshow
             loadCollectorProgress(); // Load the quest progress data
+            
+            // Auto-refresh every 3 seconds to check for updates
+            setInterval(() => {
+                loadCollectorProgress();
+            }, 3000);
         });
 
         // Listen for updates from parent window

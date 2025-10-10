@@ -63,6 +63,27 @@ class QuestTracker {
         }
     }
 
+    refreshOBSOverlays() {
+        // Trigger a cache refresh event that OBS overlays can listen to
+        // This uses browser cache API to invalidate the overlay pages
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    if (name.includes('collector') || name.includes('kappa')) {
+                        caches.delete(name);
+                    }
+                });
+            });
+        }
+        
+        // Also dispatch a custom event that overlay pages can listen to
+        window.dispatchEvent(new CustomEvent('questUpdated', { 
+            detail: { timestamp: Date.now() } 
+        }));
+        
+        console.log('OBS overlays refreshed');
+    }
+
     setupEventListeners() {
         const levelInput = document.getElementById('pmc-level');
         levelInput.value = this.userProgress.pmcLevel;
@@ -298,6 +319,7 @@ class QuestTracker {
         this.userProgress.completedQuests.push(questId);
         await this.saveProgress();
         this.updateUI();
+        this.refreshOBSOverlays(); // Force OBS to refresh overlays
         
         this.hideCompleteQuestDialog();
         this.pendingCompleteQuestId = null;
@@ -316,6 +338,7 @@ class QuestTracker {
             this.userProgress.completedQuests.splice(index, 1);
             await this.saveProgress();
             this.updateUI();
+            this.refreshOBSOverlays(); // Force OBS to refresh overlays
         }
     }
 
@@ -1170,10 +1193,7 @@ class QuestTracker {
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.pmcLevel}</td>
                                             <td style="padding: 15px; text-align: center;">
                                                 ${user.progress.prestige && user.progress.prestige > 0 ? `
-                                                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                                        <img src="/imgs/prestige_${user.progress.prestige}.webp" alt="Prestige ${user.progress.prestige}" style="width: 32px; height: 32px; object-fit: contain;" />
-                                                        <span style="color: #c7aa6a; font-weight: 700; font-size: 18px;">${user.progress.prestige}</span>
-                                                    </div>
+                                                    <img src="/imgs/prestige_${user.progress.prestige}.webp" alt="Prestige ${user.progress.prestige}" style="width: 40px; height: 40px; object-fit: contain;" title="Prestige ${user.progress.prestige}" />
                                                 ` : `<span style="color: #888; font-size: 14px;">-</span>`}
                                             </td>
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.totalCompleted}</td>
