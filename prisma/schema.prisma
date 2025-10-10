@@ -29,6 +29,8 @@ model User {
   twitchName    String?
   twitchUrl     String?
   discordTag    String?
+  tarkovDevId   String?
+  avatarUrl     String?
   
   // Relations
   progress      UserProgress?

@@ -399,6 +399,8 @@ app.get('/api/users/:username', optionalAuth, async (req, res) => {
                 bio: true,
                 twitchUrl: true,
                 discordTag: true,
+                tarkovDevId: true,
+                avatarUrl: true,
                 isPublic: true,
                 createdAt: true,
                 progress: {
@@ -447,7 +449,7 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
             return res.status(403).json({ error: 'Cannot update another user\'s profile' });
         }
 
-        const { displayName, bio, twitchUrl, discordTag, isPublic } = req.body;
+        const { displayName, bio, twitchUrl, discordTag, tarkovDevId, avatarUrl, isPublic } = req.body;
 
         const updatedUser = await prisma.user.update({
             where: { username: username.toLowerCase() },
@@ -456,6 +458,8 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
                 ...(bio !== undefined && { bio }),
                 ...(twitchUrl !== undefined && { twitchUrl }),
                 ...(discordTag !== undefined && { discordTag }),
+                ...(tarkovDevId !== undefined && { tarkovDevId }),
+                ...(avatarUrl !== undefined && { avatarUrl }),
                 ...(isPublic !== undefined && { isPublic })
             },
             select: {
@@ -466,6 +470,8 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
                 bio: true,
                 twitchUrl: true,
                 discordTag: true,
+                tarkovDevId: true,
+                avatarUrl: true,
                 isPublic: true
             }
         });
@@ -580,7 +586,13 @@ app.post('/api/progress', requireAuth, async (req, res) => {
             where: { requiredForKappa: true }
         });
         const totalKappaQuests = allQuests.length;
-        const completedCount = completedQuests ? completedQuests.length : 0;
+        const kappaQuestIds = allQuests.map(q => q.id);
+        
+        // Only count completed quests that are kappa-required
+        const completedKappaQuests = completedQuests 
+            ? completedQuests.filter(id => kappaQuestIds.includes(id))
+            : [];
+        const completedCount = completedKappaQuests.length;
         const completionRate = totalKappaQuests > 0 ? (completedCount / totalKappaQuests) * 100 : 0;
 
         let progress = await prisma.userProgress.findUnique({
@@ -706,6 +718,8 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
                 displayName: true,
                 twitchName: true,
                 twitchUrl: true,
+                tarkovDevId: true,
+                avatarUrl: true,
                 progress: {
                     select: {
                         pmcLevel: true,
@@ -1159,7 +1173,32 @@ async function applyQuestFixes() {
             where: { id: '5d2495a886f77425cd51e403' },
             data: { prerequisiteQuests: '[]' }
         });
-        console.log('Applied quest prerequisite fixes');
+        
+        // Bad Rep Evidence - should be Any Location, not Factory
+        await prisma.quest.update({
+            where: { id: '5967530a86f77462ba22226b' },
+            data: { mapName: 'Any Location' }
+        });
+        
+        // The Walls Have Eyes - should require 3 WiFi cameras, not 1
+        await prisma.quest.update({
+            where: { id: '669fa39c64ea11e84c0642a6' },
+            data: { requiredItems: JSON.stringify([{"name":"WI-FI Camera","count":3,"category":"fir","type":"plantItem"}]) }
+        });
+        
+        // Rough Tarkov - should be Any Location
+        await prisma.quest.update({
+            where: { id: '66b38c7bf85b8bf7250f9cb6' },
+            data: { mapName: 'Any Location' }
+        });
+        
+        // The Guide - should be Any Location, not Woods
+        await prisma.quest.update({
+            where: { id: '5c0d4e61d09282029f53920e' },
+            data: { mapName: 'Any Location' }
+        });
+        
+        console.log('Applied quest data fixes');
     } catch (error) {
         console.error('Error applying quest fixes:', error);
     }
