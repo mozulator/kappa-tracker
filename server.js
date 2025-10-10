@@ -286,17 +286,17 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
         // Handle approved vs pending users
         if (user.approved) {
             // Auto login for approved users (first user)
-            req.login(user, (err) => {
-                if (err) {
-                    console.error('Auto-login failed after registration:', err);
-                    return res.status(500).json({ error: 'Registration successful but login failed' });
-                }
-                console.log('User auto-logged in after registration:', user.username);
-                res.json({
-                    message: 'Registration successful',
-                    user
-                });
+        req.login(user, (err) => {
+            if (err) {
+                console.error('Auto-login failed after registration:', err);
+                return res.status(500).json({ error: 'Registration successful but login failed' });
+            }
+            console.log('User auto-logged in after registration:', user.username);
+            res.json({
+                message: 'Registration successful',
+                user
             });
+        });
         } else {
             // Pending approval
             res.json({
@@ -386,6 +386,8 @@ app.get('/api/admin/pending-users', requireAdmin, async (req, res) => {
                 username: true,
                 email: true,
                 displayName: true,
+                tarkovDevId: true,
+                twitchUrl: true,
                 createdAt: true
             },
             orderBy: { createdAt: 'desc' }
@@ -868,8 +870,8 @@ app.get('/api/users/:username', optionalAuth, async (req, res) => {
         // If public profile or own profile, include completed quests for OBS overlays
         if (user.progress) {
             if (user.isPublic || isOwnProfile) {
-                user.progress.completedQuests = JSON.parse(user.progress.completedQuests || '[]');
-            } else {
+            user.progress.completedQuests = JSON.parse(user.progress.completedQuests || '[]');
+        } else {
                 // Don't send detailed quest list for private profiles
                 delete user.progress.completedQuests;
             }
@@ -895,11 +897,11 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
 
         // Build update data object
         let updateData = {
-            ...(displayName !== undefined && { displayName }),
-            ...(bio !== undefined && { bio }),
-            ...(discordTag !== undefined && { discordTag }),
+                ...(displayName !== undefined && { displayName }),
+                ...(bio !== undefined && { bio }),
+                ...(discordTag !== undefined && { discordTag }),
             ...(tarkovDevId !== undefined && { tarkovDevId }),
-            ...(isPublic !== undefined && { isPublic })
+                ...(isPublic !== undefined && { isPublic })
         };
 
         // Handle Twitch username update (auto-fetch avatar)
@@ -1197,7 +1199,7 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
             }
         });
 
-        // Sort by prestige (descending), then by completionRate (descending)
+        // Sort by prestige (descending), then by completionRate (descending), then by PMC level (descending)
         const sortedRankings = allRankings.sort((a, b) => {
             const prestigeA = a.progress?.prestige || 0;
             const prestigeB = b.progress?.prestige || 0;
@@ -1210,7 +1212,14 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
             // If prestige is equal, compare completion rate (higher is better)
             const rateA = a.progress?.completionRate || 0;
             const rateB = b.progress?.completionRate || 0;
+            if (rateB !== rateA) {
             return rateB - rateA;
+            }
+            
+            // If completion rate is also equal, compare PMC level (higher is better)
+            const levelA = a.progress?.pmcLevel || 0;
+            const levelB = b.progress?.pmcLevel || 0;
+            return levelB - levelA;
         });
 
         // Apply pagination after sorting
@@ -1259,7 +1268,8 @@ app.get('/api/rankings/map/:mapName', apiLimiter, async (req, res) => {
                 progress: {
                     select: {
                         completedQuests: true,
-                        pmcLevel: true
+                        pmcLevel: true,
+                        prestige: true
                     }
                 }
             }
@@ -1277,13 +1287,25 @@ app.get('/api/rankings/map/:mapName', apiLimiter, async (req, res) => {
                 username: user.username,
                 displayName: user.displayName,
                 pmcLevel: user.progress.pmcLevel,
+                prestige: user.progress.prestige || 0,
                 mapCompleted: mapCompleted.length,
                 mapTotal: mapQuestIds.length,
                 mapCompletionRate
             };
         })
         .filter(u => u.mapCompleted > 0)
-        .sort((a, b) => b.mapCompletionRate - a.mapCompletionRate)
+        .sort((a, b) => {
+            // Sort by prestige first
+            if (b.prestige !== a.prestige) {
+                return b.prestige - a.prestige;
+            }
+            // Then by map completion rate
+            if (b.mapCompletionRate !== a.mapCompletionRate) {
+                return b.mapCompletionRate - a.mapCompletionRate;
+            }
+            // Then by PMC level
+            return b.pmcLevel - a.pmcLevel;
+        })
         .slice(0, parseInt(limit));
 
         res.json({

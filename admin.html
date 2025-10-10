@@ -552,6 +552,12 @@
                             <span class="username">@${user.username}</span> • ${user.email}
                         </div>
                         <div class="date">Registered: ${new Date(user.createdAt).toLocaleString()}</div>
+                        ${user.tarkovDevId || user.twitchUrl ? `
+                            <div class="user-links" style="margin-top: 8px;">
+                                ${user.twitchUrl ? `<a href="${user.twitchUrl}" target="_blank" style="color: #9147ff; margin-right: 12px;"><i class="fab fa-twitch"></i> Twitch</a>` : ''}
+                                ${user.tarkovDevId ? `<a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank" style="color: #c7aa6a;"><i class="fas fa-gamepad"></i> Tarkov.dev</a>` : ''}
+                            </div>
+                        ` : ''}
                     </div>
                     <div class="action-buttons">
                         <button class="btn btn-approve" onclick="approveUser('${user.id}')">

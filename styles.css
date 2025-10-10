@@ -176,7 +176,7 @@ body {
     width: 300px;
     background: var(--post-bg);
     border-right: 1px solid var(--post-border);
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     height: 100%;
     min-height: 0;
