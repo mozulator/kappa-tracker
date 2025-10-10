@@ -520,6 +520,7 @@ app.get('/api/progress', requireAuth, async (req, res) => {
                 data: {
                     userId: req.user.id,
                     pmcLevel: 1,
+                    prestige: 0,
                     completedQuests: JSON.stringify([]),
                     completionRate: 0,
                     totalCompleted: 0
@@ -665,6 +666,7 @@ app.post('/api/reset-progress', requireAuth, async (req, res) => {
             where: { userId: req.user.id },
             data: {
                 pmcLevel: 1,
+                prestige: 0,
                 completedQuests: JSON.stringify([]),
                 completionRate: 0,
                 totalCompleted: 0,

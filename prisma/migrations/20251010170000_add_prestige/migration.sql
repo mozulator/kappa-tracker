@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "user_progress" ADD COLUMN IF NOT EXISTS "prestige" INTEGER NOT NULL DEFAULT 0;
+
