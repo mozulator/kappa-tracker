@@ -229,6 +229,21 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="tarkovDevId">Tarkov.dev Profile ID *</label>
+                    <input type="text" id="tarkovDevId" name="tarkovDevId" required placeholder="e.g., 123456789012345678">
+                    <small>
+                        Go to <a href="https://tarkov.dev/players" target="_blank" style="color: #c7aa6a;">tarkov.dev/players</a>, 
+                        search your Tarkov username, and copy the last part of the URL (the ID)
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="twitchUsername">Twitch Username (Optional)</label>
+                    <input type="text" id="twitchUsername" name="twitchUsername" placeholder="your_twitch_name">
+                    <small>We'll automatically fetch your Twitch avatar</small>
+                </div>
+
+                <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required autocomplete="new-password" minlength="6">
                     <small>At least 6 characters</small>
@@ -282,12 +297,20 @@
             const email = document.getElementById('email').value;
             const username = document.getElementById('username').value;
             const displayName = document.getElementById('displayName').value;
+            const tarkovDevId = document.getElementById('tarkovDevId').value.trim();
+            const twitchUsername = document.getElementById('twitchUsername').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
             // Validate password match
             if (password !== confirmPassword) {
                 showError('Passwords do not match');
+                return;
+            }
+
+            // Validate Tarkov.dev ID (should be numeric or alphanumeric)
+            if (!tarkovDevId) {
+                showError('Tarkov.dev Profile ID is required');
                 return;
             }
 
@@ -300,17 +323,31 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, username, password, displayName }),
+                    body: JSON.stringify({ 
+                        email, 
+                        username, 
+                        password, 
+                        displayName,
+                        tarkovDevId,
+                        twitchUsername
+                    }),
                     credentials: 'include'
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    showSuccess('Account created successfully! Redirecting...');
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1500);
+                    if (data.pending) {
+                        showSuccess(data.message || 'Registration successful! Your account is pending approval.');
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 3000);
+                    } else {
+                        showSuccess('Account created successfully! Redirecting...');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                    }
                 } else {
                     showError(data.error || 'Registration failed');
                     submitBtn.disabled = false;

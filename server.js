@@ -169,13 +169,37 @@ function optionalAuth(req, res, next) {
 // AUTHENTICATION ROUTES
 // ============================================================================
 
+// Helper function to fetch Twitch avatar
+async function fetchTwitchAvatar(twitchUsername) {
+    try {
+        // Twitch API requires OAuth, but we can use a simpler approach
+        // Try to fetch from Twitch's public API or use a third-party service
+        const response = await fetch(`https://decapi.me/twitch/avatar/${twitchUsername}`);
+        if (response.ok) {
+            const avatarUrl = await response.text();
+            // DecAPI returns the URL as plain text
+            if (avatarUrl && avatarUrl.startsWith('http')) {
+                return avatarUrl.trim();
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching Twitch avatar:', error);
+        return null;
+    }
+}
+
 app.post('/api/auth/register', authLimiter, async (req, res) => {
     try {
-        const { email, username, password, displayName } = req.body;
+        const { email, username, password, displayName, tarkovDevId, twitchUsername } = req.body;
 
         // Validation
         if (!email || !username || !password) {
             return res.status(400).json({ error: 'Email, username, and password are required' });
+        }
+
+        if (!tarkovDevId || tarkovDevId.trim() === '') {
+            return res.status(400).json({ error: 'Tarkov.dev Profile ID is required' });
         }
 
         if (password.length < 6) {
@@ -207,6 +231,17 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
         // Hash password
         const passwordHash = await bcrypt.hash(password, 10);
 
+        // Fetch Twitch avatar if username provided
+        let avatarUrl = null;
+        let twitchUrl = null;
+        let twitchName = null;
+        if (twitchUsername && twitchUsername.trim()) {
+            twitchName = twitchUsername.trim();
+            twitchUrl = `https://twitch.tv/${twitchName}`;
+            avatarUrl = await fetchTwitchAvatar(twitchName);
+            console.log(`Fetched Twitch avatar for ${twitchName}:`, avatarUrl);
+        }
+
         // Check if this is the first user (auto-approve and make admin)
         const userCount = await prisma.user.count();
         const isFirstUser = userCount === 0;
@@ -218,6 +253,10 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                 username: username.toLowerCase(),
                 displayName: displayName || username,
                 passwordHash,
+                tarkovDevId: tarkovDevId.trim(),
+                twitchUrl,
+                twitchName,
+                avatarUrl,
                 approved: isFirstUser, // First user auto-approved
                 isAdmin: isFirstUser,  // First user is admin
                 progress: {
@@ -607,6 +646,7 @@ app.get('/api/users/:username', optionalAuth, async (req, res) => {
                 progress: {
                     select: {
                         pmcLevel: true,
+                        prestige: true,
                         completionRate: true,
                         totalCompleted: true,
                         lastQuestDate: true,
@@ -650,19 +690,45 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
             return res.status(403).json({ error: 'Cannot update another user\'s profile' });
         }
 
-        const { displayName, bio, twitchUrl, discordTag, tarkovDevId, avatarUrl, isPublic } = req.body;
+        const { displayName, bio, twitchUrl, twitchUsername, discordTag, tarkovDevId, avatarUrl, isPublic } = req.body;
+
+        // Build update data object
+        let updateData = {
+            ...(displayName !== undefined && { displayName }),
+            ...(bio !== undefined && { bio }),
+            ...(discordTag !== undefined && { discordTag }),
+            ...(tarkovDevId !== undefined && { tarkovDevId }),
+            ...(isPublic !== undefined && { isPublic })
+        };
+
+        // Handle Twitch username update (auto-fetch avatar)
+        if (twitchUsername !== undefined) {
+            if (twitchUsername && twitchUsername.trim()) {
+                const twitchName = twitchUsername.trim();
+                updateData.twitchName = twitchName;
+                updateData.twitchUrl = `https://twitch.tv/${twitchName}`;
+                const fetchedAvatar = await fetchTwitchAvatar(twitchName);
+                if (fetchedAvatar) {
+                    updateData.avatarUrl = fetchedAvatar;
+                }
+            } else {
+                // Clear Twitch data if empty
+                updateData.twitchName = null;
+                updateData.twitchUrl = null;
+            }
+        } else if (twitchUrl !== undefined) {
+            // Legacy support for direct twitchUrl updates
+            updateData.twitchUrl = twitchUrl;
+        }
+
+        // Manual avatar URL override (if provided separately)
+        if (avatarUrl !== undefined) {
+            updateData.avatarUrl = avatarUrl;
+        }
 
         const updatedUser = await prisma.user.update({
             where: { username: username.toLowerCase() },
-            data: {
-                ...(displayName !== undefined && { displayName }),
-                ...(bio !== undefined && { bio }),
-                ...(twitchUrl !== undefined && { twitchUrl }),
-                ...(discordTag !== undefined && { discordTag }),
-                ...(tarkovDevId !== undefined && { tarkovDevId }),
-                ...(avatarUrl !== undefined && { avatarUrl }),
-                ...(isPublic !== undefined && { isPublic })
-            },
+            data: updateData,
             select: {
                 id: true,
                 username: true,
@@ -670,6 +736,7 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
                 displayName: true,
                 bio: true,
                 twitchUrl: true,
+                twitchName: true,
                 discordTag: true,
                 tarkovDevId: true,
                 avatarUrl: true,
