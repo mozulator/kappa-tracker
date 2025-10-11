@@ -829,7 +829,8 @@ body {
 }
 
 .wiki-link,
-.quest-images-btn {
+.quest-images-btn,
+.quest-fix-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -847,10 +848,24 @@ body {
 }
 
 .wiki-link:hover,
-.quest-images-btn:hover {
+.quest-images-btn:hover,
+.quest-fix-btn:hover {
     background: var(--text-highlight);
     border-color: var(--text-alt-highlight);
     color: var(--header-bg);
+}
+
+.quest-fix-btn {
+    background: rgba(199, 170, 106, 0.15);
+    border-color: rgba(199, 170, 106, 0.3);
+    color: #c7aa6a;
+    padding: 4px 8px;
+}
+
+.quest-fix-btn:hover {
+    background: rgba(199, 170, 106, 0.25);
+    border-color: #c7aa6a;
+    color: #c7aa6a;
 }
 
 .quest-level-req {

@@ -1156,13 +1156,20 @@
                         }
                     });
 
-                    // Try to parse custom items JSON
-                    const customJson = document.getElementById('edit-required-items-dialog').value;
-                    let parsedCustom = [];
-                    try {
-                        parsedCustom = JSON.parse(customJson);
-                    } catch (e) {
-                        // If JSON is invalid, use what we built
+                    // Try to parse custom items JSON - only use if user explicitly entered something
+                    const customJson = document.getElementById('edit-required-items-dialog').value.trim();
+                    let finalRequiredItems = requiredItems;
+                    
+                    if (customJson && customJson !== '[]' && customJson !== '') {
+                        try {
+                            const parsedCustom = JSON.parse(customJson);
+                            if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
+                                finalRequiredItems = parsedCustom;
+                            }
+                        } catch (e) {
+                            // If JSON is invalid, use what we built from form fields
+                            console.warn('Custom JSON invalid, using form fields instead');
+                        }
                     }
 
                     // Get images
@@ -1175,7 +1182,7 @@
                         requiredForKappa: document.getElementById('edit-kappa-required-dialog').checked,
                         mapName: document.getElementById('edit-map-dialog').value,
                         prerequisiteQuests: JSON.stringify(Array.from(selectedPrereqsForEdit)),
-                        requiredItems: JSON.stringify(parsedCustom.length > 0 ? parsedCustom : requiredItems),
+                        requiredItems: JSON.stringify(finalRequiredItems),
                         images: JSON.stringify(imageUrls)
                     };
 
@@ -1227,6 +1234,17 @@
 
             // Initialize the quest tracker
             window.tracker = new QuestTracker();
+            
+            // Set admin status after checking auth
+            fetch('/api/auth/me', { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user && data.user.isAdmin) {
+                        window.tracker.isAdmin = true;
+                        window.tracker.updateUI(); // Refresh to show fix buttons
+                    }
+                })
+                .catch(err => console.error('Failed to check admin status:', err));
         });
     </script>
 </body>

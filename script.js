@@ -7,6 +7,7 @@ class QuestTracker {
         this.viewMode = 'available'; // 'available' or 'finished'
         this.currentView = 'dashboard'; // 'dashboard', 'finished', 'rankings', or 'profile'
         this.showFutureQuests = false; // Show all future quests mode
+        this.isAdmin = false; // Will be set from auth check
         this.init();
     }
 
@@ -626,6 +627,9 @@ class QuestTracker {
                                 <i class="fas fa-image"></i> Images
                             </button>` : ''}
                             ${quest.wikiLink ? `<a href="${quest.wikiLink}" target="_blank" class="wiki-link" title="Open Wiki">Wiki</a>` : ''}
+                            ${this.isAdmin ? `<button class="quest-fix-btn" onclick="window.openQuestEditDialog('${quest.id}')" title="Fix Quest">
+                                <i class="fas fa-tools"></i>
+                            </button>` : ''}
                             ${this.showFutureQuests ? `<div class="quest-level-req">L${quest.level}</div>` : ''}
                         </div>
                     </div>
