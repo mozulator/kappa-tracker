@@ -829,11 +829,14 @@ body {
 }
 
 .wiki-link,
-.quest-images-btn {
+.quest-images-btn,
+.quest-fix-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 4px 8px;
+    width: 40px;
+    height: 24px;
     background: var(--post-bg);
     border: 1px solid var(--post-border);
     border-radius: 6px;
@@ -847,7 +850,8 @@ body {
 }
 
 .wiki-link:hover,
-.quest-images-btn:hover {
+.quest-images-btn:hover,
+.quest-fix-btn:hover {
     background: var(--text-highlight);
     border-color: var(--text-alt-highlight);
     color: var(--header-bg);
