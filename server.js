@@ -1693,44 +1693,212 @@ async function applyQuestFixes() {
 
     let successCount = 0;
     let failCount = 0;
+    let idUpdateCount = 0;
+    const failedFixes = [];
+
+    console.log('\n🔧 Applying quest fixes...');
 
     for (const fix of fixes) {
         try {
-            // Check if quest exists first
-            const questExists = await prisma.quest.findUnique({
+            // First, try to find by ID
+            let quest = await prisma.quest.findUnique({
                 where: { id: fix.id },
-                select: { id: true }
+                select: { id: true, name: true }
             });
 
-            if (questExists) {
-                await prisma.quest.update({
-                    where: { id: fix.id },
-                    data: fix.data
+            // If not found by ID, try to find by name (fallback)
+            if (!quest) {
+                console.log(`⚠️  Quest ID not found for "${fix.name}" (${fix.id}), trying name lookup...`);
+                
+                // Try exact name match
+                quest = await prisma.quest.findFirst({
+                    where: { name: fix.name },
+                    select: { id: true, name: true }
                 });
-                successCount++;
-            } else {
-                console.log(`⚠️  Quest not found: ${fix.name} (${fix.id})`);
-                failCount++;
+
+                // If still not found, try case-insensitive or similar names
+                if (!quest) {
+                    const allQuests = await prisma.quest.findMany({
+                        select: { id: true, name: true }
+                    });
+                    
+                    // Try case-insensitive match
+                    quest = allQuests.find(q => q.name.toLowerCase() === fix.name.toLowerCase());
+                    
+                    // Try partial match (e.g., "Lend Lease" vs "Lend-Lease")
+                    if (!quest) {
+                        const normalizedFixName = fix.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        quest = allQuests.find(q => 
+                            q.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedFixName
+                        );
+                    }
+                }
+
+                if (quest) {
+                    console.log(`   ✅ Found by name: "${quest.name}" with ID: ${quest.id}`);
+                    
+                    // Check if ID has changed
+                    if (quest.id !== fix.id) {
+                        console.log(`   ⚡ Quest ID has changed!`);
+                        console.log(`      Old ID: ${fix.id}`);
+                        console.log(`      New ID: ${quest.id}`);
+                        console.log(`      ⚠️  Consider updating the fix list with the new ID`);
+                        idUpdateCount++;
+                    }
+                } else {
+                    console.log(`   ❌ Quest not found by name either`);
+                    failedFixes.push({ name: fix.name, id: fix.id, reason: 'not found' });
+                    failCount++;
+                    continue;
+                }
             }
+
+            // Apply the fix
+            await prisma.quest.update({
+                where: { id: quest.id },
+                data: fix.data
+            });
+            
+            console.log(`✅ Applied fix: "${fix.name}" (${quest.id})`);
+            successCount++;
+            
         } catch (error) {
-            console.error(`❌ Error fixing quest ${fix.name}:`, error.message);
+            console.error(`❌ Error fixing quest "${fix.name}":`, error.message);
+            failedFixes.push({ name: fix.name, id: fix.id, reason: error.message });
             failCount++;
         }
     }
 
-    console.log(`✅ Applied quest data fixes: ${successCount} successful, ${failCount} failed/not found`);
+    console.log('\n📊 Quest Fix Summary:');
+    console.log(`   ✅ Successful: ${successCount}`);
+    console.log(`   ❌ Failed: ${failCount}`);
+    if (idUpdateCount > 0) {
+        console.log(`   ⚡ ID changes detected: ${idUpdateCount} (consider updating fix list)`);
+    }
+    
+    if (failedFixes.length > 0) {
+        console.log('\n⚠️  Failed fixes:');
+        failedFixes.forEach(fail => {
+            console.log(`   - ${fail.name} (${fail.id}): ${fail.reason}`);
+        });
+    }
+    
+    console.log(''); // Empty line for readability
+
+    // Store results for health check
+    global.questFixStatus = {
+        timestamp: new Date().toISOString(),
+        total: fixes.length,
+        successful: successCount,
+        failed: failCount,
+        idChanges: idUpdateCount,
+        failedFixes: failedFixes
+    };
+
+    return {
+        success: successCount,
+        failed: failCount,
+        idChanges: idUpdateCount,
+        failedFixes
+    };
 }
 
 // ============================================================================
 // HEALTH CHECK
 // ============================================================================
 
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-    });
+app.get('/health', async (req, res) => {
+    try {
+        // Basic health check
+        const health = {
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV || 'development'
+        };
+
+        // Check database connection
+        try {
+            await prisma.$queryRaw`SELECT 1`;
+            health.database = 'connected';
+        } catch (error) {
+            health.database = 'disconnected';
+            health.status = 'degraded';
+        }
+
+        // Include quest fix status if available
+        if (global.questFixStatus) {
+            health.questFixes = global.questFixStatus;
+            
+            // Mark as degraded if quest fixes failed
+            if (global.questFixStatus.failed > 0) {
+                health.status = 'degraded';
+                health.warnings = health.warnings || [];
+                health.warnings.push(`${global.questFixStatus.failed} quest fix(es) failed`);
+            }
+            
+            // Warn about ID changes
+            if (global.questFixStatus.idChanges > 0) {
+                health.warnings = health.warnings || [];
+                health.warnings.push(`${global.questFixStatus.idChanges} quest ID(s) have changed - update recommended`);
+            }
+        }
+
+        res.json(health);
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            timestamp: new Date().toISOString(),
+            error: error.message
+        });
+    }
+});
+
+// Detailed quest fixes health check endpoint
+app.get('/health/quest-fixes', async (req, res) => {
+    try {
+        if (!global.questFixStatus) {
+            return res.json({
+                status: 'unknown',
+                message: 'Quest fixes have not been applied yet (server may still be starting)',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        const status = global.questFixStatus;
+        const isHealthy = status.failed === 0;
+        
+        const recommendations = [];
+        if (status.failed > 0) {
+            recommendations.push('Some quest fixes failed to apply. Check server logs for details.');
+        }
+        if (status.idChanges > 0) {
+            recommendations.push('Quest IDs have changed. Consider updating the fix list in server.js.');
+        }
+        
+        res.json({
+            status: isHealthy ? 'healthy' : 'unhealthy',
+            timestamp: status.timestamp,
+            summary: {
+                total: status.total,
+                successful: status.successful,
+                failed: status.failed,
+                idChanges: status.idChanges
+            },
+            details: {
+                successRate: `${((status.successful / status.total) * 100).toFixed(1)}%`,
+                failedFixes: status.failedFixes,
+                needsUpdate: status.idChanges > 0,
+                recommendations: recommendations
+            }
+        });
+        
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            timestamp: new Date().toISOString(),
+            error: error.message
+        });
+    }
 });
 
 // ============================================================================
