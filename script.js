@@ -919,7 +919,7 @@ class QuestTracker {
         
         return `
             <div class="quest-objectives">
-                <div class="quest-objectives-header" onclick="questTracker.toggleObjectives('${uniqueId}')">
+                <div class="quest-objectives-header" onclick="window.tracker.toggleObjectives('${uniqueId}')">
                     <div class="quest-objectives-title">
                         <i class="fas fa-tasks"></i> Objectives
                     </div>
