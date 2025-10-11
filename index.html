@@ -582,17 +582,23 @@
                     return; // Stop execution
                 }
                 
-                // Show user info
-                const userInfo = document.getElementById('user-info');
-                const displayName = document.getElementById('user-display-name');
-                if (userInfo && displayName) {
-                    displayName.textContent = data.user.displayName || data.user.username;
-                    userInfo.style.display = 'block';
-                }
+                    // Show user info
+                    const userInfo = document.getElementById('user-info');
+                    const displayName = document.getElementById('user-display-name');
+                    if (userInfo && displayName) {
+                        displayName.textContent = data.user.displayName || data.user.username;
+                        userInfo.style.display = 'block';
+                    }
                 
                 // Load tracker script only after auth confirmed
                 const script = document.createElement('script');
                 script.src = 'script.js';
+                script.onload = function() {
+                    // Initialize tracker after script loads
+                    if (typeof QuestTracker !== 'undefined') {
+                        window.tracker = new QuestTracker();
+                    }
+                };
                 document.body.appendChild(script);
             } catch (err) {
                 console.error('Auth check error:', err);
@@ -1241,9 +1247,6 @@
                     saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
                 }
             }
-
-            // Initialize the quest tracker (admin check happens in init())
-            window.tracker = new QuestTracker();
         });
     </script>
 </body>
