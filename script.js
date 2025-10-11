@@ -1022,6 +1022,22 @@ class QuestTracker {
             `;
         }
         
+        // Render FIR items section
+        const firItems = items.filter(item => item.category === 'fir');
+        if (firItems.length > 0) {
+            const firTags = firItems.map(item => {
+                const displayName = item.displayName || item.name.replace(/_/g, ' ');
+                return `<span class="item-tag fir">${displayName} x${item.count}</span>`;
+            }).join('');
+            
+            html += `
+                <div class="quest-items">
+                    <div class="quest-items-title"><i class="fas fa-box"></i> Required FIR Items:</div>
+                    <div class="items-list">${firTags}</div>
+                </div>
+            `;
+        }
+        
         return html;
     }
 
