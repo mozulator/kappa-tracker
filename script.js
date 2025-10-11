@@ -607,7 +607,15 @@ class QuestTracker {
             }
 
             // Check if quest has images
-            const hasImages = quest.images && quest.images.length > 0;
+            let hasImages = false;
+            try {
+                if (quest.images && quest.images !== '[]') {
+                    const images = JSON.parse(quest.images);
+                    hasImages = Array.isArray(images) && images.length > 0;
+                }
+            } catch (e) {
+                hasImages = false;
+            }
             
             return `
                 <div class="quest-card ${questCardClass}" data-quest-id="${quest.id}">

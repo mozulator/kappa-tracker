@@ -79,7 +79,7 @@
             <nav class="nav">
                 <a href="#" class="nav-link active" id="dashboard-tab">Dashboard</a>
                 <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
-                <a href="#" class="nav-link" id="fix-quests-tab" style="display: none; background: rgba(199, 170, 106, 0.1); border: 1px solid #c7aa6a;">
+                <a href="#" class="nav-link" id="fix-quests-tab" style="display: none;">
                     <i class="fas fa-tools"></i> Fix Quests
                 </a>
                 <a href="#" class="nav-link" id="rankings-tab">Rankings</a>
@@ -236,15 +236,9 @@
                         padding: 15px;
                         display: flex;
                         flex-direction: column;
-                        min-height: auto;
-                        gap: 12px;
-                    }
-                    
-                    .fix-quest-header {
-                        display: flex;
-                        justify-content: space-between;
                         align-items: flex-start;
-                        gap: 10px;
+                        min-height: auto;
+                        gap: 8px;
                     }
                     
                     .fix-quest-title {
@@ -252,31 +246,15 @@
                         font-weight: 600;
                         color: #fff;
                         line-height: 1.4;
-                        flex: 1;
                         word-wrap: break-word;
+                        width: 100%;
+                        margin-bottom: 4px;
                     }
                     
-                    .fix-quest-level {
-                        flex-shrink: 0;
-                    }
-                    
-                    .fix-quest-level .level-badge {
-                        padding: 4px 8px;
-                        font-size: 11px;
-                        white-space: nowrap;
-                    }
-                    
-                    .fix-quest-trader {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 6px;
-                        align-items: center;
-                        margin-top: 4px;
-                    }
-                    
-                    .fix-quest-trader .trader-badge,
-                    .fix-quest-trader .map-badge,
-                    .fix-quest-trader .kappa-badge {
+                    .fix-quest-card .level-badge,
+                    .fix-quest-card .trader-badge,
+                    .fix-quest-card .map-badge,
+                    .fix-quest-card .kappa-badge {
                         padding: 4px 8px;
                         font-size: 11px;
                         white-space: nowrap;
@@ -295,6 +273,40 @@
                     
                     .fix-quest-btn:hover {
                         background: rgba(199, 170, 106, 0.3) !important;
+                    }
+                    
+                    /* Custom checkbox styling */
+                    input[type="checkbox"] {
+                        appearance: none;
+                        -webkit-appearance: none;
+                        width: 20px;
+                        height: 20px;
+                        border: 2px solid #3a3a3a;
+                        border-radius: 4px;
+                        background: rgba(0, 0, 0, 0.5);
+                        cursor: pointer;
+                        position: relative;
+                        transition: all 0.2s ease;
+                    }
+                    
+                    input[type="checkbox"]:hover {
+                        border-color: #c7aa6a;
+                    }
+                    
+                    input[type="checkbox"]:checked {
+                        background: rgba(199, 170, 106, 0.3);
+                        border-color: #c7aa6a;
+                    }
+                    
+                    input[type="checkbox"]:checked::after {
+                        content: '✓';
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        color: #c7aa6a;
+                        font-size: 14px;
+                        font-weight: bold;
                     }
                 </style>
                 <div class="quests-grid" id="fix-quests-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
@@ -885,17 +897,11 @@
                 // Custom card layout for fix quests
                 grid.innerHTML = quests.map(quest => `
                     <div class="quest-card fix-quest-card" data-quest-id="${quest.id}">
-                        <div class="fix-quest-header">
-                            <div class="fix-quest-title">${quest.name}</div>
-                            <div class="fix-quest-level">
-                                <span class="level-badge">Lvl ${quest.level}</span>
-                            </div>
-                        </div>
-                        <div class="fix-quest-trader">
-                            <span class="trader-badge">${quest.trader}</span>
-                            ${quest.mapName && quest.mapName !== 'Any Location' ? `<span class="map-badge">${quest.mapName}</span>` : ''}
-                            ${quest.requiredForKappa ? '<span class="kappa-badge" style="background: rgba(199, 170, 106, 0.3); color: #c7aa6a; border: 1px solid #c7aa6a;"><i class="fas fa-star"></i> Kappa</span>' : ''}
-                        </div>
+                        <div class="fix-quest-title">${quest.name}</div>
+                        <span class="level-badge">Lvl ${quest.level}</span>
+                        <span class="trader-badge">${quest.trader}</span>
+                        ${quest.mapName && quest.mapName !== 'Any Location' ? `<span class="map-badge">${quest.mapName}</span>` : ''}
+                        ${quest.requiredForKappa ? '<span class="kappa-badge" style="background: rgba(199, 170, 106, 0.3); color: #c7aa6a; border: 1px solid #c7aa6a;"><i class="fas fa-star"></i> Kappa</span>' : ''}
                         <button class="complete-btn fix-quest-btn" onclick="openQuestEditDialog('${quest.id}')">
                             <i class="fas fa-tools"></i> Fix Quest
                         </button>
