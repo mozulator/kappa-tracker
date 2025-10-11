@@ -230,7 +230,34 @@
                 <div class="quest-search" style="margin-bottom: 30px;">
                     <input type="text" id="fix-quest-search" placeholder="🔍 Search quests by name or trader..." style="width: 100%; padding: 15px; background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px;">
                 </div>
-                <div class="quests-grid" id="fix-quests-grid">
+                <style>
+                    /* Compact quest cards for fix quests section */
+                    #fix-quests-grid .quest-card {
+                        padding: 15px;
+                        min-height: auto;
+                    }
+                    #fix-quests-grid .quest-header {
+                        margin-bottom: 10px;
+                    }
+                    #fix-quests-grid .quest-title {
+                        font-size: 14px;
+                        margin-bottom: 8px;
+                    }
+                    #fix-quests-grid .quest-meta {
+                        gap: 6px;
+                    }
+                    #fix-quests-grid .trader-badge,
+                    #fix-quests-grid .level-badge,
+                    #fix-quests-grid .map-badge {
+                        padding: 3px 8px;
+                        font-size: 11px;
+                    }
+                    #fix-quests-grid .complete-btn {
+                        padding: 8px 12px;
+                        font-size: 13px;
+                    }
+                </style>
+                <div class="quests-grid" id="fix-quests-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
                     <div class="loading">Loading quests...</div>
                 </div>
             </section>
@@ -332,15 +359,32 @@
                                 <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Quest Name</label>
                                 <input type="text" id="edit-name-dialog" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #3a3a3a; border-radius: 6px; color: #888; cursor: not-allowed;">
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                                 <div>
                                     <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Trader</label>
-                                    <input type="text" id="edit-trader-dialog" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #3a3a3a; border-radius: 6px; color: #888; cursor: not-allowed;">
+                                    <select id="edit-trader-dialog" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px;">
+                                        <option value="Prapor">Prapor</option>
+                                        <option value="Therapist">Therapist</option>
+                                        <option value="Fence">Fence</option>
+                                        <option value="Skier">Skier</option>
+                                        <option value="Peacekeeper">Peacekeeper</option>
+                                        <option value="Mechanic">Mechanic</option>
+                                        <option value="Ragman">Ragman</option>
+                                        <option value="Jaeger">Jaeger</option>
+                                        <option value="Lightkeeper">Lightkeeper</option>
+                                        <option value="Ref">Ref</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Level Required</label>
-                                    <input type="number" id="edit-level-dialog" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #3a3a3a; border-radius: 6px; color: #888; cursor: not-allowed;">
+                                    <input type="number" id="edit-level-dialog" min="1" max="79" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff;">
                                 </div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                                    <input type="checkbox" id="edit-kappa-required-dialog" style="width: 20px; height: 20px; cursor: pointer;">
+                                    <span style="color: #c7aa6a; font-weight: 600; font-size: 14px;">Required for Kappa Container</span>
+                                </label>
                             </div>
                         </div>
 
@@ -769,6 +813,7 @@
                                 <span class="trader-badge">${quest.trader}</span>
                                 <span class="level-badge">Lvl ${quest.level}</span>
                                 ${quest.mapName && quest.mapName !== 'Any Location' ? `<span class="map-badge">${quest.mapName}</span>` : ''}
+                                ${quest.requiredForKappa ? '<span class="kappa-badge" style="background: rgba(199, 170, 106, 0.3); color: #c7aa6a; border: 1px solid #c7aa6a;"><i class="fas fa-star"></i> Kappa</span>' : ''}
                             </div>
                         </div>
                         <button class="complete-btn" onclick="openQuestEditDialog('${quest.id}')" style="background: rgba(199, 170, 106, 0.2); border-color: #c7aa6a; color: #c7aa6a;">
@@ -842,6 +887,7 @@
                 document.getElementById('edit-name-dialog').value = selectedQuestForEdit.name;
                 document.getElementById('edit-trader-dialog').value = selectedQuestForEdit.trader;
                 document.getElementById('edit-level-dialog').value = selectedQuestForEdit.level;
+                document.getElementById('edit-kappa-required-dialog').checked = selectedQuestForEdit.requiredForKappa || false;
                 document.getElementById('edit-map-dialog').value = selectedQuestForEdit.mapName || 'Any Location';
 
                 // Load prerequisite quests
@@ -998,6 +1044,9 @@
                     }
 
                     const updateData = {
+                        trader: document.getElementById('edit-trader-dialog').value,
+                        level: parseInt(document.getElementById('edit-level-dialog').value) || 1,
+                        requiredForKappa: document.getElementById('edit-kappa-required-dialog').checked,
                         mapName: document.getElementById('edit-map-dialog').value,
                         prerequisiteQuests: JSON.stringify(Array.from(selectedPrereqsForEdit)),
                         requiredItems: JSON.stringify(parsedCustom.length > 0 ? parsedCustom : requiredItems)

@@ -987,7 +987,7 @@ app.post('/api/refresh-quests', requireAuth, async (req, res) => {
 app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
     try {
         const { questId } = req.params;
-        const { mapName, prerequisiteQuests, requiredItems } = req.body;
+        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, requiredItems } = req.body;
 
         // Validate quest exists
         const quest = await prisma.quest.findUnique({
@@ -1001,6 +1001,18 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
 
         // Build update data
         const updateData = {};
+        
+        if (trader !== undefined) {
+            updateData.trader = trader;
+        }
+        
+        if (level !== undefined) {
+            updateData.level = parseInt(level);
+        }
+        
+        if (requiredForKappa !== undefined) {
+            updateData.requiredForKappa = Boolean(requiredForKappa);
+        }
         
         if (mapName !== undefined) {
             updateData.mapName = mapName;
