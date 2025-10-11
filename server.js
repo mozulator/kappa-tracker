@@ -1947,6 +1947,10 @@ app.get('/kappa/:userId/:token', async (req, res) => {
 // ============================================================================
 // STATIC FILES (must be after API routes)
 // ============================================================================
+// Explicitly serve fonts directory
+app.use('/fonts', express.static(path.join(__dirname, 'fonts')));
+
+// Serve all static files
 app.use(express.static('.'));
 
 // ============================================================================

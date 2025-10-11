@@ -100,12 +100,12 @@
                         </a>
                     </div>
                 </div>
+                <a href="#" class="nav-link" id="collector-items-tab">
+                    <i class="fas fa-box-open"></i> Collector Items
+                </a>
             </nav>
         </div>
         <div class="header-right">
-            <button id="collector-items-btn" class="collector-btn" title="Collector Items Tracker">
-                <i class="fas fa-box-open"></i> COLLECTOR ITEMS
-            </button>
             <button id="report-bug-btn" class="reset-btn report-bug" title="Report a Bug">
                 <i class="fas fa-bug"></i> REPORT BUG
             </button>
@@ -1487,16 +1487,70 @@
 
         let collectorItems = [];
         let collectorFoundItems = new Set();
+        let tarkovItemsGlobal = []; // Global items cache
+        let tarkovItemsLoadedGlobal = false;
 
-        // Setup Collector Items button
-        const collectorBtn = document.getElementById('collector-items-btn');
-        if (collectorBtn) {
-            collectorBtn.addEventListener('click', () => {
+        // Global function to fetch items from tarkov.dev (available to all users)
+        async function fetchTarkovItemsGlobal() {
+            if (tarkovItemsLoadedGlobal && tarkovItemsGlobal.length > 0) {
+                return tarkovItemsGlobal;
+            }
+
+            try {
+                const query = `
+                    query {
+                        items {
+                            id
+                            name
+                            shortName
+                            iconLink
+                            gridImageLink
+                        }
+                    }
+                `;
+
+                const response = await fetch('https://api.tarkov.dev/graphql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+                if (data.data && data.data.items) {
+                    tarkovItemsGlobal = data.data.items.sort((a, b) => a.name.localeCompare(b.name));
+                    tarkovItemsLoadedGlobal = true;
+                    console.log(`Loaded ${tarkovItemsGlobal.length} items from tarkov.dev`);
+                }
+            } catch (error) {
+                console.error('Failed to fetch items from tarkov.dev:', error);
+            }
+
+            return tarkovItemsGlobal;
+        }
+
+        // Setup Collector Items tab
+        const collectorTab = document.getElementById('collector-items-tab');
+        if (collectorTab) {
+            collectorTab.addEventListener('click', (e) => {
+                e.preventDefault();
                 showCollectorSection();
             });
         }
 
         function showCollectorSection() {
+            // Remove active class from all tabs
+            const allTabs = ['dashboard-tab', 'finished-quests-tab', 'fix-quests-tab', 'rankings-tab', 'profile-tab', 'collector-items-tab'];
+            allTabs.forEach(tabId => {
+                const tab = document.getElementById(tabId);
+                if (tab) tab.classList.remove('active');
+            });
+
+            // Add active class to collector tab
+            const collectorTab = document.getElementById('collector-items-tab');
+            if (collectorTab) collectorTab.classList.add('active');
+
             // Hide all sections
             const sections = ['quests-section', 'rankings-section', 'profile-section', 'fix-quests-section'];
             sections.forEach(id => {
@@ -1542,11 +1596,11 @@
                 const firItems = requiredItems.filter(item => item.category === 'fir');
                 
                 // Fetch item images from tarkov.dev
-                await fetchTarkovItems(); // Use the already defined function
+                const items = await fetchTarkovItemsGlobal();
                 
                 // Enrich items with tarkov.dev data
                 collectorItems = firItems.map(item => {
-                    const tarkovItem = tarkovItems.find(ti => 
+                    const tarkovItem = items.find(ti => 
                         ti.name.toLowerCase() === item.name.toLowerCase() ||
                         ti.shortName.toLowerCase() === item.name.toLowerCase()
                     );
