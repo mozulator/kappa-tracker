@@ -975,9 +975,17 @@
                 }
             }
 
-            window.openQuestEditDialog = function(questId) {
+            window.openQuestEditDialog = async function(questId) {
+                // Load quests if not already loaded
+                if (allQuestsForEdit.length === 0) {
+                    await loadQuestsForFixing();
+                }
+                
                 selectedQuestForEdit = allQuestsForEdit.find(q => q.id === questId);
-                if (!selectedQuestForEdit) return;
+                if (!selectedQuestForEdit) {
+                    console.error('Quest not found:', questId);
+                    return;
+                }
 
                 const dialog = document.getElementById('quest-editor-dialog');
                 
