@@ -982,7 +982,8 @@
 
                 // Load required items
                 const requiredItems = JSON.parse(selectedQuestForEdit.requiredItems || '[]');
-                document.getElementById('edit-required-items-dialog').value = JSON.stringify(requiredItems, null, 2);
+                // Don't pre-populate custom JSON - let user edit via form fields
+                document.getElementById('edit-required-items-dialog').value = '';
 
                 // Parse markers, jammers, cameras, keys
                 let markers = 0, jammers = 0, cameras = 0;
@@ -1160,11 +1161,14 @@
                     const customJson = document.getElementById('edit-required-items-dialog').value.trim();
                     let finalRequiredItems = requiredItems;
                     
-                    if (customJson && customJson !== '[]' && customJson !== '') {
+                    // Only use custom JSON if user actually entered valid JSON
+                    if (customJson.length > 0) {
                         try {
                             const parsedCustom = JSON.parse(customJson);
-                            if (Array.isArray(parsedCustom) && parsedCustom.length > 0) {
+                            if (Array.isArray(parsedCustom)) {
+                                // Use custom JSON instead of form fields
                                 finalRequiredItems = parsedCustom;
+                                console.log('Using custom JSON for required items');
                             }
                         } catch (e) {
                             // If JSON is invalid, use what we built from form fields
@@ -1232,7 +1236,7 @@
                 }
             }
 
-            // Initialize the quest tracker
+            // Initialize the quest tracker and check admin status
             window.tracker = new QuestTracker();
             
             // Set admin status after checking auth
@@ -1240,6 +1244,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.user && data.user.isAdmin) {
+                        console.log('Admin user detected, enabling fix buttons');
                         window.tracker.isAdmin = true;
                         window.tracker.updateUI(); // Refresh to show fix buttons
                     }

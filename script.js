@@ -623,8 +623,8 @@ class QuestTracker {
                     <div class="quest-header">
                         <div class="quest-name">${quest.name}</div>
                         <div class="quest-actions">
-                            ${hasImages ? `<button class="quest-images-btn" onclick="window.tracker.showQuestImages('${quest.id}')">
-                                <i class="fas fa-image"></i> Images
+                            ${hasImages ? `<button class="quest-images-btn" onclick="window.tracker.showQuestImages('${quest.id}')" title="View Images">
+                                <i class="fas fa-image"></i>
                             </button>` : ''}
                             ${quest.wikiLink ? `<a href="${quest.wikiLink}" target="_blank" class="wiki-link" title="Open Wiki">Wiki</a>` : ''}
                             ${this.isAdmin ? `<button class="quest-fix-btn" onclick="window.openQuestEditDialog('${quest.id}')" title="Fix Quest">
