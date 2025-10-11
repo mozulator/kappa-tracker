@@ -1144,22 +1144,30 @@
 
                     // Add keys
                     const keyEntries = document.querySelectorAll('#keys-editor-dialog > div');
-                    keyEntries.forEach(entry => {
+                    console.log('Found key entries:', keyEntries.length);
+                    keyEntries.forEach((entry, idx) => {
                         const nameInput = entry.querySelector('input[data-key-idx]');
                         const countInput = entry.querySelector('input[data-key-count-idx]');
+                        console.log(`Key ${idx}:`, nameInput?.value, countInput?.value);
                         if (nameInput && nameInput.value.trim()) {
-                            requiredItems.push({
+                            const keyData = {
                                 name: nameInput.value.trim(),
                                 count: parseInt(countInput.value) || 1,
                                 category: 'keys',
                                 type: 'key'
-                            });
+                            };
+                            console.log('Adding key:', keyData);
+                            requiredItems.push(keyData);
                         }
                     });
+                    console.log('Total required items (with keys):', requiredItems);
 
                     // Try to parse custom items JSON - only use if user explicitly entered something
                     const customJson = document.getElementById('edit-required-items-dialog').value.trim();
                     let finalRequiredItems = requiredItems;
+                    
+                    console.log('Custom JSON length:', customJson.length);
+                    console.log('Custom JSON content:', customJson);
                     
                     // Only use custom JSON if user actually entered valid JSON
                     if (customJson.length > 0) {
@@ -1168,12 +1176,14 @@
                             if (Array.isArray(parsedCustom)) {
                                 // Use custom JSON instead of form fields
                                 finalRequiredItems = parsedCustom;
-                                console.log('Using custom JSON for required items');
+                                console.log('Using custom JSON for required items:', parsedCustom);
                             }
                         } catch (e) {
                             // If JSON is invalid, use what we built from form fields
                             console.warn('Custom JSON invalid, using form fields instead');
                         }
+                    } else {
+                        console.log('No custom JSON, using form fields:', finalRequiredItems);
                     }
 
                     // Get images

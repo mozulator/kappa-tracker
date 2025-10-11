@@ -530,6 +530,7 @@ class QuestTracker {
     }
 
     updateQuestsList() {
+        console.log('updateQuestsList called, isAdmin:', this.isAdmin);
         const questsGrid = document.getElementById('quests-grid');
         let questsToShow;
         
