@@ -103,6 +103,9 @@
             </nav>
         </div>
         <div class="header-right">
+            <button id="collector-items-btn" class="collector-btn" title="Collector Items Tracker">
+                <i class="fas fa-box-open"></i> COLLECTOR ITEMS
+            </button>
             <button id="report-bug-btn" class="reset-btn report-bug" title="Report a Bug">
                 <i class="fas fa-bug"></i> REPORT BUG
             </button>
@@ -226,6 +229,40 @@
             <!-- Profile Section -->
             <section class="profile-section" id="profile-section" style="display: none;">
                 <div id="profile-content"></div>
+            </section>
+
+            <!-- Collector Items Section -->
+            <section class="collector-section" id="collector-section" style="display: none;">
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: var(--text-highlight); font-size: 2rem; margin-bottom: 10px;">
+                        <i class="fas fa-box-open"></i> Collector Items Tracker
+                    </h2>
+                    <p style="color: var(--subtext); font-size: 0.9rem;">
+                        Track all Found in Raid items needed for the Collector quest. Click items to mark as found.
+                    </p>
+                </div>
+
+                <div class="collector-split-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; height: calc(100vh - 300px);">
+                    <!-- Needed Items (Left Side) -->
+                    <div class="collector-needed" style="background: var(--post-bg); border: 2px solid var(--post-border); border-radius: 8px; padding: 20px; overflow-y: auto;">
+                        <h3 style="color: var(--text-highlight); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; background: var(--post-bg); padding-bottom: 10px; border-bottom: 2px solid var(--post-border);">
+                            <i class="fas fa-search"></i> 
+                            <span>Needed Items</span>
+                            <span id="needed-count" style="background: rgba(220, 38, 38, 0.2); color: #ef4444; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: auto;"></span>
+                        </h3>
+                        <div id="collector-needed-grid" class="collector-grid"></div>
+                    </div>
+
+                    <!-- Found Items (Right Side) -->
+                    <div class="collector-found" style="background: var(--post-bg); border: 2px solid var(--post-border); border-radius: 8px; padding: 20px; overflow-y: auto;">
+                        <h3 style="color: var(--text-highlight); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; background: var(--post-bg); padding-bottom: 10px; border-bottom: 2px solid var(--post-border);">
+                            <i class="fas fa-check-circle"></i> 
+                            <span>Found Items</span>
+                            <span id="found-count" style="background: rgba(34, 197, 94, 0.2); color: #22c55e; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: auto;"></span>
+                        </h3>
+                        <div id="collector-found-grid" class="collector-grid"></div>
+                    </div>
+                </div>
             </section>
 
             <!-- Fix Quests Section (Admin Only) -->
@@ -590,6 +627,9 @@
                         displayName.textContent = data.user.displayName || data.user.username;
                         userInfo.style.display = 'block';
                     }
+
+                    // Store user ID for collector items
+                    window.currentUserId = data.user.id;
                 
                 // Load tracker script only after auth confirmed
                 const script = document.createElement('script');
@@ -1440,6 +1480,174 @@
                 }
             }
         });
+
+        // ========================================================================
+        // COLLECTOR ITEMS TRACKER
+        // ========================================================================
+
+        let collectorItems = [];
+        let collectorFoundItems = new Set();
+
+        // Setup Collector Items button
+        const collectorBtn = document.getElementById('collector-items-btn');
+        if (collectorBtn) {
+            collectorBtn.addEventListener('click', () => {
+                showCollectorSection();
+            });
+        }
+
+        function showCollectorSection() {
+            // Hide all sections
+            const sections = ['quests-section', 'rankings-section', 'profile-section', 'fix-quests-section'];
+            sections.forEach(id => {
+                const section = document.getElementById(id);
+                if (section) section.style.display = 'none';
+            });
+
+            // Hide map sections
+            const mapOverview = document.getElementById('map-overview');
+            const mapTabsSection = document.querySelector('.map-tabs-section');
+            if (mapOverview) mapOverview.style.display = 'none';
+            if (mapTabsSection) mapTabsSection.style.display = 'none';
+
+            // Show collector section
+            const collectorSection = document.getElementById('collector-section');
+            if (collectorSection) {
+                collectorSection.style.display = 'block';
+                loadCollectorItems();
+            }
+        }
+
+        async function loadCollectorItems() {
+            try {
+                // Fetch quests to find Collector quest
+                const response = await fetch('/api/quests');
+                const quests = await response.json();
+                
+                // Find Collector quest (usually named "Collector" by Fence)
+                const collectorQuest = quests.find(q => 
+                    q.name.toLowerCase().includes('collector') || 
+                    q.id === 'collector' ||
+                    q.trader === 'Fence'
+                );
+
+                if (!collectorQuest) {
+                    console.warn('Collector quest not found');
+                    displayCollectorItems([]);
+                    return;
+                }
+
+                // Parse required items and filter FIR items
+                const requiredItems = JSON.parse(collectorQuest.requiredItems || '[]');
+                const firItems = requiredItems.filter(item => item.category === 'fir');
+                
+                // Fetch item images from tarkov.dev
+                await fetchTarkovItems(); // Use the already defined function
+                
+                // Enrich items with tarkov.dev data
+                collectorItems = firItems.map(item => {
+                    const tarkovItem = tarkovItems.find(ti => 
+                        ti.name.toLowerCase() === item.name.toLowerCase() ||
+                        ti.shortName.toLowerCase() === item.name.toLowerCase()
+                    );
+                    
+                    return {
+                        ...item,
+                        image: tarkovItem?.iconLink || tarkovItem?.gridImageLink || null,
+                        id: tarkovItem?.id || item.name
+                    };
+                });
+
+                // Load user progress from localStorage
+                const savedProgress = localStorage.getItem(`collector-progress-${window.currentUserId}`);
+                if (savedProgress) {
+                    collectorFoundItems = new Set(JSON.parse(savedProgress));
+                } else {
+                    collectorFoundItems = new Set();
+                }
+
+                displayCollectorItems(collectorItems);
+            } catch (error) {
+                console.error('Error loading collector items:', error);
+                displayCollectorItems([]);
+            }
+        }
+
+        function displayCollectorItems(items) {
+            const neededGrid = document.getElementById('collector-needed-grid');
+            const foundGrid = document.getElementById('collector-found-grid');
+            const neededCount = document.getElementById('needed-count');
+            const foundCount = document.getElementById('found-count');
+
+            if (!neededGrid || !foundGrid) return;
+
+            // Split items into needed and found
+            const neededItems = items.filter(item => !collectorFoundItems.has(item.id));
+            const foundItems = items.filter(item => collectorFoundItems.has(item.id));
+
+            // Update counts
+            if (neededCount) neededCount.textContent = `${neededItems.length}`;
+            if (foundCount) foundCount.textContent = `${foundItems.length}`;
+
+            // Render needed items
+            if (neededItems.length === 0) {
+                neededGrid.innerHTML = '<p style="color: var(--subtext); text-align: center; padding: 40px;">🎉 All items found!</p>';
+            } else {
+                neededGrid.innerHTML = neededItems.map(item => renderCollectorItem(item, false)).join('');
+            }
+
+            // Render found items
+            if (foundItems.length === 0) {
+                foundGrid.innerHTML = '<p style="color: var(--subtext); text-align: center; padding: 40px;">No items found yet. Click items on the left to mark as found.</p>';
+            } else {
+                foundGrid.innerHTML = foundItems.map(item => renderCollectorItem(item, true)).join('');
+            }
+
+            // Add click handlers
+            document.querySelectorAll('.collector-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const itemId = el.dataset.itemId;
+                    toggleCollectorItem(itemId);
+                });
+            });
+        }
+
+        function renderCollectorItem(item, isFound) {
+            const imageUrl = item.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23333" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23888" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
+            
+            return `
+                <div class="collector-item ${isFound ? 'found' : 'needed'}" data-item-id="${item.id}" title="Click to ${isFound ? 'unmark' : 'mark'} as found">
+                    ${isFound ? '<div class="collector-item-check"><i class="fas fa-check"></i></div>' : ''}
+                    ${item.count > 1 ? `<div class="collector-item-count">x${item.count}</div>` : ''}
+                    <img src="${imageUrl}" 
+                         alt="${item.name}" 
+                         class="collector-item-image"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23333\\' width=\\'100\\' height=\\'100\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23888\\' font-size=\\'12\\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+                    <div class="collector-item-name">${item.name}</div>
+                </div>
+            `;
+        }
+
+        function toggleCollectorItem(itemId) {
+            if (collectorFoundItems.has(itemId)) {
+                collectorFoundItems.delete(itemId);
+            } else {
+                collectorFoundItems.add(itemId);
+            }
+
+            // Save progress to localStorage
+            localStorage.setItem(
+                `collector-progress-${window.currentUserId}`, 
+                JSON.stringify(Array.from(collectorFoundItems))
+            );
+
+            // Re-render
+            displayCollectorItems(collectorItems);
+        }
+
+        // Store current user ID when available
+        window.currentUserId = null;
+
     </script>
 </body>
 </html>
