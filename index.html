@@ -1578,35 +1578,46 @@
                 const response = await fetch('/api/quests');
                 const quests = await response.json();
                 
-                // Find Collector quest (usually named "Collector" by Fence)
+                // Find Collector quest - must be exact match
                 const collectorQuest = quests.find(q => 
-                    q.name.toLowerCase().includes('collector') || 
-                    q.id === 'collector' ||
-                    q.trader === 'Fence'
+                    q.name.toLowerCase() === 'collector' && q.trader === 'Fence'
                 );
 
                 if (!collectorQuest) {
-                    console.warn('Collector quest not found');
+                    console.warn('Collector quest not found. Looking for quest with name "Collector" and trader "Fence"');
+                    console.log('Available Fence quests:', quests.filter(q => q.trader === 'Fence').map(q => q.name));
                     displayCollectorItems([]);
                     return;
                 }
 
-                // Parse required items and filter FIR items
+                console.log('Found Collector quest:', collectorQuest.name);
+
+                // Parse required items - Collector quest has ALL items as FIR items of type "giveItem"
                 const requiredItems = JSON.parse(collectorQuest.requiredItems || '[]');
-                const firItems = requiredItems.filter(item => item.category === 'fir');
+                console.log('Total required items in Collector quest:', requiredItems.length);
+                
+                // For Collector quest, ALL items with type "giveItem" are FIR items
+                // Filter for giveItem type (these are the FIR items to collect)
+                const firItems = requiredItems.filter(item => 
+                    item.type === 'giveItem' || item.category === 'fir'
+                );
+                
+                console.log('FIR items to collect:', firItems.length);
                 
                 // Fetch item images from tarkov.dev
                 const items = await fetchTarkovItemsGlobal();
                 
                 // Enrich items with tarkov.dev data
                 collectorItems = firItems.map(item => {
+                    const itemName = item.name.replace(/_/g, ' '); // Remove underscores
                     const tarkovItem = items.find(ti => 
-                        ti.name.toLowerCase() === item.name.toLowerCase() ||
-                        ti.shortName.toLowerCase() === item.name.toLowerCase()
+                        ti.name.toLowerCase() === itemName.toLowerCase() ||
+                        ti.shortName.toLowerCase() === itemName.toLowerCase()
                     );
                     
                     return {
                         ...item,
+                        name: itemName, // Use cleaned name
                         image: tarkovItem?.iconLink || tarkovItem?.gridImageLink || null,
                         id: tarkovItem?.id || item.name
                     };
