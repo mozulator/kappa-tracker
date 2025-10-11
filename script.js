@@ -589,7 +589,7 @@ class QuestTracker {
             let buttonHtml, additionalInfo = '';
             
             if (this.viewMode === 'finished') {
-                buttonHtml = `<button class="complete-btn uncomplete-btn" onclick="questTracker.uncompleteQuest('${quest.id}')">
+                buttonHtml = `<button class="complete-btn uncomplete-btn" onclick="window.tracker.uncompleteQuest('${quest.id}')">
                                  UNCOMPLETE QUEST
                                </button>`;
             } else if (this.showFutureQuests) {
@@ -607,11 +607,11 @@ class QuestTracker {
                         additionalInfo = `<div class="quest-locked"><i class="fas fa-lock"></i> Complete: ${prereqNames}${morePrereqs}</div>`;
                     }
                 }
-                buttonHtml = `<button class="complete-btn" onclick="questTracker.completeQuest('${quest.id}', event)">
+                buttonHtml = `<button class="complete-btn" onclick="window.tracker.completeQuest('${quest.id}', event)">
                                  COMPLETE QUEST
                                </button>`;
             } else {
-                buttonHtml = `<button class="complete-btn" onclick="questTracker.completeQuest('${quest.id}', event)">
+                buttonHtml = `<button class="complete-btn" onclick="window.tracker.completeQuest('${quest.id}', event)">
                                  COMPLETE QUEST
                                </button>`;
             }
