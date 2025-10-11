@@ -16,6 +16,7 @@ Allow: /login.html
 Allow: /register.html
 Allow: /rankings.html
 Allow: /public-profile.html
+Allow: /public-profile
 Allow: /collector-progress.html
 Allow: /kappa-overview.html
 

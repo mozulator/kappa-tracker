@@ -1829,6 +1829,147 @@ app.get('/profile', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'profile.html'));
 });
 
+// Public profile with server-side rendering for SEO
+app.get('/public-profile', async (req, res) => {
+    const username = req.query.user;
+    
+    // If no username, serve basic page
+    if (!username) {
+        return res.sendFile(path.join(__dirname, 'public-profile.html'));
+    }
+    
+    try {
+        // Fetch user data
+        const user = await prisma.user.findUnique({
+            where: { username: username.toLowerCase() },
+            select: {
+                id: true,
+                username: true,
+                displayName: true,
+                bio: true,
+                twitchUrl: true,
+                discordTag: true,
+                tarkovDevId: true,
+                avatarUrl: true,
+                isPublic: true,
+                createdAt: true,
+                progress: {
+                    select: {
+                        pmcLevel: true,
+                        prestige: true,
+                        completionRate: true,
+                        totalCompleted: true,
+                        lastQuestDate: true
+                    }
+                }
+            }
+        });
+        
+        // If user not found or private, serve basic page
+        if (!user || !user.isPublic) {
+            return res.sendFile(path.join(__dirname, 'public-profile.html'));
+        }
+        
+        // Generate dynamic meta tags
+        const displayName = user.displayName || user.username;
+        const completionRate = user.progress?.completionRate?.toFixed(1) || '0.0';
+        const questsCompleted = user.progress?.totalCompleted || 0;
+        const prestige = user.progress?.prestige || 0;
+        const pmcLevel = user.progress?.pmcLevel || 1;
+        const avatarUrl = user.avatarUrl || 'https://kappa-tracker.onrender.com/imgs/kaban.png';
+        const profileUrl = `${req.protocol}://${req.get('host')}/public-profile?user=${username}`;
+        
+        // Build description with stats
+        const description = `${displayName} - Level ${pmcLevel}${prestige > 0 ? ` (Prestige ${prestige})` : ''} | ${completionRate}% Complete | ${questsCompleted} Quests | Escape From Tarkov Progress`;
+        
+        // Read the base HTML file
+        const fs = require('fs');
+        let html = fs.readFileSync(path.join(__dirname, 'public-profile.html'), 'utf8');
+        
+        // Replace meta tags
+        html = html.replace(
+            /<title>.*?<\/title>/,
+            `<title>${displayName} - OBS Kappa Tracker</title>`
+        );
+        
+        html = html.replace(
+            /<meta name="title" content=".*?">/,
+            `<meta name="title" content="${displayName} - OBS Kappa Tracker">`
+        );
+        
+        html = html.replace(
+            /<meta name="description" content=".*?">/,
+            `<meta name="description" content="${description}">`
+        );
+        
+        html = html.replace(
+            /<link rel="canonical" href=".*?">/,
+            `<link rel="canonical" href="${profileUrl}">`
+        );
+        
+        // Open Graph tags
+        html = html.replace(
+            /<meta property="og:url" content=".*?">/,
+            `<meta property="og:url" content="${profileUrl}">`
+        );
+        
+        html = html.replace(
+            /<meta property="og:title" content=".*?">/,
+            `<meta property="og:title" content="${displayName} - Level ${pmcLevel}${prestige > 0 ? ` (Prestige ${prestige})` : ''}">`
+        );
+        
+        html = html.replace(
+            /<meta property="og:description" content=".*?">/,
+            `<meta property="og:description" content="${completionRate}% Complete | ${questsCompleted} Quests Completed | Escape From Tarkov Kappa Progress">`
+        );
+        
+        html = html.replace(
+            /<meta property="og:image" content=".*?">/,
+            `<meta property="og:image" content="${avatarUrl}">`
+        );
+        
+        // Twitter tags
+        html = html.replace(
+            /<meta property="twitter:url" content=".*?">/,
+            `<meta property="twitter:url" content="${profileUrl}">`
+        );
+        
+        html = html.replace(
+            /<meta property="twitter:title" content=".*?">/,
+            `<meta property="twitter:title" content="${displayName} - Level ${pmcLevel}${prestige > 0 ? ` (Prestige ${prestige})` : ''}">`
+        );
+        
+        html = html.replace(
+            /<meta property="twitter:description" content=".*?">/,
+            `<meta property="twitter:description" content="${completionRate}% Complete | ${questsCompleted} Quests Completed">`
+        );
+        
+        // Add twitter:image if not present
+        if (!html.includes('twitter:image')) {
+            html = html.replace(
+                /<meta property="twitter:description".*?>/,
+                `$&\n    <meta property="twitter:image" content="${avatarUrl}">`
+            );
+        } else {
+            html = html.replace(
+                /<meta property="twitter:image" content=".*?">/,
+                `<meta property="twitter:image" content="${avatarUrl}">`
+            );
+        }
+        
+        // Change twitter card to summary_large_image for better display
+        html = html.replace(
+            /<meta property="twitter:card" content="summary">/,
+            `<meta property="twitter:card" content="summary_large_image">`
+        );
+        
+        res.send(html);
+    } catch (error) {
+        console.error('Error serving public profile:', error);
+        res.sendFile(path.join(__dirname, 'public-profile.html'));
+    }
+});
+
 // ============================================================================
 // START SERVER
 // ============================================================================

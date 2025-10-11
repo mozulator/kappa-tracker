@@ -1259,7 +1259,7 @@ class QuestTracker {
                                                              onerror="this.style.display='none'">
                                                     ` : ''}
                                                     <div>
-                                                        <a href="/public-profile.html?user=${user.username}" style="color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
+                                                        <a href="/public-profile?user=${user.username}" style="color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
                                                             ${displayName}
                                                         </a>
                                                         <div style="color: #888; font-size: 14px;">@${user.username}</div>

@@ -44,6 +44,14 @@
         <priority>0.9</priority>
     </url>
 
+    <!-- Public Profile -->
+    <url>
+        <loc>https://kappa-tracker.onrender.com/public-profile</loc>
+        <lastmod>2025-10-10</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>0.8</priority>
+    </url>
+
     <!-- OBS Integrations -->
     <url>
         <loc>https://kappa-tracker.onrender.com/collector-progress.html</loc>
