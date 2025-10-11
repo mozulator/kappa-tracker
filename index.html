@@ -79,7 +79,7 @@
             <nav class="nav">
                 <a href="#" class="nav-link active" id="dashboard-tab">Dashboard</a>
                 <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
-                <a href="/admin-quest-editor.html" class="nav-link" id="fix-quests-tab" style="display: none; background: rgba(199, 170, 106, 0.1); border: 1px solid #c7aa6a;">
+                <a href="#" class="nav-link" id="fix-quests-tab" style="display: none; background: rgba(199, 170, 106, 0.1); border: 1px solid #c7aa6a;">
                     <i class="fas fa-tools"></i> Fix Quests
                 </a>
                 <a href="#" class="nav-link" id="rankings-tab">Rankings</a>
@@ -224,6 +224,16 @@
             <section class="profile-section" id="profile-section" style="display: none;">
                 <div id="profile-content"></div>
             </section>
+
+            <!-- Fix Quests Section (Admin Only) -->
+            <section class="fix-quests-section" id="fix-quests-section" style="display: none;">
+                <div class="quest-search" style="margin-bottom: 30px;">
+                    <input type="text" id="fix-quest-search" placeholder="🔍 Search quests by name or trader..." style="width: 100%; padding: 15px; background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px;">
+                </div>
+                <div class="quests-grid" id="fix-quests-grid">
+                    <div class="loading">Loading quests...</div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -299,6 +309,128 @@
             <div class="dialog-footer">
                 <button id="cancel-report" class="dialog-btn cancel-btn">Cancel</button>
                 <button id="submit-report" class="dialog-btn confirm-btn">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quest Editor Dialog (Admin Only) -->
+    <div id="quest-editor-dialog" class="dialog-overlay">
+        <div class="dialog-content" style="max-width: 1400px; max-height: 90vh; overflow-y: auto; width: 95%;">
+            <div class="dialog-header">
+                <h3><i class="fas fa-tools"></i> Edit Quest: <span id="editing-quest-name-dialog">Quest Name</span></h3>
+            </div>
+            <div class="dialog-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <!-- Left Column -->
+                    <div>
+                        <!-- Basic Info -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-info-circle"></i> Basic Information
+                            </h4>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Quest Name</label>
+                                <input type="text" id="edit-name-dialog" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #3a3a3a; border-radius: 6px; color: #888; cursor: not-allowed;">
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div>
+                                    <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Trader</label>
+                                    <input type="text" id="edit-trader-dialog" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #3a3a3a; border-radius: 6px; color: #888; cursor: not-allowed;">
+                                </div>
+                                <div>
+                                    <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Level Required</label>
+                                    <input type="number" id="edit-level-dialog" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid #3a3a3a; border-radius: 6px; color: #888; cursor: not-allowed;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Map Location -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-map-marked-alt"></i> Map Location
+                            </h4>
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Map Name</label>
+                            <select id="edit-map-dialog" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px;">
+                                <option value="Any Location">Any Location</option>
+                                <option value="Customs">Customs</option>
+                                <option value="Woods">Woods</option>
+                                <option value="Shoreline">Shoreline</option>
+                                <option value="Interchange">Interchange</option>
+                                <option value="Reserve">Reserve</option>
+                                <option value="Factory">Factory</option>
+                                <option value="The Lab">The Lab</option>
+                                <option value="Lighthouse">Lighthouse</option>
+                                <option value="Streets of Tarkov">Streets of Tarkov</option>
+                                <option value="Ground Zero">Ground Zero</option>
+                            </select>
+                        </div>
+
+                        <!-- Required Items (Simple) -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-box-open"></i> Required Items
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">MS2000 Markers</label>
+                                    <input type="number" id="edit-markers-dialog" min="0" placeholder="0" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff;">
+                                </div>
+                                <div>
+                                    <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">Signal Jammers</label>
+                                    <input type="number" id="edit-jammers-dialog" min="0" placeholder="0" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff;">
+                                </div>
+                                <div>
+                                    <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">WI-FI Cameras</label>
+                                    <input type="number" id="edit-cameras-dialog" min="0" placeholder="0" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff;">
+                                </div>
+                            </div>
+
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Keys Needed</label>
+                            <div id="keys-editor-dialog" style="margin-bottom: 10px;">
+                                <!-- Keys entries will be added here -->
+                            </div>
+                            <button onclick="addKeyEntryDialog()" style="padding: 8px 16px; background: rgba(199, 170, 106, 0.2); border: 2px solid #c7aa6a; border-radius: 6px; color: #c7aa6a; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-plus"></i> Add Key
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <!-- Prerequisite Quests -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-link"></i> Prerequisite Quests
+                            </h4>
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">Search and Add Prerequisite Quests</label>
+                            <div style="position: relative;">
+                                <input type="text" id="prereq-search-dialog" placeholder="Type to search quests..." style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff;">
+                                <div id="prereq-dropdown-dialog" style="position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background: rgba(20, 20, 20, 0.98); border: 2px solid #c7aa6a; border-radius: 6px; margin-top: 5px; z-index: 2000; display: none;"></div>
+                            </div>
+                            <div id="selected-prereqs-dialog" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+                                <!-- Selected prerequisites will appear here -->
+                            </div>
+                        </div>
+
+                        <!-- Advanced JSON Editor -->
+                        <div>
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-code"></i> Advanced (JSON Editor)
+                            </h4>
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">Required Items (JSON)</label>
+                            <textarea id="edit-required-items-dialog" rows="12" placeholder='[{"name":"Item Name","count":1,"category":"fir","type":"giveItem"}]' style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-family: monospace; font-size: 12px; resize: vertical;"></textarea>
+                            <small style="color: #666; font-size: 11px;">Advanced: Direct JSON editing. Takes priority over simple fields if valid.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="quest-edit-alert" style="display: none; padding: 15px; border-radius: 8px; margin-top: 20px;"></div>
+            </div>
+            <div class="dialog-footer">
+                <button id="cancel-quest-edit" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="save-quest-edit" class="dialog-btn confirm-btn">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
             </div>
         </div>
     </div>
@@ -534,6 +666,382 @@
                     submitReportBtn.textContent = 'Submit';
                 }
             });
+
+            // ========================================================================
+            // FIX QUESTS TAB (ADMIN ONLY)
+            // ========================================================================
+            
+            let allQuestsForEdit = [];
+            let selectedQuestForEdit = null;
+            let selectedPrereqsForEdit = new Set();
+            let isAdminUser = false;
+
+            // Check if user is admin and setup fix quests tab
+            fetch('/api/auth/me', { credentials: 'include' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user && data.user.isAdmin) {
+                        isAdminUser = true;
+                        setupFixQuestsTab();
+                    }
+                })
+                .catch(err => console.error('Failed to check admin status:', err));
+
+            function setupFixQuestsTab() {
+                const fixQuestsTab = document.getElementById('fix-quests-tab');
+                const fixQuestsSection = document.getElementById('fix-quests-section');
+                const questsSection = document.getElementById('quests-section');
+                const rankingsSection = document.getElementById('rankings-section');
+                const profileSection = document.getElementById('profile-section');
+                const dashboardTab = document.getElementById('dashboard-tab');
+                const finishedQuestsTab = document.getElementById('finished-quests-tab');
+                const rankingsTab = document.getElementById('rankings-tab');
+                const profileTab = document.getElementById('profile-tab');
+
+                if (!fixQuestsTab) return;
+
+                // Tab click handler
+                fixQuestsTab.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Switch tabs
+                    [dashboardTab, finishedQuestsTab, fixQuestsTab, rankingsTab, profileTab].forEach(tab => {
+                        if (tab) tab.classList.remove('active');
+                    });
+                    fixQuestsTab.classList.add('active');
+
+                    // Switch sections
+                    [questsSection, rankingsSection, profileSection].forEach(section => {
+                        if (section) section.style.display = 'none';
+                    });
+                    if (fixQuestsSection) {
+                        fixQuestsSection.style.display = 'block';
+                        loadQuestsForFixing();
+                    }
+                });
+
+                // Quest search
+                const fixQuestSearch = document.getElementById('fix-quest-search');
+                if (fixQuestSearch) {
+                    fixQuestSearch.addEventListener('input', function() {
+                        const search = this.value.toLowerCase();
+                        const filtered = allQuestsForEdit.filter(q => 
+                            q.name.toLowerCase().includes(search) ||
+                            q.trader.toLowerCase().includes(search)
+                        );
+                        displayQuestsForFixing(filtered);
+                    });
+                }
+
+                // Dialog handlers
+                setupQuestEditDialog();
+            }
+
+            async function loadQuestsForFixing() {
+                try {
+                    const response = await fetch('/api/quests', { credentials: 'include' });
+                    allQuestsForEdit = await response.json();
+                    displayQuestsForFixing(allQuestsForEdit);
+                } catch (error) {
+                    console.error('Error loading quests for fixing:', error);
+                    const grid = document.getElementById('fix-quests-grid');
+                    if (grid) {
+                        grid.innerHTML = '<div style="text-align:center;color:#ff6b6b;padding:40px;">Failed to load quests</div>';
+                    }
+                }
+            }
+
+            function displayQuestsForFixing(quests) {
+                const grid = document.getElementById('fix-quests-grid');
+                if (!grid) return;
+
+                if (quests.length === 0) {
+                    grid.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">No quests found</div>';
+                    return;
+                }
+
+                // Use same quest card format as main tracker
+                grid.innerHTML = quests.map(quest => `
+                    <div class="quest-card" data-quest-id="${quest.id}">
+                        <div class="quest-header">
+                            <div class="quest-title">${quest.name}</div>
+                            <div class="quest-meta">
+                                <span class="trader-badge">${quest.trader}</span>
+                                <span class="level-badge">Lvl ${quest.level}</span>
+                                ${quest.mapName && quest.mapName !== 'Any Location' ? `<span class="map-badge">${quest.mapName}</span>` : ''}
+                            </div>
+                        </div>
+                        <button class="complete-btn" onclick="openQuestEditDialog('${quest.id}')" style="background: rgba(199, 170, 106, 0.2); border-color: #c7aa6a; color: #c7aa6a;">
+                            <i class="fas fa-tools"></i> Fix Quest
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            function setupQuestEditDialog() {
+                const dialog = document.getElementById('quest-editor-dialog');
+                const cancelBtn = document.getElementById('cancel-quest-edit');
+                const saveBtn = document.getElementById('save-quest-edit');
+
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', () => {
+                        dialog.style.display = 'none';
+                    });
+                }
+
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', saveQuestEdit);
+                }
+
+                // Prerequisite quest search
+                const prereqSearch = document.getElementById('prereq-search-dialog');
+                if (prereqSearch) {
+                    prereqSearch.addEventListener('input', function() {
+                        const search = this.value.toLowerCase();
+                        const dropdown = document.getElementById('prereq-dropdown-dialog');
+                        
+                        if (search.length < 2) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+
+                        const filtered = allQuestsForEdit.filter(q => 
+                            q.name.toLowerCase().includes(search) && 
+                            q.id !== selectedQuestForEdit.id &&
+                            !selectedPrereqsForEdit.has(q.id)
+                        );
+
+                        if (filtered.length === 0) {
+                            dropdown.innerHTML = '<div style="padding:10px;color:#888;">No quests found</div>';
+                        } else {
+                            dropdown.innerHTML = filtered.slice(0, 10).map(q => `
+                                <div onclick="addPrereqDialog('${q.id}', '${q.name.replace(/'/g, "\\'")}', '${q.trader}')" style="padding:10px;cursor:pointer;color:#fff;border-bottom:1px solid #2a2a2a;">
+                                    ${q.name} <span style="color:#888;">(${q.trader})</span>
+                                </div>
+                            `).join('');
+                        }
+                        dropdown.style.display = 'block';
+                    });
+
+                    prereqSearch.addEventListener('blur', function() {
+                        setTimeout(() => {
+                            document.getElementById('prereq-dropdown-dialog').style.display = 'none';
+                        }, 200);
+                    });
+                }
+            }
+
+            window.openQuestEditDialog = function(questId) {
+                selectedQuestForEdit = allQuestsForEdit.find(q => q.id === questId);
+                if (!selectedQuestForEdit) return;
+
+                const dialog = document.getElementById('quest-editor-dialog');
+                
+                // Populate basic info
+                document.getElementById('editing-quest-name-dialog').textContent = selectedQuestForEdit.name;
+                document.getElementById('edit-name-dialog').value = selectedQuestForEdit.name;
+                document.getElementById('edit-trader-dialog').value = selectedQuestForEdit.trader;
+                document.getElementById('edit-level-dialog').value = selectedQuestForEdit.level;
+                document.getElementById('edit-map-dialog').value = selectedQuestForEdit.mapName || 'Any Location';
+
+                // Load prerequisite quests
+                selectedPrereqsForEdit = new Set(JSON.parse(selectedQuestForEdit.prerequisiteQuests || '[]'));
+                updatePrereqsDisplayDialog();
+
+                // Load required items
+                const requiredItems = JSON.parse(selectedQuestForEdit.requiredItems || '[]');
+                document.getElementById('edit-required-items-dialog').value = JSON.stringify(requiredItems, null, 2);
+
+                // Parse markers, jammers, cameras, keys
+                let markers = 0, jammers = 0, cameras = 0;
+                const keys = [];
+
+                requiredItems.forEach(item => {
+                    if (item.category === 'markers') markers = Math.max(markers, item.count || 0);
+                    else if (item.category === 'jammers') jammers = Math.max(jammers, item.count || 0);
+                    else if (item.name && item.name.includes('WI-FI Camera')) cameras = Math.max(cameras, item.count || 0);
+                    else if (item.category === 'keys') keys.push({ name: item.name, count: item.count || 1 });
+                });
+
+                document.getElementById('edit-markers-dialog').value = markers || '';
+                document.getElementById('edit-jammers-dialog').value = jammers || '';
+                document.getElementById('edit-cameras-dialog').value = cameras || '';
+
+                // Display keys
+                const keysEditor = document.getElementById('keys-editor-dialog');
+                keysEditor.innerHTML = keys.map((key, idx) => `
+                    <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
+                        <input type="text" value="${key.name}" placeholder="Key name" data-key-idx="${idx}" style="flex:1;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                        <input type="number" value="${key.count}" min="1" placeholder="Count" data-key-count-idx="${idx}" style="width:80px;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                        <button onclick="this.parentElement.remove()" style="padding:8px 12px;background:#c83232;border:none;border-radius:4px;color:#fff;cursor:pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                dialog.style.display = 'flex';
+            };
+
+            window.addKeyEntryDialog = function() {
+                const keysEditor = document.getElementById('keys-editor-dialog');
+                const idx = keysEditor.children.length;
+                const entry = document.createElement('div');
+                entry.style = 'display:flex;gap:10px;margin-bottom:10px;align-items:center;';
+                entry.innerHTML = `
+                    <input type="text" placeholder="Key name" data-key-idx="${idx}" style="flex:1;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                    <input type="number" value="1" min="1" placeholder="Count" data-key-count-idx="${idx}" style="width:80px;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                    <button onclick="this.parentElement.remove()" style="padding:8px 12px;background:#c83232;border:none;border-radius:4px;color:#fff;cursor:pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                keysEditor.appendChild(entry);
+            };
+
+            window.addPrereqDialog = function(id, name, trader) {
+                selectedPrereqsForEdit.add(id);
+                updatePrereqsDisplayDialog();
+                document.getElementById('prereq-search-dialog').value = '';
+                document.getElementById('prereq-dropdown-dialog').style.display = 'none';
+            };
+
+            window.removePrereqDialog = function(id) {
+                selectedPrereqsForEdit.delete(id);
+                updatePrereqsDisplayDialog();
+            };
+
+            function updatePrereqsDisplayDialog() {
+                const container = document.getElementById('selected-prereqs-dialog');
+                if (selectedPrereqsForEdit.size === 0) {
+                    container.innerHTML = '<p style="color:#888;">No prerequisite quests</p>';
+                    return;
+                }
+
+                container.innerHTML = Array.from(selectedPrereqsForEdit).map(id => {
+                    const quest = allQuestsForEdit.find(q => q.id === id);
+                    return quest ? `
+                        <div style="padding:8px 12px;background:rgba(199,170,106,0.2);border:1px solid #c7aa6a;border-radius:4px;color:#fff;display:flex;align-items:center;gap:8px;">
+                            ${quest.name}
+                            <i class="fas fa-times" onclick="removePrereqDialog('${id}')" style="cursor:pointer;color:#c83232;"></i>
+                        </div>
+                    ` : '';
+                }).join('');
+            }
+
+            async function saveQuestEdit() {
+                if (!selectedQuestForEdit) return;
+
+                const saveBtn = document.getElementById('save-quest-edit');
+                const alert = document.getElementById('quest-edit-alert');
+                
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+                try {
+                    // Build required items
+                    const requiredItems = [];
+
+                    // Add markers
+                    const markers = parseInt(document.getElementById('edit-markers-dialog').value) || 0;
+                    if (markers > 0) {
+                        requiredItems.push({
+                            name: 'MS2000 Marker',
+                            count: markers,
+                            category: 'markers',
+                            type: 'mark'
+                        });
+                    }
+
+                    // Add jammers
+                    const jammers = parseInt(document.getElementById('edit-jammers-dialog').value) || 0;
+                    if (jammers > 0) {
+                        requiredItems.push({
+                            name: 'Signal Jammer',
+                            count: jammers,
+                            category: 'jammers',
+                            type: 'plantItem'
+                        });
+                    }
+
+                    // Add cameras
+                    const cameras = parseInt(document.getElementById('edit-cameras-dialog').value) || 0;
+                    if (cameras > 0) {
+                        requiredItems.push({
+                            name: 'WI-FI Camera',
+                            count: cameras,
+                            category: 'any',
+                            type: 'plantItem'
+                        });
+                    }
+
+                    // Add keys
+                    const keyEntries = document.querySelectorAll('#keys-editor-dialog > div');
+                    keyEntries.forEach(entry => {
+                        const nameInput = entry.querySelector('input[data-key-idx]');
+                        const countInput = entry.querySelector('input[data-key-count-idx]');
+                        if (nameInput && nameInput.value.trim()) {
+                            requiredItems.push({
+                                name: nameInput.value.trim(),
+                                count: parseInt(countInput.value) || 1,
+                                category: 'keys',
+                                type: 'key'
+                            });
+                        }
+                    });
+
+                    // Try to parse custom items JSON
+                    const customJson = document.getElementById('edit-required-items-dialog').value;
+                    let parsedCustom = [];
+                    try {
+                        parsedCustom = JSON.parse(customJson);
+                    } catch (e) {
+                        // If JSON is invalid, use what we built
+                    }
+
+                    const updateData = {
+                        mapName: document.getElementById('edit-map-dialog').value,
+                        prerequisiteQuests: JSON.stringify(Array.from(selectedPrereqsForEdit)),
+                        requiredItems: JSON.stringify(parsedCustom.length > 0 ? parsedCustom : requiredItems)
+                    };
+
+                    const response = await fetch(`/api/admin/quests/${selectedQuestForEdit.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to update quest');
+                    }
+
+                    // Show success
+                    alert.style.display = 'block';
+                    alert.style.background = 'rgba(76, 175, 80, 0.2)';
+                    alert.style.border = '2px solid #4CAF50';
+                    alert.style.color = '#4CAF50';
+                    alert.textContent = '✅ Quest updated successfully!';
+
+                    // Reload quests
+                    await loadQuestsForFixing();
+
+                    // Close dialog after a moment
+                    setTimeout(() => {
+                        document.getElementById('quest-editor-dialog').style.display = 'none';
+                        alert.style.display = 'none';
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('Error saving quest:', error);
+                    alert.style.display = 'block';
+                    alert.style.background = 'rgba(200, 50, 50, 0.2)';
+                    alert.style.border = '2px solid #c83232';
+                    alert.style.color = '#ff6b6b';
+                    alert.textContent = '❌ Failed to save quest: ' + error.message;
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                }
+            }
 
             // Initialize the quest tracker
             window.tracker = new QuestTracker();
