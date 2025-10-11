@@ -987,7 +987,7 @@ app.post('/api/refresh-quests', requireAuth, async (req, res) => {
 app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
     try {
         const { questId } = req.params;
-        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, requiredItems } = req.body;
+        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, requiredItems, images } = req.body;
 
         // Validate quest exists
         const quest = await prisma.quest.findUnique({
@@ -1035,6 +1035,16 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
                 updateData.requiredItems = requiredItems;
             } catch (e) {
                 return res.status(400).json({ error: 'Invalid requiredItems JSON' });
+            }
+        }
+        
+        if (images !== undefined) {
+            // Validate it's valid JSON
+            try {
+                JSON.parse(images);
+                updateData.images = images;
+            } catch (e) {
+                return res.status(400).json({ error: 'Invalid images JSON' });
             }
         }
 

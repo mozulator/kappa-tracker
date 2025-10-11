@@ -231,30 +231,70 @@
                     <input type="text" id="fix-quest-search" placeholder="🔍 Search quests by name or trader..." style="width: 100%; padding: 15px; background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px;">
                 </div>
                 <style>
-                    /* Compact quest cards for fix quests section */
-                    #fix-quests-grid .quest-card {
+                    /* Custom layout for fix quests cards */
+                    .fix-quest-card {
                         padding: 15px;
+                        display: flex;
+                        flex-direction: column;
                         min-height: auto;
+                        gap: 12px;
                     }
-                    #fix-quests-grid .quest-header {
-                        margin-bottom: 10px;
+                    
+                    .fix-quest-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        gap: 10px;
                     }
-                    #fix-quests-grid .quest-title {
+                    
+                    .fix-quest-title {
                         font-size: 14px;
-                        margin-bottom: 8px;
+                        font-weight: 600;
+                        color: #fff;
+                        line-height: 1.4;
+                        flex: 1;
+                        word-wrap: break-word;
                     }
-                    #fix-quests-grid .quest-meta {
-                        gap: 6px;
+                    
+                    .fix-quest-level {
+                        flex-shrink: 0;
                     }
-                    #fix-quests-grid .trader-badge,
-                    #fix-quests-grid .level-badge,
-                    #fix-quests-grid .map-badge {
-                        padding: 3px 8px;
+                    
+                    .fix-quest-level .level-badge {
+                        padding: 4px 8px;
                         font-size: 11px;
+                        white-space: nowrap;
                     }
-                    #fix-quests-grid .complete-btn {
-                        padding: 8px 12px;
+                    
+                    .fix-quest-trader {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                        align-items: center;
+                        margin-top: 4px;
+                    }
+                    
+                    .fix-quest-trader .trader-badge,
+                    .fix-quest-trader .map-badge,
+                    .fix-quest-trader .kappa-badge {
+                        padding: 4px 8px;
+                        font-size: 11px;
+                        white-space: nowrap;
+                    }
+                    
+                    .fix-quest-btn {
+                        width: 100%;
+                        padding: 10px;
                         font-size: 13px;
+                        font-weight: 600;
+                        margin-top: auto;
+                        background: rgba(199, 170, 106, 0.2) !important;
+                        border-color: #c7aa6a !important;
+                        color: #c7aa6a !important;
+                    }
+                    
+                    .fix-quest-btn:hover {
+                        background: rgba(199, 170, 106, 0.3) !important;
                     }
                 </style>
                 <div class="quests-grid" id="fix-quests-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
@@ -336,6 +376,32 @@
             <div class="dialog-footer">
                 <button id="cancel-report" class="dialog-btn cancel-btn">Cancel</button>
                 <button id="submit-report" class="dialog-btn confirm-btn">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quest Image Viewer Dialog -->
+    <div id="quest-image-viewer" class="dialog-overlay">
+        <div class="dialog-content" style="max-width: 1200px; max-height: 95vh; width: 95%;">
+            <div class="dialog-header">
+                <h3><i class="fas fa-image"></i> <span id="quest-image-quest-name">Quest Images</span></h3>
+            </div>
+            <div class="dialog-body" style="padding: 20px;">
+                <div style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 500px;">
+                    <button id="quest-image-prev" style="position: absolute; left: 10px; padding: 15px 20px; background: rgba(199, 170, 106, 0.2); border: 2px solid #c7aa6a; border-radius: 8px; color: #c7aa6a; cursor: pointer; font-size: 24px; z-index: 10;">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <img id="quest-image-display" src="" alt="Quest Image" style="max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 8px;">
+                    <button id="quest-image-next" style="position: absolute; right: 10px; padding: 15px 20px; background: rgba(199, 170, 106, 0.2); border: 2px solid #c7aa6a; border-radius: 8px; color: #c7aa6a; cursor: pointer; font-size: 24px; z-index: 10;">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <span id="quest-image-counter" style="color: #c7aa6a; font-size: 16px; font-weight: 600;">1 / 1</span>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button onclick="document.getElementById('quest-image-viewer').style.display='none'" class="dialog-btn cancel-btn">Close</button>
             </div>
         </div>
     </div>
@@ -456,13 +522,26 @@
                             </div>
                         </div>
 
+                        <!-- Quest Images -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-images"></i> Quest Images
+                            </h4>
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">Image URLs (one per line)</label>
+                            <textarea id="edit-images-dialog" rows="4" placeholder="https://example.com/image1.png&#10;https://example.com/image2.png" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 12px; resize: vertical;"></textarea>
+                            <small style="color: #666; font-size: 11px;">Add image URLs (one per line). These will be displayed when users click the Images button.</small>
+                            <div id="current-images-preview" style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+                                <!-- Image previews will appear here -->
+                            </div>
+                        </div>
+
                         <!-- Advanced JSON Editor -->
                         <div>
                             <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
                                 <i class="fas fa-code"></i> Advanced (JSON Editor)
                             </h4>
                             <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">Required Items (JSON)</label>
-                            <textarea id="edit-required-items-dialog" rows="12" placeholder='[{"name":"Item Name","count":1,"category":"fir","type":"giveItem"}]' style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-family: monospace; font-size: 12px; resize: vertical;"></textarea>
+                            <textarea id="edit-required-items-dialog" rows="8" placeholder='[{"name":"Item Name","count":1,"category":"fir","type":"giveItem"}]' style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-family: monospace; font-size: 12px; resize: vertical;"></textarea>
                             <small style="color: #666; font-size: 11px;">Advanced: Direct JSON editing. Takes priority over simple fields if valid.</small>
                         </div>
                     </div>
@@ -601,10 +680,13 @@
                         
                         // Show Fix Quests button for admins
                         if (data.user.isAdmin) {
+                            isAdminUser = true;
                             const fixQuestsTab = document.getElementById('fix-quests-tab');
                             if (fixQuestsTab) {
                                 fixQuestsTab.style.display = 'block';
                             }
+                            // Setup the tab functionality
+                            setupFixQuestsTab();
                         }
                     }
                 })
@@ -720,17 +802,6 @@
             let selectedPrereqsForEdit = new Set();
             let isAdminUser = false;
 
-            // Check if user is admin and setup fix quests tab
-            fetch('/api/auth/me', { credentials: 'include' })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.user && data.user.isAdmin) {
-                        isAdminUser = true;
-                        setupFixQuestsTab();
-                    }
-                })
-                .catch(err => console.error('Failed to check admin status:', err));
-
             function setupFixQuestsTab() {
                 const fixQuestsTab = document.getElementById('fix-quests-tab');
                 const fixQuestsSection = document.getElementById('fix-quests-section');
@@ -758,6 +829,13 @@
                     [questsSection, rankingsSection, profileSection].forEach(section => {
                         if (section) section.style.display = 'none';
                     });
+                    
+                    // Hide map sections
+                    const mapOverview = document.getElementById('map-overview');
+                    const mapTabsSection = document.querySelector('.map-tabs-section');
+                    if (mapOverview) mapOverview.style.display = 'none';
+                    if (mapTabsSection) mapTabsSection.style.display = 'none';
+                    
                     if (fixQuestsSection) {
                         fixQuestsSection.style.display = 'block';
                         loadQuestsForFixing();
@@ -804,19 +882,21 @@
                     return;
                 }
 
-                // Use same quest card format as main tracker
+                // Custom card layout for fix quests
                 grid.innerHTML = quests.map(quest => `
-                    <div class="quest-card" data-quest-id="${quest.id}">
-                        <div class="quest-header">
-                            <div class="quest-title">${quest.name}</div>
-                            <div class="quest-meta">
-                                <span class="trader-badge">${quest.trader}</span>
+                    <div class="quest-card fix-quest-card" data-quest-id="${quest.id}">
+                        <div class="fix-quest-header">
+                            <div class="fix-quest-title">${quest.name}</div>
+                            <div class="fix-quest-level">
                                 <span class="level-badge">Lvl ${quest.level}</span>
-                                ${quest.mapName && quest.mapName !== 'Any Location' ? `<span class="map-badge">${quest.mapName}</span>` : ''}
-                                ${quest.requiredForKappa ? '<span class="kappa-badge" style="background: rgba(199, 170, 106, 0.3); color: #c7aa6a; border: 1px solid #c7aa6a;"><i class="fas fa-star"></i> Kappa</span>' : ''}
                             </div>
                         </div>
-                        <button class="complete-btn" onclick="openQuestEditDialog('${quest.id}')" style="background: rgba(199, 170, 106, 0.2); border-color: #c7aa6a; color: #c7aa6a;">
+                        <div class="fix-quest-trader">
+                            <span class="trader-badge">${quest.trader}</span>
+                            ${quest.mapName && quest.mapName !== 'Any Location' ? `<span class="map-badge">${quest.mapName}</span>` : ''}
+                            ${quest.requiredForKappa ? '<span class="kappa-badge" style="background: rgba(199, 170, 106, 0.3); color: #c7aa6a; border: 1px solid #c7aa6a;"><i class="fas fa-star"></i> Kappa</span>' : ''}
+                        </div>
+                        <button class="complete-btn fix-quest-btn" onclick="openQuestEditDialog('${quest.id}')">
                             <i class="fas fa-tools"></i> Fix Quest
                         </button>
                     </div>
@@ -925,8 +1005,44 @@
                     </div>
                 `).join('');
 
+                // Load images
+                const imagesTextarea = document.getElementById('edit-images-dialog');
+                const imagesPreview = document.getElementById('current-images-preview');
+                if (selectedQuestForEdit.images) {
+                    try {
+                        const images = JSON.parse(selectedQuestForEdit.images);
+                        imagesTextarea.value = images.join('\n');
+                        updateImagePreview();
+                    } catch (e) {
+                        imagesTextarea.value = '';
+                    }
+                } else {
+                    imagesTextarea.value = '';
+                    imagesPreview.innerHTML = '';
+                }
+
+                // Add image preview update on textarea change
+                imagesTextarea.addEventListener('input', updateImagePreview);
+
                 dialog.style.display = 'flex';
             };
+
+            function updateImagePreview() {
+                const textarea = document.getElementById('edit-images-dialog');
+                const preview = document.getElementById('current-images-preview');
+                const urls = textarea.value.split('\n').filter(url => url.trim() !== '');
+                
+                if (urls.length === 0) {
+                    preview.innerHTML = '';
+                    return;
+                }
+                
+                preview.innerHTML = urls.map((url, idx) => `
+                    <div style="position: relative; border: 2px solid #3a3a3a; border-radius: 6px; overflow: hidden; aspect-ratio: 1;">
+                        <img src="${url.trim()}" alt="Preview ${idx + 1}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'%3E%3Crect fill=\\'%23333\\' width=\\'100\\' height=\\'100\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23888\\' font-size=\\'12\\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+                    </div>
+                `).join('');
+            }
 
             window.addKeyEntryDialog = function() {
                 const keysEditor = document.getElementById('keys-editor-dialog');
@@ -1043,13 +1159,18 @@
                         // If JSON is invalid, use what we built
                     }
 
+                    // Get images
+                    const imagesText = document.getElementById('edit-images-dialog').value;
+                    const imageUrls = imagesText.split('\n').filter(url => url.trim() !== '').map(url => url.trim());
+
                     const updateData = {
                         trader: document.getElementById('edit-trader-dialog').value,
                         level: parseInt(document.getElementById('edit-level-dialog').value) || 1,
                         requiredForKappa: document.getElementById('edit-kappa-required-dialog').checked,
                         mapName: document.getElementById('edit-map-dialog').value,
                         prerequisiteQuests: JSON.stringify(Array.from(selectedPrereqsForEdit)),
-                        requiredItems: JSON.stringify(parsedCustom.length > 0 ? parsedCustom : requiredItems)
+                        requiredItems: JSON.stringify(parsedCustom.length > 0 ? parsedCustom : requiredItems),
+                        images: JSON.stringify(imageUrls)
                     };
 
                     const response = await fetch(`/api/admin/quests/${selectedQuestForEdit.id}`, {

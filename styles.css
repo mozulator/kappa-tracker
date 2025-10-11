@@ -1231,8 +1231,8 @@ body {
     text-decoration: underline;
 }
 
-/* Gunsmith Build Button */
-.gunsmith-build-btn {
+/* Quest Images Button */
+.quest-images-btn {
     background: linear-gradient(135deg, #c7aa6a 0%, #a08850 100%);
     color: #1a1a1a;
     border: none;
@@ -1249,16 +1249,16 @@ body {
     letter-spacing: 0.5px;
 }
 
-.gunsmith-build-btn:hover {
+.quest-images-btn:hover {
     background: linear-gradient(135deg, #d4b978 0%, #b09660 100%);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(199, 170, 106, 0.3);
 }
 
-.gunsmith-build-btn:active {
+.quest-images-btn:active {
     transform: translateY(0);
 }
 
-.gunsmith-build-btn i {
+.quest-images-btn i {
     font-size: 0.85rem;
 }

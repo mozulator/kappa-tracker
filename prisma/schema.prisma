@@ -57,6 +57,7 @@ model Quest {
   wikiLink          String?
   mapName           String?  // Map where quest takes place
   requiredItems     String   @default("[]") // JSON array of required items with counts
+  images            String   @default("[]") // JSON array of image URLs
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
