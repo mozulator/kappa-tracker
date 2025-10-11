@@ -1950,12 +1950,9 @@ app.get('/collector-items-overlay', (req, res) => {
 });
 
 // API endpoint for collector items overlay data
-app.get('/api/overlay/collector-items', async (req, res) => {
+// Get collector items with user's progress (authenticated)
+app.get('/api/collector-items', requireAuth, async (req, res) => {
     try {
-        const { token } = req.query;
-        
-        // For now, token is optional - returns all items
-        // In future, could track per-user progress
         const collectorQuest = await prisma.quest.findFirst({
             where: {
                 name: 'Collector',
@@ -1972,6 +1969,13 @@ app.get('/api/overlay/collector-items', async (req, res) => {
             item.type === 'giveItem' || item.category === 'fir'
         );
 
+        // Get user's progress
+        const userProgress = await prisma.userProgress.findUnique({
+            where: { userId: req.user.id }
+        });
+
+        const foundItems = userProgress ? JSON.parse(userProgress.collectorItemsFound || '[]') : [];
+
         res.json({
             items: firItems.map(item => ({
                 id: item.name,
@@ -1979,11 +1983,35 @@ app.get('/api/overlay/collector-items', async (req, res) => {
                 count: item.count || 1,
                 image: null
             })),
-            foundItems: []
+            foundItems: foundItems
         });
     } catch (error) {
         console.error('Error fetching collector items:', error);
         res.status(500).json({ error: 'Failed to fetch data' });
+    }
+});
+
+// Save collector items progress (authenticated)
+app.post('/api/collector-items/save', requireAuth, async (req, res) => {
+    try {
+        const { foundItems } = req.body;
+        
+        await prisma.userProgress.upsert({
+            where: { userId: req.user.id },
+            update: {
+                collectorItemsFound: JSON.stringify(foundItems || [])
+            },
+            create: {
+                userId: req.user.id,
+                collectorItemsFound: JSON.stringify(foundItems || []),
+                completedQuests: '[]'
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving collector items:', error);
+        res.status(500).json({ error: 'Failed to save progress' });
     }
 });
 

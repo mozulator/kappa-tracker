@@ -98,7 +98,7 @@
                         <a href="/kappa-overview.html" target="_blank" class="dropdown-item" id="kappa-overview-link">
                             <i class="fas fa-chart-bar"></i> Kappa Overview
                         </a>
-                        <a href="/collector-items-overlay?token=demo" target="_blank" class="dropdown-item" id="collector-items-overlay-link">
+                        <a href="/collector-items-overlay" target="_blank" class="dropdown-item" id="collector-items-overlay-link">
                             <i class="fas fa-box-open"></i> Collector Items
                         </a>
                         <a href="https://www.youtube.com/watch?v=8ysn_HS_Y9k&feature=youtu.be" target="_blank" class="dropdown-item" id="obs-tutorial-link">
@@ -1673,12 +1673,30 @@
                     };
                 });
 
-                // Load user progress from localStorage
-                const savedProgress = localStorage.getItem(`collector-progress-${window.currentUserId}`);
-                if (savedProgress) {
-                    collectorFoundItems = new Set(JSON.parse(savedProgress));
-                } else {
-                    collectorFoundItems = new Set();
+                // Load user progress from server
+                try {
+                    const progressResponse = await fetch('/api/collector-items');
+                    if (progressResponse.ok) {
+                        const progressData = await progressResponse.json();
+                        collectorFoundItems = new Set(progressData.foundItems || []);
+                    } else {
+                        // Fallback to localStorage if server fails
+                        const savedProgress = localStorage.getItem(`collector-progress-${window.currentUserId}`);
+                        if (savedProgress) {
+                            collectorFoundItems = new Set(JSON.parse(savedProgress));
+                        } else {
+                            collectorFoundItems = new Set();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading progress from server:', error);
+                    // Fallback to localStorage
+                    const savedProgress = localStorage.getItem(`collector-progress-${window.currentUserId}`);
+                    if (savedProgress) {
+                        collectorFoundItems = new Set(JSON.parse(savedProgress));
+                    } else {
+                        collectorFoundItems = new Set();
+                    }
                 }
 
                 displayCollectorItems(collectorItems);
@@ -1749,18 +1767,33 @@
             `;
         }
 
-        function toggleCollectorItem(itemId) {
+        async function toggleCollectorItem(itemId) {
             if (collectorFoundItems.has(itemId)) {
                 collectorFoundItems.delete(itemId);
             } else {
                 collectorFoundItems.add(itemId);
             }
 
-            // Save progress to localStorage
+            const foundItemsArray = Array.from(collectorFoundItems);
+
+            // Save progress to localStorage (as backup)
             localStorage.setItem(
                 `collector-progress-${window.currentUserId}`, 
-                JSON.stringify(Array.from(collectorFoundItems))
+                JSON.stringify(foundItemsArray)
             );
+
+            // Save progress to server
+            try {
+                await fetch('/api/collector-items/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ foundItems: foundItemsArray })
+                });
+            } catch (error) {
+                console.error('Error saving to server:', error);
+            }
 
             // Re-render
             displayCollectorItems(collectorItems);

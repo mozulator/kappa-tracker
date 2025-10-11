@@ -72,6 +72,7 @@ model UserProgress {
   pmcLevel        Int      @default(1)
   prestige        Int      @default(0)
   completedQuests String   @default("[]") // JSON array of completed quest IDs
+  collectorItemsFound String @default("[]") // JSON array of found collector item IDs
   
   // Cached stats for rankings
   completionRate  Float    @default(0)
