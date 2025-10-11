@@ -79,6 +79,9 @@
             <nav class="nav">
                 <a href="#" class="nav-link active" id="dashboard-tab">Dashboard</a>
                 <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
+                <a href="/admin-quest-editor.html" class="nav-link" id="fix-quests-tab" style="display: none; background: rgba(199, 170, 106, 0.1); border: 1px solid #c7aa6a;">
+                    <i class="fas fa-tools"></i> Fix Quests
+                </a>
                 <a href="#" class="nav-link" id="rankings-tab">Rankings</a>
                 <a href="#" class="nav-link" id="profile-tab">Profile</a>
                 <div class="nav-dropdown">
@@ -418,6 +421,14 @@
                         }
                         if (kappaOverviewLink) {
                             kappaOverviewLink.href = `/kappa-overview.html?username=${username}`;
+                        }
+                        
+                        // Show Fix Quests button for admins
+                        if (data.user.isAdmin) {
+                            const fixQuestsTab = document.getElementById('fix-quests-tab');
+                            if (fixQuestsTab) {
+                                fixQuestsTab.style.display = 'block';
+                            }
                         }
                     }
                 })

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Editor - Admin - OBS Kappa Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, rgba(199, 170, 106, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+            border: 2px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .admin-header h1 {
+            color: #c7aa6a;
+            margin: 0 0 10px 0;
+            font-size: 32px;
+        }
+
+        .admin-header p {
+            color: #888;
+            margin: 0;
+        }
+
+        .quest-search {
+            margin-bottom: 30px;
+        }
+
+        .quest-search input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #3a3a3a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .quest-search input:focus {
+            outline: none;
+            border-color: #c7aa6a;
+        }
+
+        .quests-list {
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .quest-item {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quest-item:hover {
+            background: rgba(199, 170, 106, 0.1);
+            border-color: #c7aa6a;
+        }
+
+        .quest-item.selected {
+            background: rgba(199, 170, 106, 0.2);
+            border-color: #c7aa6a;
+        }
+
+        .quest-item-name {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .quest-item-details {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .quest-editor {
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 30px;
+            display: none;
+        }
+
+        .quest-editor.active {
+            display: block;
+        }
+
+        .editor-section {
+            margin-bottom: 30px;
+        }
+
+        .editor-section h3 {
+            color: #c7aa6a;
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            border-bottom: 2px solid #3a3a3a;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #c7aa6a;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #3a3a3a;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #c7aa6a;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+
+        .items-editor {
+            margin-top: 15px;
+        }
+
+        .item-entry {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .item-entry input {
+            flex: 1;
+        }
+
+        .item-entry input[type="number"] {
+            width: 100px;
+        }
+
+        .item-entry select {
+            width: 150px;
+        }
+
+        .btn-remove {
+            padding: 8px 12px;
+            background: #c83232;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-remove:hover {
+            background: #a82828;
+        }
+
+        .btn-add {
+            padding: 10px 20px;
+            background: rgba(199, 170, 106, 0.2);
+            border: 2px solid #c7aa6a;
+            border-radius: 6px;
+            color: #c7aa6a;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-add:hover {
+            background: rgba(199, 170, 106, 0.3);
+        }
+
+        .btn-save {
+            padding: 15px 30px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 10px;
+        }
+
+        .btn-save:hover {
+            background: #45a049;
+        }
+
+        .btn-cancel {
+            padding: 15px 30px;
+            background: rgba(200, 50, 50, 0.2);
+            border: 2px solid #c83232;
+            border-radius: 8px;
+            color: #c83232;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(200, 50, 50, 0.3);
+        }
+
+        .select-search {
+            position: relative;
+        }
+
+        .select-search input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #3a3a3a;
+            border-radius: 6px;
+            color: #fff;
+        }
+
+        .select-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(20, 20, 20, 0.98);
+            border: 2px solid #c7aa6a;
+            border-radius: 6px;
+            margin-top: 5px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .select-search-dropdown.active {
+            display: block;
+        }
+
+        .select-search-item {
+            padding: 10px;
+            cursor: pointer;
+            color: #fff;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .select-search-item:hover {
+            background: rgba(199, 170, 106, 0.2);
+        }
+
+        .selected-prereqs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .prereq-tag {
+            padding: 8px 12px;
+            background: rgba(199, 170, 106, 0.2);
+            border: 1px solid #c7aa6a;
+            border-radius: 4px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .prereq-tag i {
+            cursor: pointer;
+            color: #c83232;
+        }
+
+        .prereq-tag i:hover {
+            color: #ff4444;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .alert.error {
+            background: rgba(200, 50, 50, 0.2);
+            border: 2px solid #c83232;
+            color: #ff6b6b;
+        }
+
+        .alert.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <h1 class="title">QUEST EDITOR</h1>
+        </div>
+        <div class="header-right">
+            <a href="/index.html" class="reset-btn">
+                <i class="fas fa-arrow-left"></i> BACK TO TRACKER
+            </a>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1><i class="fas fa-tools"></i> Quest Editor</h1>
+            <p>Comprehensive quest parameter editing (Admin Only)</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="quest-search">
+            <input type="text" id="quest-search-input" placeholder="🔍 Search quests by name...">
+        </div>
+
+        <div class="quests-list" id="quests-list">
+            <div style="text-align: center; color: #888; padding: 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 32px;"></i>
+                <p>Loading quests...</p>
+            </div>
+        </div>
+
+        <div class="quest-editor" id="quest-editor">
+            <h2 style="color: #c7aa6a; margin-top: 0;"><span id="editing-quest-name">Quest Name</span></h2>
+
+            <div class="editor-section">
+                <h3>Basic Information</h3>
+                <div class="form-group">
+                    <label>Quest Name</label>
+                    <input type="text" id="edit-name" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Trader</label>
+                    <input type="text" id="edit-trader" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Level Requirement</label>
+                    <input type="number" id="edit-level" readonly>
+                </div>
+            </div>
+
+            <div class="editor-section">
+                <h3>Map Location</h3>
+                <div class="form-group">
+                    <label>Map Name</label>
+                    <select id="edit-map">
+                        <option value="Any Location">Any Location</option>
+                        <option value="Customs">Customs</option>
+                        <option value="Woods">Woods</option>
+                        <option value="Shoreline">Shoreline</option>
+                        <option value="Interchange">Interchange</option>
+                        <option value="Reserve">Reserve</option>
+                        <option value="Factory">Factory</option>
+                        <option value="The Lab">The Lab</option>
+                        <option value="Lighthouse">Lighthouse</option>
+                        <option value="Streets of Tarkov">Streets of Tarkov</option>
+                        <option value="Ground Zero">Ground Zero</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="editor-section">
+                <h3>Prerequisite Quests</h3>
+                <div class="form-group">
+                    <label>Search and Add Prerequisite Quests</label>
+                    <div class="select-search">
+                        <input type="text" id="prereq-search" placeholder="Type to search quests...">
+                        <div class="select-search-dropdown" id="prereq-dropdown"></div>
+                    </div>
+                    <div class="selected-prereqs" id="selected-prereqs"></div>
+                </div>
+            </div>
+
+            <div class="editor-section">
+                <h3>Required Items</h3>
+                
+                <div class="form-group">
+                    <label>MS2000 Markers</label>
+                    <input type="number" id="edit-markers" min="0" placeholder="Number of markers needed">
+                </div>
+
+                <div class="form-group">
+                    <label>Signal Jammers</label>
+                    <input type="number" id="edit-jammers" min="0" placeholder="Number of jammers needed">
+                </div>
+
+                <div class="form-group">
+                    <label>WI-FI Cameras</label>
+                    <input type="number" id="edit-cameras" min="0" placeholder="Number of cameras needed">
+                </div>
+
+                <div class="form-group">
+                    <label>Keys Needed</label>
+                    <div class="items-editor" id="keys-editor">
+                        <!-- Keys will be added here -->
+                    </div>
+                    <button class="btn-add" onclick="addKeyEntry()">
+                        <i class="fas fa-plus"></i> Add Key
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label>Custom Required Items (JSON)</label>
+                    <textarea id="edit-required-items" placeholder='[{"name":"Item Name","count":1,"category":"fir","type":"giveItem"}]'></textarea>
+                    <small style="color: #888;">Advanced: Edit full JSON for complete control</small>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button class="btn-save" onclick="saveQuest()">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <button class="btn-cancel" onclick="cancelEdit()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allQuests = [];
+        let selectedQuest = null;
+        let selectedPrereqs = new Set();
+
+        async function loadQuests() {
+            try {
+                const response = await fetch('/api/quests', { credentials: 'include' });
+                allQuests = await response.json();
+                displayQuests(allQuests);
+            } catch (error) {
+                console.error('Error loading quests:', error);
+                showAlert('Failed to load quests', 'error');
+            }
+        }
+
+        function displayQuests(quests) {
+            const listElement = document.getElementById('quests-list');
+            if (quests.length === 0) {
+                listElement.innerHTML = '<p style="text-align: center; color: #888;">No quests found</p>';
+                return;
+            }
+
+            listElement.innerHTML = quests.map(quest => `
+                <div class="quest-item" onclick="selectQuest('${quest.id}')">
+                    <div>
+                        <div class="quest-item-name">${quest.name}</div>
+                        <div class="quest-item-details">
+                            ${quest.trader} • Level ${quest.level} • ${quest.mapName || 'Any Location'}
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: #c7aa6a;"></i>
+                </div>
+            `).join('');
+        }
+
+        function selectQuest(questId) {
+            selectedQuest = allQuests.find(q => q.id === questId);
+            if (!selectedQuest) return;
+
+            // Update UI
+            document.querySelectorAll('.quest-item').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            // Populate editor
+            document.getElementById('editing-quest-name').textContent = selectedQuest.name;
+            document.getElementById('edit-name').value = selectedQuest.name;
+            document.getElementById('edit-trader').value = selectedQuest.trader;
+            document.getElementById('edit-level').value = selectedQuest.level;
+            document.getElementById('edit-map').value = selectedQuest.mapName || 'Any Location';
+
+            // Load prerequisite quests
+            selectedPrereqs = new Set(JSON.parse(selectedQuest.prerequisiteQuests || '[]'));
+            updatePrereqsDisplay();
+
+            // Load required items
+            const requiredItems = JSON.parse(selectedQuest.requiredItems || '[]');
+            document.getElementById('edit-required-items').value = JSON.stringify(requiredItems, null, 2);
+
+            // Parse markers, jammers, cameras, keys
+            let markers = 0, jammers = 0, cameras = 0;
+            const keys = [];
+
+            requiredItems.forEach(item => {
+                if (item.category === 'markers') markers = Math.max(markers, item.count || 0);
+                else if (item.category === 'jammers') jammers = Math.max(jammers, item.count || 0);
+                else if (item.name && item.name.includes('WI-FI Camera')) cameras = Math.max(cameras, item.count || 0);
+                else if (item.category === 'keys') keys.push({ name: item.name, count: item.count || 1 });
+            });
+
+            document.getElementById('edit-markers').value = markers;
+            document.getElementById('edit-jammers').value = jammers;
+            document.getElementById('edit-cameras').value = cameras;
+
+            // Display keys
+            const keysEditor = document.getElementById('keys-editor');
+            keysEditor.innerHTML = keys.map((key, idx) => `
+                <div class="item-entry">
+                    <input type="text" value="${key.name}" placeholder="Key name" data-key-idx="${idx}">
+                    <input type="number" value="${key.count}" min="1" placeholder="Count" data-key-count-idx="${idx}">
+                    <button class="btn-remove" onclick="removeKeyEntry(${idx})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            // Show editor
+            document.getElementById('quest-editor').classList.add('active');
+            document.getElementById('quest-editor').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function addKeyEntry() {
+            const keysEditor = document.getElementById('keys-editor');
+            const idx = keysEditor.children.length;
+            const entry = document.createElement('div');
+            entry.className = 'item-entry';
+            entry.innerHTML = `
+                <input type="text" placeholder="Key name" data-key-idx="${idx}">
+                <input type="number" value="1" min="1" placeholder="Count" data-key-count-idx="${idx}">
+                <button class="btn-remove" onclick="removeKeyEntry(${idx})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            keysEditor.appendChild(entry);
+        }
+
+        function removeKeyEntry(idx) {
+            event.target.closest('.item-entry').remove();
+        }
+
+        // Prerequisite quest search
+        document.getElementById('prereq-search').addEventListener('input', function() {
+            const search = this.value.toLowerCase();
+            const dropdown = document.getElementById('prereq-dropdown');
+            
+            if (search.length < 2) {
+                dropdown.classList.remove('active');
+                return;
+            }
+
+            const filtered = allQuests.filter(q => 
+                q.name.toLowerCase().includes(search) && 
+                q.id !== selectedQuest.id &&
+                !selectedPrereqs.has(q.id)
+            );
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="select-search-item" style="color: #888;">No quests found</div>';
+            } else {
+                dropdown.innerHTML = filtered.slice(0, 10).map(q => `
+                    <div class="select-search-item" onclick="addPrereq('${q.id}', '${q.name.replace(/'/g, "\\'")}')">
+                        ${q.name} <span style="color: #888;">(${q.trader})</span>
+                    </div>
+                `).join('');
+            }
+            dropdown.classList.add('active');
+        });
+
+        document.getElementById('prereq-search').addEventListener('blur', function() {
+            setTimeout(() => {
+                document.getElementById('prereq-dropdown').classList.remove('active');
+            }, 200);
+        });
+
+        function addPrereq(id, name) {
+            selectedPrereqs.add(id);
+            updatePrereqsDisplay();
+            document.getElementById('prereq-search').value = '';
+            document.getElementById('prereq-dropdown').classList.remove('active');
+        }
+
+        function removePrereq(id) {
+            selectedPrereqs.delete(id);
+            updatePrereqsDisplay();
+        }
+
+        function updatePrereqsDisplay() {
+            const container = document.getElementById('selected-prereqs');
+            if (selectedPrereqs.size === 0) {
+                container.innerHTML = '<p style="color: #888;">No prerequisite quests</p>';
+                return;
+            }
+
+            container.innerHTML = Array.from(selectedPrereqs).map(id => {
+                const quest = allQuests.find(q => q.id === id);
+                return quest ? `
+                    <div class="prereq-tag">
+                        ${quest.name}
+                        <i class="fas fa-times" onclick="removePrereq('${id}')"></i>
+                    </div>
+                ` : '';
+            }).join('');
+        }
+
+        // Quest search
+        document.getElementById('quest-search-input').addEventListener('input', function() {
+            const search = this.value.toLowerCase();
+            const filtered = allQuests.filter(q => 
+                q.name.toLowerCase().includes(search) ||
+                q.trader.toLowerCase().includes(search)
+            );
+            displayQuests(filtered);
+        });
+
+        async function saveQuest() {
+            if (!selectedQuest) return;
+
+            try {
+                // Build required items
+                const requiredItems = [];
+
+                // Add markers
+                const markers = parseInt(document.getElementById('edit-markers').value) || 0;
+                if (markers > 0) {
+                    requiredItems.push({
+                        name: 'MS2000 Marker',
+                        count: markers,
+                        category: 'markers',
+                        type: 'mark'
+                    });
+                }
+
+                // Add jammers
+                const jammers = parseInt(document.getElementById('edit-jammers').value) || 0;
+                if (jammers > 0) {
+                    requiredItems.push({
+                        name: 'Signal Jammer',
+                        count: jammers,
+                        category: 'jammers',
+                        type: 'plantItem'
+                    });
+                }
+
+                // Add cameras
+                const cameras = parseInt(document.getElementById('edit-cameras').value) || 0;
+                if (cameras > 0) {
+                    requiredItems.push({
+                        name: 'WI-FI Camera',
+                        count: cameras,
+                        category: 'any',
+                        type: 'plantItem'
+                    });
+                }
+
+                // Add keys
+                const keyEntries = document.querySelectorAll('#keys-editor .item-entry');
+                keyEntries.forEach(entry => {
+                    const nameInput = entry.querySelector('input[data-key-idx]');
+                    const countInput = entry.querySelector('input[data-key-count-idx]');
+                    if (nameInput && nameInput.value.trim()) {
+                        requiredItems.push({
+                            name: nameInput.value.trim(),
+                            count: parseInt(countInput.value) || 1,
+                            category: 'keys',
+                            type: 'key'
+                        });
+                    }
+                });
+
+                // Try to parse custom items JSON
+                const customJson = document.getElementById('edit-required-items').value;
+                let parsedCustom = [];
+                try {
+                    parsedCustom = JSON.parse(customJson);
+                    // Merge with our built items, preferring custom JSON
+                    // This is advanced mode
+                } catch (e) {
+                    // If JSON is invalid, use what we built
+                }
+
+                const updateData = {
+                    mapName: document.getElementById('edit-map').value,
+                    prerequisiteQuests: JSON.stringify(Array.from(selectedPrereqs)),
+                    requiredItems: JSON.stringify(parsedCustom.length > 0 ? parsedCustom : requiredItems)
+                };
+
+                const response = await fetch(`/api/admin/quests/${selectedQuest.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update quest');
+                }
+
+                showAlert('Quest updated successfully!', 'success');
+                
+                // Reload quests
+                await loadQuests();
+                
+                // Reselect current quest
+                setTimeout(() => selectQuest(selectedQuest.id), 100);
+
+            } catch (error) {
+                console.error('Error saving quest:', error);
+                showAlert('Failed to save quest: ' + error.message, 'error');
+            }
+        }
+
+        function cancelEdit() {
+            document.getElementById('quest-editor').classList.remove('active');
+            document.querySelectorAll('.quest-item').forEach(el => el.classList.remove('selected'));
+            selectedQuest = null;
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type} active`;
+            setTimeout(() => {
+                alert.classList.remove('active');
+            }, 5000);
+        }
+
+        // Check if user is admin
+        async function checkAdmin() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                if (!response.ok) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                const data = await response.json();
+                if (!data.user.isAdmin) {
+                    alert('Access denied. Admin privileges required.');
+                    window.location.href = '/index.html';
+                }
+            } catch (error) {
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Initialize
+        checkAdmin();
+        loadQuests();
+    </script>
+</body>
+</html>
+

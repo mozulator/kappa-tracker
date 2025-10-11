@@ -361,6 +361,7 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
                 discordTag: true,
                 tarkovDevId: true,
                 avatarUrl: true,
+                isAdmin: true,
                 createdAt: true
             }
         });
@@ -979,6 +980,86 @@ app.post('/api/refresh-quests', requireAuth, async (req, res) => {
         res.json({ message: 'Quests refreshed successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Update quest (admin only)
+app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
+    try {
+        const { questId } = req.params;
+        const { mapName, prerequisiteQuests, requiredItems } = req.body;
+
+        // Validate quest exists
+        const quest = await prisma.quest.findUnique({
+            where: { id: questId },
+            select: { id: true, name: true }
+        });
+
+        if (!quest) {
+            return res.status(404).json({ error: 'Quest not found' });
+        }
+
+        // Build update data
+        const updateData = {};
+        
+        if (mapName !== undefined) {
+            updateData.mapName = mapName;
+        }
+        
+        if (prerequisiteQuests !== undefined) {
+            // Validate it's valid JSON
+            try {
+                JSON.parse(prerequisiteQuests);
+                updateData.prerequisiteQuests = prerequisiteQuests;
+            } catch (e) {
+                return res.status(400).json({ error: 'Invalid prerequisiteQuests JSON' });
+            }
+        }
+        
+        if (requiredItems !== undefined) {
+            // Validate it's valid JSON
+            try {
+                JSON.parse(requiredItems);
+                updateData.requiredItems = requiredItems;
+            } catch (e) {
+                return res.status(400).json({ error: 'Invalid requiredItems JSON' });
+            }
+        }
+
+        // Update quest
+        const updatedQuest = await prisma.quest.update({
+            where: { id: questId },
+            data: updateData
+        });
+
+        console.log(`Admin ${req.user.username} updated quest: ${quest.name}`);
+        res.json({
+            message: 'Quest updated successfully',
+            quest: updatedQuest
+        });
+
+    } catch (error) {
+        console.error('Error updating quest:', error);
+        res.status(500).json({ error: 'Failed to update quest' });
+    }
+});
+
+// Get single quest (admin)
+app.get('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
+    try {
+        const { questId } = req.params;
+        const quest = await prisma.quest.findUnique({
+            where: { id: questId }
+        });
+
+        if (!quest) {
+            return res.status(404).json({ error: 'Quest not found' });
+        }
+
+        res.json(quest);
+    } catch (error) {
+        console.error('Error fetching quest:', error);
+        res.status(500).json({ error: 'Failed to fetch quest' });
     }
 });
 
