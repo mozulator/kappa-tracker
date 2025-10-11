@@ -500,9 +500,10 @@ class QuestTracker {
         const rankingsTab = document.getElementById('rankings-tab');
         const profileTab = document.getElementById('profile-tab');
         const fixQuestsTab = document.getElementById('fix-quests-tab');
+        const collectorItemsTab = document.getElementById('collector-items-tab');
         
         // Remove active class from all tabs
-        [dashboardTab, finishedQuestsTab, rankingsTab, profileTab, fixQuestsTab].forEach(tab => {
+        [dashboardTab, finishedQuestsTab, rankingsTab, profileTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
             if (tab) tab.classList.remove('active');
         });
         
