@@ -1144,30 +1144,22 @@
 
                     // Add keys
                     const keyEntries = document.querySelectorAll('#keys-editor-dialog > div');
-                    console.log('Found key entries:', keyEntries.length);
-                    keyEntries.forEach((entry, idx) => {
+                    keyEntries.forEach(entry => {
                         const nameInput = entry.querySelector('input[data-key-idx]');
                         const countInput = entry.querySelector('input[data-key-count-idx]');
-                        console.log(`Key ${idx}:`, nameInput?.value, countInput?.value);
                         if (nameInput && nameInput.value.trim()) {
-                            const keyData = {
+                            requiredItems.push({
                                 name: nameInput.value.trim(),
                                 count: parseInt(countInput.value) || 1,
                                 category: 'keys',
                                 type: 'key'
-                            };
-                            console.log('Adding key:', keyData);
-                            requiredItems.push(keyData);
+                            });
                         }
                     });
-                    console.log('Total required items (with keys):', requiredItems);
 
                     // Try to parse custom items JSON - only use if user explicitly entered something
                     const customJson = document.getElementById('edit-required-items-dialog').value.trim();
                     let finalRequiredItems = requiredItems;
-                    
-                    console.log('Custom JSON length:', customJson.length);
-                    console.log('Custom JSON content:', customJson);
                     
                     // Only use custom JSON if user actually entered valid JSON
                     if (customJson.length > 0) {
@@ -1176,14 +1168,11 @@
                             if (Array.isArray(parsedCustom)) {
                                 // Use custom JSON instead of form fields
                                 finalRequiredItems = parsedCustom;
-                                console.log('Using custom JSON for required items:', parsedCustom);
                             }
                         } catch (e) {
                             // If JSON is invalid, use what we built from form fields
                             console.warn('Custom JSON invalid, using form fields instead');
                         }
-                    } else {
-                        console.log('No custom JSON, using form fields:', finalRequiredItems);
                     }
 
                     // Get images
@@ -1246,20 +1235,8 @@
                 }
             }
 
-            // Initialize the quest tracker and check admin status
+            // Initialize the quest tracker (admin check happens in init())
             window.tracker = new QuestTracker();
-            
-            // Set admin status after checking auth
-            fetch('/api/auth/me', { credentials: 'include' })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.user && data.user.isAdmin) {
-                        console.log('Admin user detected, enabling fix buttons');
-                        window.tracker.isAdmin = true;
-                        window.tracker.updateUI(); // Refresh to show fix buttons
-                    }
-                })
-                .catch(err => console.error('Failed to check admin status:', err));
         });
     </script>
 </body>

@@ -12,10 +12,25 @@ class QuestTracker {
     }
 
     async init() {
+        // Check admin status first
+        await this.checkAdminStatus();
         await this.loadProgress();
         await this.loadQuests();
         this.setupEventListeners();
         this.updateUI();
+    }
+
+    async checkAdminStatus() {
+        try {
+            const response = await fetch('/api/auth/me', { credentials: 'include' });
+            const data = await response.json();
+            if (data.user && data.user.isAdmin) {
+                this.isAdmin = true;
+                console.log('Admin status confirmed:', this.isAdmin);
+            }
+        } catch (err) {
+            console.error('Failed to check admin status:', err);
+        }
     }
 
     async loadQuests() {
@@ -530,7 +545,6 @@ class QuestTracker {
     }
 
     updateQuestsList() {
-        console.log('updateQuestsList called, isAdmin:', this.isAdmin);
         const questsGrid = document.getElementById('quests-grid');
         let questsToShow;
         
