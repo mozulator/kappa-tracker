@@ -476,6 +476,45 @@ app.get('/api/admin/all-users', requireAdmin, async (req, res) => {
     }
 });
 
+// Toggle admin status (admin only)
+app.put('/api/admin/toggle-admin/:userId', requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { isAdmin } = req.body;
+        
+        // Prevent changing your own admin status
+        if (userId === req.user.id) {
+            return res.status(400).json({ error: 'Cannot change your own admin status' });
+        }
+        
+        // Get target user
+        const targetUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, username: true, isAdmin: true }
+        });
+        
+        if (!targetUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Update admin status
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { isAdmin: Boolean(isAdmin) },
+            select: { id: true, username: true, isAdmin: true }
+        });
+        
+        console.log(`Admin ${req.user.username} ${isAdmin ? 'granted' : 'revoked'} admin access for user: ${targetUser.username}`);
+        res.json({ 
+            message: isAdmin ? 'Admin access granted' : 'Admin access revoked',
+            user: updatedUser 
+        });
+    } catch (error) {
+        console.error('Error toggling admin status:', error);
+        res.status(500).json({ error: 'Failed to update admin status' });
+    }
+});
+
 // Delete user (admin only)
 app.delete('/api/admin/delete-user/:userId', requireAdmin, async (req, res) => {
     try {

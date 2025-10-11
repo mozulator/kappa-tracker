@@ -206,6 +206,15 @@
             background: #da190b;
         }
 
+        .btn-warning {
+            background: #ff9800;
+            color: #fff;
+        }
+
+        .btn-warning:hover {
+            background: #e68900;
+        }
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -605,10 +614,18 @@
                     </div>
                     <div class="action-buttons">
                         ${!user.isAdmin ? `
+                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)">
+                                <i class="fas fa-crown"></i> Make Admin
+                            </button>
                             <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.username}')">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
-                        ` : '<span style="color: #ffd700; font-size: 12px;">Protected</span>'}
+                        ` : `
+                            <button class="btn btn-warning" onclick="toggleAdmin('${user.id}', '${user.username}', false)">
+                                <i class="fas fa-crown"></i> Remove Admin
+                            </button>
+                            <span style="color: #ffd700; font-size: 12px; margin-left: 8px;">Protected from deletion</span>
+                        `}
                     </div>
                 </div>
             `).join('');
@@ -660,6 +677,35 @@
             } catch (error) {
                 console.error('Error:', error);
                 showNotification('Failed to reject user', 'error');
+            }
+        }
+
+        async function toggleAdmin(userId, username, makeAdmin) {
+            const action = makeAdmin ? 'give admin role to' : 'remove admin role from';
+            if (!confirm(`${makeAdmin ? 'GRANT ADMIN ACCESS' : 'REVOKE ADMIN ACCESS'}: ${username}?\n\nThis will ${action} ${username}.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/toggle-admin/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ isAdmin: makeAdmin })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to update admin status');
+                }
+
+                const data = await response.json();
+                showNotification(makeAdmin ? `👑 Admin granted: ${username}` : `👤 Admin removed: ${username}`, 'success');
+                
+                await loadData();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(error.message, 'error');
             }
         }
 

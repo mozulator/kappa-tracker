@@ -1197,8 +1197,14 @@
                     alert.style.color = '#4CAF50';
                     alert.textContent = '✅ Quest updated successfully!';
 
-                    // Reload quests
+                    // Reload quests in Fix Quests tab
                     await loadQuestsForFixing();
+                    
+                    // Reload quests in main tracker so changes appear immediately
+                    if (window.tracker) {
+                        await window.tracker.loadQuests();
+                        window.tracker.updateUI();
+                    }
 
                     // Close dialog after a moment
                     setTimeout(() => {
