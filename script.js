@@ -691,7 +691,7 @@ class QuestTracker {
             const isActive = (mapName === this.currentMap) ? 'active' : '';
             
             return `
-                <button class="map-tab ${isActive}" onclick="questTracker.switchMap('${mapName}')">
+                <button class="map-tab ${isActive}" onclick="window.tracker.switchMap('${mapName}')">
                     ${mapName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
                 </button>
             `;
