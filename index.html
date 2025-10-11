@@ -95,6 +95,9 @@
                         <a href="/kappa-overview.html" target="_blank" class="dropdown-item" id="kappa-overview-link">
                             <i class="fas fa-chart-bar"></i> Kappa Overview
                         </a>
+                        <a href="/collector-items-overlay?token=demo" target="_blank" class="dropdown-item" id="collector-items-overlay-link">
+                            <i class="fas fa-box-open"></i> Collector Items
+                        </a>
                         <a href="https://www.youtube.com/watch?v=8ysn_HS_Y9k&feature=youtu.be" target="_blank" class="dropdown-item" id="obs-tutorial-link">
                             <i class="fas fa-video"></i> How to use?
                         </a>
@@ -107,13 +110,13 @@
         </div>
         <div class="header-right">
             <button id="report-bug-btn" class="reset-btn report-bug" title="Report a Bug">
-                <i class="fas fa-bug"></i> REPORT BUG
+                REPORT BUG
             </button>
             <button id="request-feature-btn" class="reset-btn request-feature" title="Request a Feature">
-                <i class="fas fa-lightbulb"></i> REQUEST FEATURE
+                REQUEST FEATURE
             </button>
             <button id="logout-btn" class="reset-btn" title="Logout" style="margin-left: 10px;">
-                <i class="fas fa-sign-out-alt"></i> LOGOUT
+                LOGOUT
             </button>
         </div>
     </header>
@@ -235,7 +238,7 @@
             <section class="collector-section" id="collector-section" style="display: none;">
                 <div style="margin-bottom: 30px;">
                     <h2 style="color: var(--text-highlight); font-size: 2rem; margin-bottom: 10px;">
-                        <i class="fas fa-box-open"></i> Collector Items Tracker
+                        <i class="fas fa-box-open"></i> Collector Items Tracker <span id="collector-title-count" style="color: var(--subtext); font-size: 1.5rem;"></span>
                     </h2>
                     <p style="color: var(--subtext); font-size: 0.9rem;">
                         Track all Found in Raid items needed for the Collector quest. Click items to mark as found.
@@ -1643,6 +1646,7 @@
             const foundGrid = document.getElementById('collector-found-grid');
             const neededCount = document.getElementById('needed-count');
             const foundCount = document.getElementById('found-count');
+            const titleCount = document.getElementById('collector-title-count');
 
             if (!neededGrid || !foundGrid) return;
 
@@ -1653,6 +1657,11 @@
             // Update counts
             if (neededCount) neededCount.textContent = `${neededItems.length}`;
             if (foundCount) foundCount.textContent = `${foundItems.length}`;
+            
+            // Update title count
+            if (titleCount) {
+                titleCount.textContent = `(${foundItems.length}/${items.length})`;
+            }
 
             // Render needed items
             if (neededItems.length === 0) {

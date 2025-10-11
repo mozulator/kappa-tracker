@@ -1944,6 +1944,49 @@ app.get('/kappa/:userId/:token', async (req, res) => {
     }
 });
 
+// Collector Items overlay (public - no auth required for now)
+app.get('/collector-items-overlay', (req, res) => {
+    res.sendFile(path.join(__dirname, 'collector-items-overlay.html'));
+});
+
+// API endpoint for collector items overlay data
+app.get('/api/overlay/collector-items', async (req, res) => {
+    try {
+        const { token } = req.query;
+        
+        // For now, token is optional - returns all items
+        // In future, could track per-user progress
+        const collectorQuest = await prisma.quest.findFirst({
+            where: {
+                name: 'Collector',
+                trader: 'Fence'
+            }
+        });
+
+        if (!collectorQuest) {
+            return res.json({ items: [], foundItems: [] });
+        }
+
+        const requiredItems = JSON.parse(collectorQuest.requiredItems || '[]');
+        const firItems = requiredItems.filter(item => 
+            item.type === 'giveItem' || item.category === 'fir'
+        );
+
+        res.json({
+            items: firItems.map(item => ({
+                id: item.name,
+                name: item.name,
+                count: item.count || 1,
+                image: null
+            })),
+            foundItems: []
+        });
+    } catch (error) {
+        console.error('Error fetching collector items:', error);
+        res.status(500).json({ error: 'Failed to fetch data' });
+    }
+});
+
 // ============================================================================
 // STATIC FILES (must be after API routes)
 // ============================================================================

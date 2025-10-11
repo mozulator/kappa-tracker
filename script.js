@@ -464,6 +464,7 @@ class QuestTracker {
         const rankingsSection = document.getElementById('rankings-section');
         const profileSection = document.getElementById('profile-section');
         const fixQuestsSection = document.getElementById('fix-quests-section');
+        const collectorSection = document.getElementById('collector-section');
 
         questsSection.style.display = 'none';
         mapOverview.style.display = 'none';
@@ -472,13 +473,20 @@ class QuestTracker {
         rankingsSection.style.display = 'none';
         profileSection.style.display = 'none';
         if (fixQuestsSection) fixQuestsSection.style.display = 'none';
+        if (collectorSection) collectorSection.style.display = 'none';
 
         // Show relevant sections based on view
-        if (view === 'dashboard' || view === 'finished') {
+        if (view === 'dashboard') {
             questsSection.style.display = 'block';
             mapOverview.style.display = 'block';
             mapTabsSection.style.display = 'block';
             sidebar.style.display = 'flex'; // Use flex to maintain sidebar layout
+        } else if (view === 'finished') {
+            questsSection.style.display = 'block';
+            mapTabsSection.style.display = 'block';
+            sidebar.style.display = 'flex';
+            // Hide map-overview on finished quests page
+            mapOverview.style.display = 'none';
         } else if (view === 'rankings') {
             rankingsSection.style.display = 'block';
         } else if (view === 'profile') {
