@@ -394,16 +394,16 @@
 
     <!-- Quest Image Viewer Dialog -->
     <div id="quest-image-viewer" class="dialog-overlay">
-        <div class="dialog-content" style="max-width: 1200px; max-height: 95vh; width: 95%;">
+        <div class="dialog-content" style="max-width: 98vw; max-height: 98vh; width: 98%; height: 98vh;">
             <div class="dialog-header">
                 <h3><i class="fas fa-image"></i> <span id="quest-image-quest-name">Quest Images</span></h3>
             </div>
-            <div class="dialog-body" style="padding: 20px;">
-                <div style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 500px;">
+            <div class="dialog-body" style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
+                <div style="position: relative; display: flex; justify-content: center; align-items: center; flex: 1;">
                     <button id="quest-image-prev" style="position: absolute; left: 10px; padding: 15px 20px; background: rgba(199, 170, 106, 0.2); border: 2px solid #c7aa6a; border-radius: 8px; color: #c7aa6a; cursor: pointer; font-size: 24px; z-index: 10;">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <img id="quest-image-display" src="" alt="Quest Image" style="max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 8px;">
+                    <img id="quest-image-display" src="" alt="Quest Image" style="max-width: 95%; max-height: 85vh; object-fit: contain; border-radius: 8px;">
                     <button id="quest-image-next" style="position: absolute; right: 10px; padding: 15px 20px; background: rgba(199, 170, 106, 0.2); border: 2px solid #c7aa6a; border-radius: 8px; color: #c7aa6a; cursor: pointer; font-size: 24px; z-index: 10;">
                         <i class="fas fa-chevron-right"></i>
                     </button>
