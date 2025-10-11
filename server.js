@@ -890,7 +890,8 @@ app.get('/api/users/:username', optionalAuth, async (req, res) => {
                         completionRate: true,
                         totalCompleted: true,
                         lastQuestDate: true,
-                        completedQuests: true
+                        completedQuests: true,
+                        collectorItemsFound: true
                     }
                 }
             }
@@ -906,14 +907,16 @@ app.get('/api/users/:username', optionalAuth, async (req, res) => {
             return res.status(403).json({ error: 'Profile is private' });
         }
 
-        // Parse completed quests
-        // If public profile or own profile, include completed quests for OBS overlays
+        // Parse completed quests and collector items
+        // If public profile or own profile, include data for OBS overlays
         if (user.progress) {
             if (user.isPublic || isOwnProfile) {
-            user.progress.completedQuests = JSON.parse(user.progress.completedQuests || '[]');
-        } else {
+                user.progress.completedQuests = JSON.parse(user.progress.completedQuests || '[]');
+                user.progress.collectorItemsFound = JSON.parse(user.progress.collectorItemsFound || '[]');
+            } else {
                 // Don't send detailed quest list for private profiles
                 delete user.progress.completedQuests;
+                delete user.progress.collectorItemsFound;
             }
         }
 
@@ -1950,9 +1953,11 @@ app.get('/collector-items-overlay', (req, res) => {
 });
 
 // API endpoint for collector items overlay data
-// Get collector items with user's progress (authenticated)
-app.get('/api/collector-items', requireAuth, async (req, res) => {
+// Get collector items with user's progress (authenticated or with username)
+app.get('/api/collector-items', optionalAuth, async (req, res) => {
     try {
+        const { username } = req.query;
+        
         const collectorQuest = await prisma.quest.findFirst({
             where: {
                 name: 'Collector',
@@ -1969,12 +1974,40 @@ app.get('/api/collector-items', requireAuth, async (req, res) => {
             item.type === 'giveItem' || item.category === 'fir'
         );
 
-        // Get user's progress
-        const userProgress = await prisma.userProgress.findUnique({
-            where: { userId: req.user.id }
-        });
+        let foundItems = [];
+        
+        // If username provided, get that user's progress
+        if (username) {
+            const user = await prisma.user.findUnique({
+                where: { username: username.toLowerCase() },
+                include: {
+                    progress: {
+                        select: {
+                            collectorItemsFound: true
+                        }
+                    }
+                }
+            });
 
-        const foundItems = userProgress ? JSON.parse(userProgress.collectorItemsFound || '[]') : [];
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            // Check if user wants their profile public
+            const isOwnProfile = req.user && req.user.id === user.id;
+            if (!user.isPublic && !isOwnProfile) {
+                return res.status(403).json({ error: 'Profile is private' });
+            }
+
+            foundItems = user.progress ? JSON.parse(user.progress.collectorItemsFound || '[]') : [];
+        } 
+        // Otherwise, use authenticated user's progress
+        else if (req.user) {
+            const userProgress = await prisma.userProgress.findUnique({
+                where: { userId: req.user.id }
+            });
+            foundItems = userProgress ? JSON.parse(userProgress.collectorItemsFound || '[]') : [];
+        }
 
         res.json({
             items: firItems.map(item => ({

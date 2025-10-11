@@ -223,6 +223,10 @@
 
     <script>
         let tarkovItemsCache = [];
+        
+        // Extract username from URL query parameter (format: ?username=XXX)
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
 
         loadCollectorItems();
 
@@ -290,9 +294,14 @@
                     await fetchTarkovItems();
                 }
 
-                // Fetch collector progress using authenticated session
-                const response = await fetch('/api/collector-items');
-                if (!response.ok) throw new Error('Failed to fetch data');
+                // Fetch collector progress - either by username or authenticated session
+                const apiUrl = username ? `/api/collector-items?username=${username}` : '/api/collector-items';
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    console.error('Error fetching data:', response.status);
+                    throw new Error('Failed to fetch data');
+                }
                 
                 const data = await response.json();
                 

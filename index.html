@@ -717,6 +717,7 @@
             const obsDropdown = document.getElementById('obs-dropdown');
             const collectorProgressLink = document.getElementById('collector-progress-link');
             const kappaOverviewLink = document.getElementById('kappa-overview-link');
+            const collectorItemsOverlayLink = document.getElementById('collector-items-overlay-link');
             
             if (obsIntegrationTab && obsDropdown) {
                 // Toggle dropdown on click
@@ -745,6 +746,9 @@
                         }
                         if (kappaOverviewLink) {
                             kappaOverviewLink.href = `/kappa-overview.html?username=${username}`;
+                        }
+                        if (collectorItemsOverlayLink) {
+                            collectorItemsOverlayLink.href = `/collector-items-overlay?username=${username}`;
                         }
                         
                         // Show Fix Quests button for admins
