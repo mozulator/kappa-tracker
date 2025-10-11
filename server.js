@@ -1678,15 +1678,15 @@ async function applyQuestFixes() {
         },
         {
             name: 'Informed Means Armed',
-            id: '669f8d43e1bc2a1a6c04bcf9',
+            id: '5b47926a86f7747ccc057c15',
             data: { 
                 mapName: 'Any Location',
                 requiredItems: JSON.stringify([{"name":"WI-FI Camera","count":3,"category":"any","type":"plantItem"}])
             }
         },
         {
-            name: 'Lend Lease - Part 1',
-            id: '656f9d5ff3a29858a60214a4',
+            name: 'Lend-Lease - Part 1',
+            id: '5b4794cb86f774598100d5d4',
             data: { mapName: 'Any Location' }
         }
     ];
