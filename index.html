@@ -570,28 +570,35 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
     <script>
-        // Check authentication on page load
-        fetch('/api/auth/status', { credentials: 'include' })
-            .then(res => res.json())
-            .then(data => {
+        // Check authentication BEFORE loading anything
+        (async function() {
+            try {
+                const res = await fetch('/api/auth/status', { credentials: 'include' });
+                const data = await res.json();
+                
                 if (!data.authenticated) {
                     window.location.href = '/login';
-                } else {
-                    // Show user info
-                    const userInfo = document.getElementById('user-info');
-                    const displayName = document.getElementById('user-display-name');
-                    if (userInfo && displayName) {
-                        displayName.textContent = data.user.displayName || data.user.username;
-                        userInfo.style.display = 'block';
-                    }
+                    return; // Stop execution
                 }
-            })
-            .catch(err => {
+                
+                // Show user info
+                const userInfo = document.getElementById('user-info');
+                const displayName = document.getElementById('user-display-name');
+                if (userInfo && displayName) {
+                    displayName.textContent = data.user.displayName || data.user.username;
+                    userInfo.style.display = 'block';
+                }
+                
+                // Load tracker script only after auth confirmed
+                const script = document.createElement('script');
+                script.src = 'script.js';
+                document.body.appendChild(script);
+            } catch (err) {
                 console.error('Auth check error:', err);
                 window.location.href = '/login';
-            });
+            }
+        })();
 
         // Logout functionality
         document.addEventListener('DOMContentLoaded', () => {

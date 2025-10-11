@@ -1742,8 +1742,6 @@ async function initializeQuests(force = false) {
     const existingQuests = await prisma.quest.count();
     if (existingQuests > 0 && !force) {
         console.log('Quests already initialized');
-        // Still apply fixes to existing quests
-        await applyQuestFixes();
         return;
     }
     
@@ -1785,165 +1783,10 @@ async function initializeQuests(force = false) {
     }
 
     console.log(`Initialized ${tasks.length} quests`);
-    
-    // Apply quest prerequisite fixes
-    await applyQuestFixes();
 }
 
-// Fix specific quest prerequisites that differ from API data
-async function applyQuestFixes() {
-    const fixes = [
-        {
-            name: 'Introduction',
-            id: '5d2495a886f77425cd51e403',
-            data: { prerequisiteQuests: '[]' }
-        },
-        {
-            name: 'Bad Rep Evidence',
-            id: '5967530a86f77462ba22226b',
-            data: { mapName: 'Any Location' }
-        },
-        {
-            name: 'The Walls Have Eyes',
-            id: '669fa39c64ea11e84c0642a6',
-            data: { requiredItems: JSON.stringify([{"name":"WI-FI Camera","count":3,"category":"fir","type":"plantItem"}]) }
-        },
-        {
-            name: 'Rough Tarkov',
-            id: '66b38c7bf85b8bf7250f9cb6',
-            data: { mapName: 'Any Location' }
-        },
-        {
-            name: 'The Guide',
-            id: '5c0d4e61d09282029f53920e',
-            data: { mapName: 'Any Location' }
-        },
-        {
-            name: 'Informed Means Armed',
-            id: '5b47926a86f7747ccc057c15',
-            data: { 
-                mapName: 'Any Location',
-                requiredItems: JSON.stringify([{"name":"WI-FI Camera","count":3,"category":"any","type":"plantItem"}])
-            }
-        },
-        {
-            name: 'Lend-Lease - Part 1',
-            id: '5b4794cb86f774598100d5d4',
-            data: { mapName: 'Any Location' }
-        }
-    ];
-
-    let successCount = 0;
-    let failCount = 0;
-    let idUpdateCount = 0;
-    const failedFixes = [];
-
-    console.log('\n🔧 Applying quest fixes...');
-
-    for (const fix of fixes) {
-        try {
-            // First, try to find by ID
-            let quest = await prisma.quest.findUnique({
-                where: { id: fix.id },
-                select: { id: true, name: true }
-            });
-
-            // If not found by ID, try to find by name (fallback)
-            if (!quest) {
-                console.log(`⚠️  Quest ID not found for "${fix.name}" (${fix.id}), trying name lookup...`);
-                
-                // Try exact name match
-                quest = await prisma.quest.findFirst({
-                    where: { name: fix.name },
-                    select: { id: true, name: true }
-                });
-
-                // If still not found, try case-insensitive or similar names
-                if (!quest) {
-                    const allQuests = await prisma.quest.findMany({
-                        select: { id: true, name: true }
-                    });
-                    
-                    // Try case-insensitive match
-                    quest = allQuests.find(q => q.name.toLowerCase() === fix.name.toLowerCase());
-                    
-                    // Try partial match (e.g., "Lend Lease" vs "Lend-Lease")
-                    if (!quest) {
-                        const normalizedFixName = fix.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                        quest = allQuests.find(q => 
-                            q.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedFixName
-                        );
-                    }
-                }
-
-                if (quest) {
-                    console.log(`   ✅ Found by name: "${quest.name}" with ID: ${quest.id}`);
-                    
-                    // Check if ID has changed
-                    if (quest.id !== fix.id) {
-                        console.log(`   ⚡ Quest ID has changed!`);
-                        console.log(`      Old ID: ${fix.id}`);
-                        console.log(`      New ID: ${quest.id}`);
-                        console.log(`      ⚠️  Consider updating the fix list with the new ID`);
-                        idUpdateCount++;
-                    }
-                } else {
-                    console.log(`   ❌ Quest not found by name either`);
-                    failedFixes.push({ name: fix.name, id: fix.id, reason: 'not found' });
-                    failCount++;
-                    continue;
-                }
-            }
-
-            // Apply the fix
-            await prisma.quest.update({
-                where: { id: quest.id },
-                data: fix.data
-            });
-            
-            console.log(`✅ Applied fix: "${fix.name}" (${quest.id})`);
-            successCount++;
-            
-        } catch (error) {
-            console.error(`❌ Error fixing quest "${fix.name}":`, error.message);
-            failedFixes.push({ name: fix.name, id: fix.id, reason: error.message });
-            failCount++;
-        }
-    }
-
-    console.log('\n📊 Quest Fix Summary:');
-    console.log(`   ✅ Successful: ${successCount}`);
-    console.log(`   ❌ Failed: ${failCount}`);
-    if (idUpdateCount > 0) {
-        console.log(`   ⚡ ID changes detected: ${idUpdateCount} (consider updating fix list)`);
-    }
-    
-    if (failedFixes.length > 0) {
-        console.log('\n⚠️  Failed fixes:');
-        failedFixes.forEach(fail => {
-            console.log(`   - ${fail.name} (${fail.id}): ${fail.reason}`);
-        });
-    }
-    
-    console.log(''); // Empty line for readability
-
-    // Store results for health check
-    global.questFixStatus = {
-        timestamp: new Date().toISOString(),
-        total: fixes.length,
-        successful: successCount,
-        failed: failCount,
-        idChanges: idUpdateCount,
-        failedFixes: failedFixes
-    };
-
-    return {
-        success: successCount,
-        failed: failCount,
-        idChanges: idUpdateCount,
-        failedFixes
-    };
-}
+// Note: Quest fixes are now managed through the admin UI (Fix Quests tab)
+// The applyQuestFixes() function has been removed in favor of manual fixes through the web interface
 
 // ============================================================================
 // HEALTH CHECK

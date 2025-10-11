@@ -642,9 +642,7 @@ class QuestTracker {
                                 <i class="fas fa-image"></i>
                             </button>` : ''}
                             ${quest.wikiLink ? `<a href="${quest.wikiLink}" target="_blank" class="wiki-link" title="Open Wiki">Wiki</a>` : ''}
-                            ${this.isAdmin ? `<button class="quest-fix-btn" onclick="window.openQuestEditDialog('${quest.id}')" title="Fix Quest">
-                                <i class="fas fa-tools"></i>
-                            </button>` : ''}
+                            ${this.isAdmin ? `<button class="wiki-link quest-fix-btn" onclick="if(window.openQuestEditDialog) window.openQuestEditDialog('${quest.id}')" title="Fix Quest">Fix</button>` : ''}
                             ${this.showFutureQuests ? `<div class="quest-level-req">L${quest.level}</div>` : ''}
                         </div>
                     </div>
