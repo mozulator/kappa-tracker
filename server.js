@@ -87,10 +87,8 @@ passport.use(new LocalStrategy(
                 return done(null, false, { message: 'Incorrect username or password.' });
             }
 
-            // Check if user is approved
-            if (!user.approved) {
-                return done(null, false, { message: 'Your account is pending approval. Please wait for an administrator to approve your account.' });
-            }
+            // No approval check needed - users have immediate access
+            // Approval now only controls leaderboard visibility
 
             return done(null, user);
         } catch (error) {
@@ -246,11 +244,12 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
             console.log(`Fetched Twitch avatar for ${twitchName}:`, avatarUrl);
         }
 
-        // Check if this is the first user (auto-approve and make admin)
+        // Check if this is the first user (make admin)
         const userCount = await prisma.user.count();
         const isFirstUser = userCount === 0;
 
         // Create user and progress
+        // All users get immediate access, approval now only controls leaderboard visibility
         const user = await prisma.user.create({
             data: {
                 email: email.toLowerCase(),
@@ -261,7 +260,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                 twitchUrl,
                 twitchName,
                 avatarUrl,
-                approved: isFirstUser, // First user auto-approved
+                approved: isFirstUser, // First user (admin) auto-approved for leaderboard
                 isAdmin: isFirstUser,  // First user is admin
                 progress: {
                     create: {
@@ -283,9 +282,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
             }
         });
 
-        // Handle approved vs pending users
-        if (user.approved) {
-            // Auto login for approved users (first user)
+        // Auto login all new users (they have immediate access)
         req.login(user, (err) => {
             if (err) {
                 console.error('Auto-login failed after registration:', err);
@@ -294,16 +291,10 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
             console.log('User auto-logged in after registration:', user.username);
             res.json({
                 message: 'Registration successful',
-                user
+                user,
+                leaderboardPending: !user.approved // Let them know if they need leaderboard approval
             });
         });
-        } else {
-            // Pending approval
-            res.json({
-                message: 'Registration successful! Your account is pending approval.',
-                pending: true
-            });
-        }
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Registration failed' });
@@ -377,7 +368,7 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
 // ADMIN ROUTES
 // ============================================================================
 
-// Get pending users (admin only)
+// Get users pending leaderboard approval (admin only)
 app.get('/api/admin/pending-users', requireAdmin, async (req, res) => {
     try {
         const pendingUsers = await prisma.user.findMany({
@@ -401,7 +392,7 @@ app.get('/api/admin/pending-users', requireAdmin, async (req, res) => {
     }
 });
 
-// Approve user (admin only)
+// Approve user for leaderboard (admin only)
 app.post('/api/admin/approve-user/:userId', requireAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
@@ -417,30 +408,31 @@ app.post('/api/admin/approve-user/:userId', requireAdmin, async (req, res) => {
             }
         });
         
-        console.log(`Admin ${req.user.username} approved user: ${user.username}`);
-        res.json({ message: 'User approved successfully', user });
+        console.log(`Admin ${req.user.username} approved user for leaderboard: ${user.username}`);
+        res.json({ message: 'User approved for leaderboard successfully', user });
     } catch (error) {
         console.error('Error approving user:', error);
         res.status(500).json({ error: 'Failed to approve user' });
     }
 });
 
-// Reject user (admin only) - deletes the user
+// Reject user from leaderboard (admin only) - removes leaderboard access only
 app.delete('/api/admin/reject-user/:userId', requireAdmin, async (req, res) => {
     try {
         const { userId } = req.params;
         
-        // Delete user (cascade will delete progress and activities)
-        const user = await prisma.user.delete({
+        // Remove from leaderboard (don't delete the user, just set approved to false)
+        const user = await prisma.user.update({
             where: { id: userId },
+            data: { approved: false },
             select: {
                 username: true,
                 email: true
             }
         });
         
-        console.log(`Admin ${req.user.username} rejected user: ${user.username}`);
-        res.json({ message: 'User rejected and removed', user });
+        console.log(`Admin ${req.user.username} removed user from leaderboard: ${user.username}`);
+        res.json({ message: 'User removed from leaderboard', user });
     } catch (error) {
         console.error('Error rejecting user:', error);
         res.status(500).json({ error: 'Failed to reject user' });
@@ -2281,3 +2273,4 @@ function start() {
 }
 
 start();
+

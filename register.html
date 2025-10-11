@@ -368,17 +368,15 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    if (data.pending) {
-                        showSuccess(data.message || 'Registration successful! Your account is pending approval.');
-                        setTimeout(() => {
-                            window.location.href = '/login';
-                        }, 3000);
+                    // Users now have immediate access - they're auto-logged in
+                    if (data.leaderboardPending) {
+                        showSuccess('Account created successfully! Note: Admin approval needed for leaderboard access. Redirecting...');
                     } else {
                         showSuccess('Account created successfully! Redirecting...');
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 1500);
                     }
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
                 } else {
                     showError(data.error || 'Registration failed');
                     submitBtn.disabled = false;

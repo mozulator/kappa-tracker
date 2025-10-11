@@ -384,12 +384,12 @@
     </div>
 
     <div class="dashboard-container">
-        <!-- Pending Approvals Panel -->
+        <!-- Pending Leaderboard Approvals Panel -->
         <div class="panel">
             <div class="panel-header">
                 <h2>
-                    <i class="fas fa-user-clock"></i>
-                    Pending Approvals
+                    <i class="fas fa-trophy"></i>
+                    Leaderboard Approvals
                     <span class="badge" id="pending-count">0</span>
                 </h2>
             </div>
@@ -418,7 +418,7 @@
                     </div>
                     <div class="stat-mini">
                         <div class="value" id="approved-users">0</div>
-                        <div class="label">Approved</div>
+                        <div class="label">On Leaderboard</div>
                     </div>
                     <div class="stat-mini">
                         <div class="value" id="admin-users">0</div>
@@ -547,7 +547,7 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-check-circle"></i>
-                        <p>No pending approvals</p>
+                        <p>No pending leaderboard approvals</p>
                     </div>
                 `;
                 return;
@@ -570,10 +570,10 @@
                     </div>
                     <div class="action-buttons">
                         <button class="btn btn-approve" onclick="approveUser('${user.id}')">
-                            <i class="fas fa-check"></i> Approve
+                            <i class="fas fa-trophy"></i> Add to Leaderboard
                         </button>
                         <button class="btn btn-delete" onclick="rejectUser('${user.id}')">
-                            <i class="fas fa-times"></i> Reject
+                            <i class="fas fa-times"></i> Deny
                         </button>
                     </div>
                 </div>
@@ -602,7 +602,7 @@
                         <div class="name">
                             ${user.displayName || user.username}
                             ${user.isAdmin ? '<i class="fas fa-crown" style="color: #ffd700; margin-left: 8px;" title="Admin"></i>' : ''}
-                            ${!user.approved ? '<i class="fas fa-clock" style="color: #ff9800; margin-left: 8px;" title="Pending"></i>' : ''}
+                            ${!user.approved ? '<i class="fas fa-ban" style="color: #ff9800; margin-left: 8px;" title="Not on Leaderboard"></i>' : '<i class="fas fa-trophy" style="color: #4CAF50; margin-left: 8px;" title="On Leaderboard"></i>'}
                         </div>
                         <div class="details">
                             <span class="username">@${user.username}</span> • ${user.email}
@@ -645,7 +645,7 @@
                 if (!response.ok) throw new Error('Failed to approve user');
 
                 const data = await response.json();
-                showNotification(`✓ Approved: ${data.user.username}`, 'success');
+                showNotification(`✓ Added to leaderboard: ${data.user.username}`, 'success');
                 
                 // Reload both lists
                 await loadData();
@@ -658,7 +658,7 @@
 
         async function rejectUser(userId) {
             const user = pendingUsers.find(u => u.id === userId);
-            if (!confirm(`Reject ${user.username}? This will delete their account.`)) {
+            if (!confirm(`Deny leaderboard access for ${user.username}?\n\nNote: This will NOT delete their account. They can still use the tracker, but won't appear on rankings.`)) {
                 return;
             }
 
@@ -671,12 +671,12 @@
                 if (!response.ok) throw new Error('Failed to reject user');
 
                 const data = await response.json();
-                showNotification(`✗ Rejected: ${data.user.username}`, 'success');
+                showNotification(`✗ Removed from leaderboard: ${data.user.username}`, 'success');
                 
                 await loadData();
             } catch (error) {
                 console.error('Error:', error);
-                showNotification('Failed to reject user', 'error');
+                showNotification('Failed to remove user from leaderboard', 'error');
             }
         }
 
