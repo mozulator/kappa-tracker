@@ -2091,6 +2091,10 @@ app.get('/rankings', (req, res) => {
     res.sendFile(path.join(__dirname, 'html', 'rankings.html'));
 });
 
+app.get('/rankings.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'html', 'rankings.html'));
+});
+
 app.get('/profile', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'html', 'profile.html'));
 });
@@ -2163,7 +2167,7 @@ app.get('/public-profile', async (req, res) => {
         
         // Read the base HTML file
         const fs = require('fs');
-        let html = fs.readFileSync(path.join(__dirname, 'public-profile.html'), 'utf8');
+        let html = fs.readFileSync(path.join(__dirname, 'html', 'public-profile.html'), 'utf8');
         
         // Replace meta tags
         html = html.replace(
