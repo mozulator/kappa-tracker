@@ -125,6 +125,9 @@
                     <a href="#" class="dropdown-item" id="account-link">
                         <i class="fas fa-user-cog"></i> Account
                     </a>
+                    <a href="/admin.html" target="_blank" class="dropdown-item" id="admin-dashboard-link" style="display: none;">
+                        <i class="fas fa-shield-alt"></i> Admin Dashboard
+                    </a>
                     <a href="#" class="dropdown-item" id="logout-link">
                         <i class="fas fa-sign-out-alt"></i> Log Out
                     </a>
@@ -879,6 +882,11 @@
                             const fixQuestsTab = document.getElementById('fix-quests-tab');
                             if (fixQuestsTab) {
                                 fixQuestsTab.style.display = 'block';
+                            }
+                            // Show Admin Dashboard link in user dropdown
+                            const adminDashboardLink = document.getElementById('admin-dashboard-link');
+                            if (adminDashboardLink) {
+                                adminDashboardLink.style.display = 'block';
                             }
                             // Setup the tab functionality
                             // setupFixQuestsTab(); // Disabled - now handled by script.js QuestTracker class

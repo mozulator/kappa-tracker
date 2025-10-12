@@ -1939,6 +1939,16 @@ app.get('/kappa/:userId/:token', async (req, res) => {
     }
 });
 
+// Collector Progress overlay (with username query param)
+app.get('/collector-progress.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'html', 'collector-progress.html'));
+});
+
+// Kappa Overview overlay (with username query param)
+app.get('/kappa-overview.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'html', 'kappa-overview.html'));
+});
+
 // Collector Items overlay (public - no auth required for now)
 app.get('/collector-items-overlay', (req, res) => {
     res.sendFile(path.join(__dirname, 'html', 'collector-items-overlay.html'));
@@ -2083,6 +2093,19 @@ app.get('/rankings', (req, res) => {
 
 app.get('/profile', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'html', 'profile.html'));
+});
+
+// Admin pages (admin only)
+app.get('/admin.html', requireAdmin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'html', 'admin.html'));
+});
+
+app.get('/admin-quest-editor.html', requireAdmin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'html', 'admin-quest-editor.html'));
+});
+
+app.get('/admin-twitch-update.html', requireAdmin, (req, res) => {
+    res.sendFile(path.join(__dirname, 'html', 'admin-twitch-update.html'));
 });
 
 // Public profile with server-side rendering for SEO
