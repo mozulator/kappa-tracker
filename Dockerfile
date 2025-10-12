@@ -38,12 +38,14 @@ RUN adduser --system --uid 1001 appuser
 COPY --from=builder --chown=appuser:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=appuser:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=appuser:nodejs /app/server.js ./server.js
+COPY --from=builder --chown=appuser:nodejs /app/start-app.js ./start-app.js
 COPY --from=builder --chown=appuser:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=appuser:nodejs /app/scripts ./scripts
-COPY --from=builder --chown=appuser:nodejs /app/*.html ./
-COPY --from=builder --chown=appuser:nodejs /app/*.js ./
-COPY --from=builder --chown=appuser:nodejs /app/*.css ./
+COPY --from=builder --chown=appuser:nodejs /app/html ./html
+COPY --from=builder --chown=appuser:nodejs /app/js ./js
+COPY --from=builder --chown=appuser:nodejs /app/css ./css
 COPY --from=builder --chown=appuser:nodejs /app/imgs ./imgs
+COPY --from=builder --chown=appuser:nodejs /app/fonts ./fonts
 
 # Create prisma directory if it doesn't exist
 RUN mkdir -p ./prisma && chown appuser:nodejs ./prisma
