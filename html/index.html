@@ -608,6 +608,11 @@
                     window.currentUserId = data.user.id;
                     window.currentUser = data.user;
                 
+                // Load user avatar now that we have user data
+                if (typeof window.loadUserAvatar === 'function') {
+                    window.loadUserAvatar();
+                }
+                
                 // Load tracker script only after auth confirmed
                 const script = document.createElement('script');
                 script.src = '/js/script.js';
@@ -624,18 +629,12 @@
             }
         })();
 
-        // Logout and User dropdown functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            // Setup user dropdown
+        // Global function to load user avatar (called after auth check)
+        window.loadUserAvatar = async function() {
             const userDropdownTab = document.getElementById('user-dropdown-tab');
-            const userDropdown = document.getElementById('user-dropdown');
-            const accountLink = document.getElementById('account-link');
-            const logoutLink = document.getElementById('logout-link');
             const userAvatar = document.getElementById('user-avatar');
             
-            // Set user avatar
-            async function loadUserAvatar() {
-                if (!window.currentUser || !userAvatar) return;
+            if (!window.currentUser || !userAvatar) return;
                 
                 const displayName = window.currentUser.displayName || window.currentUser.username;
                 
@@ -698,9 +697,15 @@
                 }
                 
                 await tryTwitchAvatar();
-            }
-            
-            loadUserAvatar();
+        };
+        
+        // Logout and User dropdown functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup user dropdown
+            const userDropdownTab = document.getElementById('user-dropdown-tab');
+            const userDropdown = document.getElementById('user-dropdown');
+            const accountLink = document.getElementById('account-link');
+            const logoutLink = document.getElementById('logout-link');
             
             // Toggle user dropdown
             if (userDropdownTab && userDropdown) {
