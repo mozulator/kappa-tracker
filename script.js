@@ -1434,12 +1434,8 @@ class QuestTracker {
                 return;
             }
             
-            // Filter quests that need fixing (have issues)
-            const fixQuests = data.quests.filter(quest => {
-                // Add your logic here for what constitutes a "fix" quest
-                // For now, let's show all quests
-                return quest.requiredForKappa;
-            });
+            // Show all quests for fixing
+            const fixQuests = data.quests;
             
             if (fixQuests.length === 0) {
                 container.innerHTML = '<div style="padding: 60px; text-align: center; color: #4CAF50;"><i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px;"></i><p>All quests look good! No fixes needed.</p></div>';
