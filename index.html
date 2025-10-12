@@ -135,7 +135,14 @@
                     </div>
                     <div class="level-section">
                         <label for="prestige-level">Prestige</label>
-                        <input type="number" id="prestige-level" min="0" max="4" value="0" class="level-input">
+                        <select id="prestige-level" class="level-input" style="width: 100%;">
+                            <option value="-1">PVE</option>
+                            <option value="0" selected>Prestige 0</option>
+                            <option value="1">Prestige 1</option>
+                            <option value="2">Prestige 2</option>
+                            <option value="3">Prestige 3</option>
+                            <option value="4">Prestige 4</option>
+                        </select>
                     </div>
                 </div>
 
@@ -164,6 +171,13 @@
                             <span class="quest-mode-label">Show All Future Quests</span>
                         </label>
                     </div>
+                    <div class="level-section" style="margin-top: 20px;">
+                        <label for="sort-quests-by">Sort Quests By</label>
+                        <select id="sort-quests-by" class="level-input" style="width: 100%;">
+                            <option value="map" selected>Map</option>
+                            <option value="trader">Trader</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -179,50 +193,61 @@
         </aside>
         
         <main class="main-content">
-            <!-- Map Overview Section -->
-            <section class="map-overview" id="map-overview">
-                <div class="overview-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Markers needed:</span>
-                        <span class="stat-value" id="markers-count">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Jammers needed:</span>
-                        <span class="stat-value" id="jammers-count">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Cameras needed:</span>
-                        <span class="stat-value" id="cameras-count">0</span>
-                    </div>
-                    <div class="stat-item keys-list-item">
-                        <div class="stat-header">
-                            <span class="stat-label">Keys needed:</span>
-                            <span class="stat-value" id="keys-count">0</span>
+            <div class="content-with-sidebar">
+                <div class="main-quests-area">
+                    <!-- Map Tabs Section -->
+                    <section class="map-tabs-section">
+                        <div class="map-tabs" id="map-tabs">
+                            <div class="loading">Loading maps...</div>
                         </div>
-                        <div class="keys-list" id="keys-list">None</div>
-                    </div>
-                    <div class="stat-item fir-list-item">
-                        <div class="stat-header">
-                            <span class="stat-label">FIR items needed:</span>
+                    </section>
+
+                    <!-- Quests Section -->
+                    <section class="quests-section" id="quests-section">
+                        <div class="quests-grid" id="quests-grid">
+                            <div class="loading">Loading quests...</div>
                         </div>
-                        <div class="fir-list" id="fir-list">None</div>
+                    </section>
+                </div>
+
+                <!-- Right Sidebar with Map Overview -->
+                <aside class="right-sidebar" id="right-sidebar">
+                    <div class="right-sidebar-content">
+                        <div class="right-sidebar-title">
+                            <i class="fas fa-info-circle"></i> QUEST REQUIREMENTS
+                        </div>
+                        <section class="map-overview" id="map-overview">
+                            <div class="overview-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Markers needed:</span>
+                                    <span class="stat-value" id="markers-count">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Jammers needed:</span>
+                                    <span class="stat-value" id="jammers-count">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Cameras needed:</span>
+                                    <span class="stat-value" id="cameras-count">0</span>
+                                </div>
+                                <div class="stat-item keys-list-item">
+                                    <div class="stat-header">
+                                        <span class="stat-label">Keys needed:</span>
+                                        <span class="stat-value" id="keys-count">0</span>
+                                    </div>
+                                    <div class="keys-list" id="keys-list">None</div>
+                                </div>
+                                <div class="stat-item fir-list-item">
+                                    <div class="stat-header">
+                                        <span class="stat-label">FIR items needed:</span>
+                                    </div>
+                                    <div class="fir-list" id="fir-list">None</div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
-                </div>
-            </section>
-
-            <!-- Map Tabs Section -->
-            <section class="map-tabs-section">
-                <div class="map-tabs" id="map-tabs">
-                    <div class="loading">Loading maps...</div>
-                </div>
-            </section>
-
-            <!-- Quests Section -->
-            <section class="quests-section" id="quests-section">
-                <div class="quests-grid" id="quests-grid">
-                    <div class="loading">Loading quests...</div>
-                </div>
-            </section>
+                </aside>
+            </div>
 
             <!-- Rankings Section -->
             <section class="rankings-section" id="rankings-section" style="display: none;">

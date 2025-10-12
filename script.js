@@ -3,7 +3,10 @@ class QuestTracker {
         this.quests = [];
         this.userProgress = { pmcLevel: 1, prestige: 0, completedQuests: [] };
         this.currentMap = 'Any Location';
+        this.currentTrader = 'Prapor';
         this.maps = [];
+        this.traders = [];
+        this.sortBy = 'map'; // 'map' or 'trader'
         this.viewMode = 'available'; // 'available' or 'finished'
         this.currentView = 'dashboard'; // 'dashboard', 'finished', 'rankings', or 'profile'
         this.showFutureQuests = false; // Show all future quests mode
@@ -164,6 +167,19 @@ class QuestTracker {
             this.updateUI();
         });
 
+        const sortQuestsBy = document.getElementById('sort-quests-by');
+        if (sortQuestsBy) {
+            sortQuestsBy.addEventListener('change', (e) => {
+                this.sortBy = e.target.value;
+                if (this.sortBy === 'trader') {
+                    this.currentTrader = this.traders[0] || 'Prapor';
+                } else {
+                    this.currentMap = 'Any Location';
+                }
+                this.updateUI();
+            });
+        }
+
         // Reset progress button (now in sidebar)
         const resetBtnSidebar = document.getElementById('reset-progress-btn-sidebar');
         if (resetBtnSidebar) {
@@ -274,8 +290,12 @@ class QuestTracker {
     }
 
     isQuestOnCurrentMap(quest) {
-        const questMap = quest.mapName || 'Any Location';
-        return questMap === this.currentMap;
+        if (this.sortBy === 'trader') {
+            return quest.trader === this.currentTrader;
+        } else {
+            const questMap = quest.mapName || 'Any Location';
+            return questMap === this.currentMap;
+        }
     }
 
     async completeQuest(questId, event) {
@@ -520,7 +540,11 @@ class QuestTracker {
     }
 
     updateUI() {
-        this.buildMapTabs();
+        if (this.sortBy === 'trader') {
+            this.buildTraderTabs();
+        } else {
+            this.buildMapTabs();
+        }
         this.updateMapOverview();
         this.updateProgressBar();
         this.updateQuestsList();
@@ -689,6 +713,33 @@ class QuestTracker {
         });
         
         this.maps = sortedMaps;
+        this.buildTradersList();
+    }
+
+    buildTradersList() {
+        const traderSet = new Set();
+        
+        this.quests.forEach(quest => {
+            if (quest.requiredForKappa && quest.trader) {
+                traderSet.add(quest.trader);
+            }
+        });
+        
+        const tradersArray = Array.from(traderSet);
+        
+        // Define trader order
+        const traderOrder = ['Prapor', 'Therapist', 'Fence', 'Skier', 'Peacekeeper', 'Mechanic', 'Ragman', 'Jaeger', 'Lightkeeper', 'Ref'];
+        
+        // Sort traders by defined order
+        const sortedTraders = tradersArray.sort((a, b) => {
+            const aIndex = traderOrder.indexOf(a);
+            const bIndex = traderOrder.indexOf(b);
+            if (aIndex === -1) return 1;
+            if (bIndex === -1) return -1;
+            return aIndex - bIndex;
+        });
+        
+        this.traders = sortedTraders;
     }
 
     buildMapTabs() {
@@ -749,8 +800,65 @@ class QuestTracker {
         this.updateUI();
     }
 
+    buildTraderTabs() {
+        const mapTabsContainer = document.getElementById('map-tabs');
+        if (!mapTabsContainer) return;
+
+        mapTabsContainer.innerHTML = this.traders.map(traderName => {
+            const questStats = this.getQuestStatsForTrader(traderName);
+            const isActive = (traderName === this.currentTrader) ? 'active' : '';
+            
+            return `
+                <button class="map-tab ${isActive}" onclick="window.tracker.switchTrader('${traderName}')">
+                    ${traderName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
+                </button>
+            `;
+        }).join('');
+    }
+
+    getQuestStatsForTrader(traderName) {
+        let allTraderQuests, completedQuests, availableQuests;
+        
+        allTraderQuests = this.quests.filter(quest => {
+            if (!quest.requiredForKappa) return false;
+            return quest.trader === traderName;
+        });
+        
+        completedQuests = allTraderQuests.filter(quest => 
+            this.userProgress.completedQuests.includes(quest.id)
+        ).length;
+        
+        if (this.viewMode === 'finished') {
+            availableQuests = completedQuests;
+        } else if (this.showFutureQuests) {
+            availableQuests = allTraderQuests.filter(quest => {
+                const isCompleted = this.userProgress.completedQuests.includes(quest.id);
+                return !isCompleted;
+            }).length;
+        } else {
+            availableQuests = allTraderQuests.filter(quest => {
+                const isCompleted = this.userProgress.completedQuests.includes(quest.id);
+                const isUnlocked = this.isQuestUnlocked(quest);
+                return !isCompleted && isUnlocked;
+            }).length;
+        }
+        
+        return {
+            total: allTraderQuests.length,
+            completed: completedQuests,
+            available: availableQuests
+        };
+    }
+
+    switchTrader(traderName) {
+        this.currentTrader = traderName;
+        this.updateUI();
+    }
+
     updateMapOverview() {
-        const currentMapQuests = this.getQuestsForCurrentMap();
+        const currentQuests = this.sortBy === 'trader' 
+            ? this.getQuestsForCurrentTrader() 
+            : this.getQuestsForCurrentMap();
         
         // Get the appropriate quest list based on current mode
         let questsToCount;
@@ -760,6 +868,14 @@ class QuestTracker {
             questsToCount = this.getFutureQuests();
         } else {
             questsToCount = this.getAvailableQuests();
+        }
+        
+        // Filter questsToCount based on current map/trader
+        if (this.sortBy === 'trader') {
+            questsToCount = questsToCount.filter(q => q.trader === this.currentTrader);
+        } else {
+            const questMap = quest => quest.mapName || 'Any Location';
+            questsToCount = questsToCount.filter(q => questMap(q) === this.currentMap);
         }
         
         const itemCounts = this.calculateItemCounts(questsToCount);
@@ -813,6 +929,13 @@ class QuestTracker {
             if (!quest.requiredForKappa) return false;
             const questMap = quest.mapName || 'Any Location';
             return questMap === this.currentMap;
+        });
+    }
+
+    getQuestsForCurrentTrader() {
+        return this.quests.filter(quest => {
+            if (!quest.requiredForKappa) return false;
+            return quest.trader === this.currentTrader;
         });
     }
 
@@ -1299,7 +1422,11 @@ class QuestTracker {
                                                              style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #c7aa6a;" 
                                                              loading="lazy"
                                                              onerror="this.style.display='none'">
-                                                    ` : ''}
+                                                    ` : `
+                                                        <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(30, 30, 30, 0.8); border: 2px solid #c7aa6a; display: flex; align-items: center; justify-content: center; color: #c7aa6a; font-size: 24px;">
+                                                            <i class="fas fa-user"></i>
+                                                        </div>
+                                                    `}
                                                     <div>
                                                         <a href="/public-profile?user=${user.username}" style="color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
                                                             ${displayName}
@@ -1322,7 +1449,9 @@ class QuestTracker {
                                             </td>
                                             <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.pmcLevel}</td>
                                             <td style="padding: 15px; text-align: center;">
-                                                ${user.progress.prestige && user.progress.prestige > 0 ? `
+                                                ${user.progress.prestige === -1 ? `
+                                                    <span style="color: #c7aa6a; font-weight: 600; font-size: 16px;">PVE</span>
+                                                ` : user.progress.prestige && user.progress.prestige > 0 ? `
                                                     <img src="/imgs/prestige_${user.progress.prestige}.webp" alt="Prestige ${user.progress.prestige}" style="width: 40px; height: 40px; object-fit: contain;" title="Prestige ${user.progress.prestige}" loading="lazy" />
                                                 ` : `<span style="color: #888; font-size: 14px;">-</span>`}
                                             </td>

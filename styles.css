@@ -210,6 +210,46 @@ body {
     overflow-y: auto;
 }
 
+/* Content with Sidebar Layout */
+.content-with-sidebar {
+    display: flex;
+    gap: 24px;
+    height: 100%;
+}
+
+.main-quests-area {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Right Sidebar */
+.right-sidebar {
+    width: 320px;
+    background: var(--post-bg);
+    border: 1px solid var(--post-border);
+    border-radius: 8px;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.right-sidebar-content {
+    padding: 20px;
+}
+
+.right-sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-highlight);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--post-border);
+}
+
 .nav {
     display: flex;
     gap: 8px;
@@ -423,25 +463,24 @@ body {
 
 /* Map Overview Section */
 .map-overview {
-    margin-bottom: 24px;
+    margin-bottom: 0;
 }
 
 .overview-stats {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .stat-item {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 10px;
-    background: var(--striped-pattern);
-    border: 1px dashed var(--post-border);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    background: var(--post-bg-secondary);
+    border: 1px solid var(--post-border);
     border-radius: 6px;
     font-size: 0.85rem;
-    white-space: nowrap;
 }
 
 .stat-label {
@@ -898,6 +937,15 @@ body {
     
     .main-content {
         padding: 16px;
+    }
+    
+    .content-with-sidebar {
+        flex-direction: column;
+    }
+    
+    .right-sidebar {
+        width: 100%;
+        order: -1;
     }
     
     .quests-grid {

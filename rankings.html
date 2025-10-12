@@ -205,6 +205,20 @@
             flex-shrink: 0;
         }
 
+        .default-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #c7aa6a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #c7aa6a;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
         .user-info {
             display: flex;
             flex-direction: column;
@@ -323,9 +337,13 @@
                 gap: 10px;
             }
 
-            .user-avatar {
+            .user-avatar, .default-avatar {
                 width: 40px;
                 height: 40px;
+            }
+            
+            .default-avatar {
+                font-size: 18px;
             }
 
             th, td {
@@ -430,7 +448,11 @@
                                                          class="user-avatar" 
                                                          loading="lazy"
                                                          onerror="this.style.display='none'">
-                                                ` : ''}
+                                                ` : `
+                                                    <div class="default-avatar">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                `}
                                                 <div class="user-info">
                                                     <div class="user-name">
                                                         <a href="/public-profile?user=${user.username}">${displayName}</a>
@@ -454,7 +476,9 @@
                                         </td>
                                         <td class="pmc-level">${user.progress.pmcLevel}</td>
                                         <td class="center prestige-badge">
-                                            ${user.progress.prestige && user.progress.prestige > 0 ? `
+                                            ${user.progress.prestige === -1 ? `
+                                                <span style="color: #c7aa6a; font-weight: 600;">PVE</span>
+                                            ` : user.progress.prestige && user.progress.prestige > 0 ? `
                                                 <img src="/imgs/prestige_${user.progress.prestige}.webp" 
                                                      alt="Prestige ${user.progress.prestige}" 
                                                      title="Prestige ${user.progress.prestige}"
