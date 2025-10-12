@@ -476,42 +476,48 @@ class QuestTracker {
     }
 
     showView(view) {
-        // Hide all sections
-        const questsSection = document.getElementById('quests-section');
-        const mapOverview = document.getElementById('map-overview');
-        const mapTabsSection = document.querySelector('.map-tabs-section');
+        /*
+         * Section Structure Rules:
+         * - Each main page has a section in main-content with class matching the page name
+         * - Class names are lowercase with hyphens instead of spaces
+         * - Section IDs match the class names
+         * - Sections: dashboard, finished-quests, fix-quests, rankings, profile, collector-items
+         * - The sidebar is shown on dashboard and finished-quests only
+         * - Quest Requirements sidebar (right-sidebar) is part of dashboard section only
+         */
+        
+        // Hide all main sections
+        const dashboard = document.getElementById('dashboard');
+        const finishedQuests = document.getElementById('finished-quests');
+        const fixQuests = document.getElementById('fix-quests');
+        const rankings = document.getElementById('rankings');
+        const profile = document.getElementById('profile');
+        const collectorItems = document.getElementById('collector-items');
         const sidebar = document.querySelector('.sidebar');
-        const rightSidebar = document.getElementById('right-sidebar');
-        const rankingsSection = document.getElementById('rankings-section');
-        const profileSection = document.getElementById('profile-section');
-        const fixQuestsSection = document.getElementById('fix-quests-section');
-        const collectorSection = document.getElementById('collector-section');
 
-        questsSection.style.display = 'none';
-        mapOverview.style.display = 'none';
-        mapTabsSection.style.display = 'none';
-        sidebar.style.display = 'none';
-        if (rightSidebar) rightSidebar.style.display = 'none';
-        rankingsSection.style.display = 'none';
-        profileSection.style.display = 'none';
-        if (fixQuestsSection) fixQuestsSection.style.display = 'none';
-        if (collectorSection) collectorSection.style.display = 'none';
+        if (dashboard) dashboard.style.display = 'none';
+        if (finishedQuests) finishedQuests.style.display = 'none';
+        if (fixQuests) fixQuests.style.display = 'none';
+        if (rankings) rankings.style.display = 'none';
+        if (profile) profile.style.display = 'none';
+        if (collectorItems) collectorItems.style.display = 'none';
+        if (sidebar) sidebar.style.display = 'none';
 
-        // Show relevant sections based on view
+        // Show relevant section and sidebar based on view
         if (view === 'dashboard') {
-            questsSection.style.display = 'block';
-            mapTabsSection.style.display = 'block';
-            sidebar.style.display = 'flex'; // Use flex to maintain sidebar layout
-            if (rightSidebar) rightSidebar.style.display = 'block'; // Show right sidebar only on dashboard
+            if (dashboard) dashboard.style.display = 'block';
+            if (sidebar) sidebar.style.display = 'flex';
         } else if (view === 'finished') {
-            questsSection.style.display = 'block';
-            mapTabsSection.style.display = 'block';
-            sidebar.style.display = 'flex';
-            // Hide map-overview and right sidebar on finished quests page
+            if (finishedQuests) finishedQuests.style.display = 'block';
+            if (sidebar) sidebar.style.display = 'flex';
+        } else if (view === 'fix-quests') {
+            if (fixQuests) fixQuests.style.display = 'block';
         } else if (view === 'rankings') {
-            rankingsSection.style.display = 'block';
+            if (rankings) rankings.style.display = 'block';
         } else if (view === 'profile') {
-            profileSection.style.display = 'block';
+            if (profile) profile.style.display = 'block';
+        } else if (view === 'collector-items') {
+            if (collectorItems) collectorItems.style.display = 'block';
         }
     }
 
@@ -579,7 +585,13 @@ class QuestTracker {
     }
 
     updateQuestsList() {
-        const questsGrid = document.getElementById('quests-grid');
+        // Determine which grid to update based on current view
+        const questsGrid = this.viewMode === 'finished' 
+            ? document.getElementById('quests-grid-finished') 
+            : document.getElementById('quests-grid');
+        
+        if (!questsGrid) return;
+        
         let questsToShow;
         
         if (this.viewMode === 'finished') {
@@ -745,9 +757,9 @@ class QuestTracker {
 
     buildMapTabs() {
         const mapTabsContainer = document.getElementById('map-tabs');
-        if (!mapTabsContainer) return;
-
-        mapTabsContainer.innerHTML = this.maps.map(mapName => {
+        const mapTabsFinishedContainer = document.getElementById('map-tabs-finished');
+        
+        const tabsHtml = this.maps.map(mapName => {
             const questStats = this.getQuestStatsForMap(mapName);
             const isActive = (mapName === this.currentMap) ? 'active' : '';
             
@@ -757,6 +769,9 @@ class QuestTracker {
                 </button>
             `;
         }).join('');
+        
+        if (mapTabsContainer) mapTabsContainer.innerHTML = tabsHtml;
+        if (mapTabsFinishedContainer) mapTabsFinishedContainer.innerHTML = tabsHtml;
     }
 
     getQuestStatsForMap(mapName) {
@@ -803,9 +818,9 @@ class QuestTracker {
 
     buildTraderTabs() {
         const mapTabsContainer = document.getElementById('map-tabs');
-        if (!mapTabsContainer) return;
-
-        mapTabsContainer.innerHTML = this.traders.map(traderName => {
+        const mapTabsFinishedContainer = document.getElementById('map-tabs-finished');
+        
+        const tabsHtml = this.traders.map(traderName => {
             const questStats = this.getQuestStatsForTrader(traderName);
             const isActive = (traderName === this.currentTrader) ? 'active' : '';
             
@@ -815,6 +830,9 @@ class QuestTracker {
                 </button>
             `;
         }).join('');
+        
+        if (mapTabsContainer) mapTabsContainer.innerHTML = tabsHtml;
+        if (mapTabsFinishedContainer) mapTabsFinishedContainer.innerHTML = tabsHtml;
     }
 
     getQuestStatsForTrader(traderName) {

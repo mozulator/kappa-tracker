@@ -366,9 +366,18 @@ body {
     gap: 12px;
 }
 
+.level-sections-inline {
+    display: flex;
+    gap: 12px;
+}
+
+.level-sections-inline .level-section {
+    flex: 1;
+}
+
 .level-section label {
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     color: var(--text-highlight);
 }
 
@@ -1343,6 +1352,50 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 0.7rem;
+}
+
+/* Fix Quest Card Styles */
+.fix-quest-card {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: auto;
+    gap: 8px;
+}
+
+.fix-quest-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.4;
+    word-wrap: break-word;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.fix-quest-card .level-badge,
+.fix-quest-card .trader-badge,
+.fix-quest-card .map-badge,
+.fix-quest-card .kappa-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.fix-quest-btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: auto;
+    background: rgba(199, 170, 106, 0.2) !important;
+    border-color: #c7aa6a !important;
+    color: #c7aa6a !important;
+}
+
+.fix-quest-btn:hover {
+    background: rgba(199, 170, 106, 0.3) !important;
 }
 
 @media (max-width: 768px) {
