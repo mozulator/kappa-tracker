@@ -1517,12 +1517,23 @@ class QuestTracker {
                 return;
             }
             
-            // Build rankings table HTML
+            // Store rankings data for sorting
+            this.rankingsData = data.rankings;
+            
+            // Build rankings table HTML with toggle
             container.innerHTML = `
                 <div style="padding: 20px;">
-                    <h2 style="color: #c7aa6a; font-size: 28px; margin-bottom: 20px;">
-                        <i class="fas fa-trophy"></i> Global Rankings
-                    </h2>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <h2 style="color: #c7aa6a; font-size: 28px; margin: 0;">
+                            <i class="fas fa-trophy"></i> Global Rankings
+                        </h2>
+                        <label class="quest-mode-toggle" style="margin: 0;">
+                            <input type="checkbox" id="include-prestige-dashboard" class="quest-mode-checkbox" checked>
+                            <span class="quest-mode-slider"></span>
+                            <span class="quest-mode-label">Include Prestige</span>
+                        </label>
+                    </div>
+                    <div id="rankings-table-wrapper">
                     <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; overflow: hidden;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
@@ -1597,12 +1608,143 @@ class QuestTracker {
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
             `;
+            
+            // Render with default sorting (include prestige = true)
+            this.renderRankings(true);
+            
+            // Setup toggle event listener
+            const toggle = document.getElementById('include-prestige-dashboard');
+            if (toggle) {
+                toggle.addEventListener('change', () => {
+                    this.renderRankings(toggle.checked);
+                });
+            }
         } catch (error) {
             console.error('Error loading rankings:', error);
             container.innerHTML = '<div style="padding: 60px; text-align: center; color: #ef4444;">Failed to load rankings</div>';
         }
+    }
+    
+    renderRankings(includePrestige) {
+        if (!this.rankingsData) return;
+        
+        // Sort rankings based on toggle
+        const sorted = [...this.rankingsData].sort((a, b) => {
+            const isPVE_A = a.progress.prestige === -1;
+            const isPVE_B = b.progress.prestige === -1;
+            
+            // PVE always below prestige players
+            if (isPVE_A && !isPVE_B) return 1;
+            if (!isPVE_A && isPVE_B) return -1;
+            
+            if (includePrestige) {
+                // Prestige > Completion % > Level
+                const prestigeA = a.progress.prestige || 0;
+                const prestigeB = b.progress.prestige || 0;
+                if (prestigeB !== prestigeA) return prestigeB - prestigeA;
+                
+                const completionA = a.progress.completionRate;
+                const completionB = b.progress.completionRate;
+                if (completionB !== completionA) return completionB - completionA;
+                
+                return b.progress.pmcLevel - a.progress.pmcLevel;
+            } else {
+                // Completion % > Prestige > Level
+                const completionA = a.progress.completionRate;
+                const completionB = b.progress.completionRate;
+                if (completionB !== completionA) return completionB - completionA;
+                
+                const prestigeA = a.progress.prestige || 0;
+                const prestigeB = b.progress.prestige || 0;
+                if (prestigeB !== prestigeA) return prestigeB - prestigeA;
+                
+                return b.progress.pmcLevel - a.progress.pmcLevel;
+            }
+        });
+        
+        // Render sorted table
+        const tableWrapper = document.getElementById('rankings-table-wrapper');
+        if (!tableWrapper) return;
+        
+        tableWrapper.innerHTML = `
+            <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: rgba(199, 170, 106, 0.1);">
+                            <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Rank</th>
+                            <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Player</th>
+                            <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">PMC Level</th>
+                            <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Prestige</th>
+                            <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Quests Completed</th>
+                            <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Completion %</th>
+                            <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Last Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sorted.map((user, index) => {
+                            const rank = index + 1;
+                            const displayName = user.displayName || user.username;
+                            const rankColor = rank === 1 ? '#ffd700' : rank === 2 ? '#c0c0c0' : rank === 3 ? '#cd7f32' : '#c7aa6a';
+                            const lastActive = user.progress.lastQuestDate 
+                                ? this.formatTimeAgo(new Date(user.progress.lastQuestDate)) 
+                                : 'Never';
+                            
+                            return `
+                                <tr style="border-bottom: 1px solid #2a2a2a; transition: background 0.2s;">
+                                    <td style="padding: 15px; color: ${rankColor}; font-weight: 700; font-size: 18px;">#${rank}</td>
+                                    <td style="padding: 15px;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            ${user.avatarUrl ? `
+                                                <img src="${user.avatarUrl}" alt="${displayName}" 
+                                                     style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #c7aa6a;" 
+                                                     loading="lazy"
+                                                     onerror="this.style.display='none'">
+                                            ` : `
+                                                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(30, 30, 30, 0.8); border: 2px solid #c7aa6a; display: flex; align-items: center; justify-content: center; color: #c7aa6a; font-size: 24px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            `}
+                                            <div>
+                                                <a href="/public-profile?user=${user.username}" style="color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
+                                                    ${displayName}
+                                                </a>
+                                                <div style="color: #888; font-size: 14px;">@${user.username}</div>
+                                                <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
+                                                    ${user.twitchUrl ? `
+                                                        <a href="${user.twitchUrl}" target="_blank" style="color: #6441a5; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                            <i class="fab fa-twitch"></i> Twitch
+                                                        </a>
+                                                    ` : ''}
+                                                    ${user.tarkovDevId ? `
+                                                        <a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank" style="color: #c7aa6a; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                            <i class="fas fa-gamepad"></i> Tarkov.dev
+                                                        </a>
+                                                    ` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.pmcLevel}</td>
+                                    <td style="padding: 15px; text-align: center;">
+                                        ${user.progress.prestige === -1 ? `
+                                            <span style="color: #c7aa6a; font-weight: 600; font-size: 16px;">PVE</span>
+                                        ` : user.progress.prestige && user.progress.prestige > 0 ? `
+                                            <img src="/imgs/prestige_${user.progress.prestige}.webp" alt="Prestige ${user.progress.prestige}" style="width: 40px; height: 40px; object-fit: contain;" title="Prestige ${user.progress.prestige}" loading="lazy" />
+                                        ` : `<span style="color: #888; font-size: 14px;">-</span>`}
+                                    </td>
+                                    <td style="padding: 15px; text-align: center; color: #fff; font-weight: 600; font-size: 16px;">${user.progress.totalCompleted}</td>
+                                    <td style="padding: 15px; text-align: center; color: #4CAF50; font-weight: 700; font-size: 18px;">${user.progress.completionRate.toFixed(1)}%</td>
+                                    <td style="padding: 15px; text-align: center; color: #888; font-size: 14px;">${lastActive}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
     }
 
     async loadProfile() {

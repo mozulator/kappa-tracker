@@ -109,13 +109,6 @@
             background: rgba(199, 170, 106, 0.2);
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 25px 0;
-        }
-
         .stat-card {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid #3a3a3a;
@@ -371,21 +364,6 @@
             </div>
             <p>Global Leaderboard of Quest Completion</p>
 
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-users">-</div>
-                    <div class="stat-label">Total Trackers</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="avg-completion">-</div>
-                    <div class="stat-label">Avg Completion</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="total-completed">-</div>
-                    <div class="stat-label">Total Quests Completed</div>
-                </div>
-            </div>
-
             <div class="nav-links">
                 <a href="/"><i class="fas fa-home"></i> Home</a>
                 <a href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
@@ -574,18 +552,6 @@
             document.getElementById('rankings-list').innerHTML = tableHTML;
         }
 
-        async function loadGlobalStats() {
-            try {
-                const response = await fetch('/api/stats/global');
-                const data = await response.json();
-
-                document.getElementById('total-users').textContent = data.totalUsers.toLocaleString();
-                document.getElementById('avg-completion').textContent = data.avgCompletion + '%';
-                document.getElementById('total-completed').textContent = data.totalQuestsCompleted.toLocaleString();
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
 
         function formatTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
@@ -623,7 +589,6 @@
         
         // Load data on page load
         loadRankings();
-        loadGlobalStats();
     </script>
 </body>
 </html>
