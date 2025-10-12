@@ -1421,56 +1421,44 @@ class QuestTracker {
         }, 3000);
     }
 
-    async loadFixQuests() {
+    loadFixQuests() {
         const container = document.getElementById('fix-quests-grid');
-        container.innerHTML = '<div class="loading" style="padding: 60px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading quests...</div>';
         
-        try {
-            const response = await fetch('/api/quests', { credentials: 'include' });
-            const data = await response.json();
-            
-            if (!data.quests || data.quests.length === 0) {
-                container.innerHTML = '<div style="padding: 60px; text-align: center; color: #888;">No quests found</div>';
-                return;
-            }
-            
-            // Show all quests for fixing
-            const fixQuests = data.quests;
-            
-            if (fixQuests.length === 0) {
-                container.innerHTML = '<div style="padding: 60px; text-align: center; color: #4CAF50;"><i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px;"></i><p>All quests look good! No fixes needed.</p></div>';
-                return;
-            }
-            
-            // Build quest cards HTML
-            const questsHTML = fixQuests.map(quest => {
-                const questMap = quest.mapName || 'Any Location';
-                const questTrader = quest.trader || 'Unknown';
-                
-                return `
-                    <div class="fix-quest-card">
-                        <div class="fix-quest-title">${quest.name}</div>
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                            <span class="level-badge">Level ${quest.level}</span>
-                            <span class="trader-badge">${questTrader}</span>
-                            <span class="map-badge">${questMap}</span>
-                            ${quest.requiredForKappa ? '<span class="kappa-badge">Kappa</span>' : ''}
-                        </div>
-                        <div style="color: #888; font-size: 14px; margin-bottom: 12px;">
-                            ${quest.description || 'No description available'}
-                        </div>
-                        <button class="fix-quest-btn" onclick="window.tracker.fixQuest('${quest.id}')">
-                            <i class="fas fa-wrench"></i> Fix Quest
-                        </button>
-                    </div>
-                `;
-            }).join('');
-            
-            container.innerHTML = questsHTML;
-        } catch (error) {
-            console.error('Error loading fix quests:', error);
-            container.innerHTML = '<div style="padding: 60px; text-align: center; color: #ef4444;">Failed to load quests</div>';
+        if (!this.quests || this.quests.length === 0) {
+            container.innerHTML = '<div style="padding: 60px; text-align: center; color: #888;">No quests loaded yet. Please wait...</div>';
+            return;
         }
+        
+        // Show all quests for fixing
+        const fixQuests = this.quests;
+        
+        // Build quest cards HTML
+        const questsHTML = fixQuests.map(quest => {
+            const questMap = quest.mapName || 'Any Location';
+            const questTrader = quest.trader || 'Unknown';
+            const isCompleted = this.userProgress.completedQuests.includes(quest.id);
+            
+            return `
+                <div class="fix-quest-card ${isCompleted ? 'completed' : ''}">
+                    <div class="fix-quest-title">${quest.name}</div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                        <span class="level-badge">Level ${quest.level}</span>
+                        <span class="trader-badge">${questTrader}</span>
+                        <span class="map-badge">${questMap}</span>
+                        ${quest.requiredForKappa ? '<span class="kappa-badge">Kappa</span>' : ''}
+                        ${isCompleted ? '<span class="badge" style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; border: 1px solid rgba(76, 175, 80, 0.3);">✓ Completed</span>' : ''}
+                    </div>
+                    <div style="color: #888; font-size: 14px; margin-bottom: 12px;">
+                        ${quest.description || 'No description available'}
+                    </div>
+                    <button class="fix-quest-btn" onclick="window.tracker.toggleQuestCompletion('${quest.id}')">
+                        <i class="fas ${isCompleted ? 'fa-undo' : 'fa-check'}"></i> ${isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+        
+        container.innerHTML = questsHTML;
     }
     
     fixQuest(questId) {
