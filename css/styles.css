@@ -163,6 +163,10 @@ body {
     border-bottom: 1px solid var(--post-border);
 }
 
+.sidebar-section-kappa-progress {
+    padding-top: 0px;
+}
+
 .sidebar-section:last-child {
     border-bottom: none;
 }
@@ -363,11 +367,36 @@ body {
     gap: 8px;
 }
 
+.user-avatar-link {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.user-avatar-link:hover {
+    opacity: 0.8;
+}
+
 .user-avatar-header {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid var(--text-highlight);
+}
+
+.default-avatar-initial {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--text-highlight);
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
     border: 2px solid var(--text-highlight);
 }
 
@@ -1427,7 +1456,7 @@ body {
     padding: 12px;
     font-size: 14px;
     font-weight: 600;
-    margin-top: 8px;
+    margin-top: auto;
     background: var(--text-highlight);
     border: none;
     border-radius: 6px;
