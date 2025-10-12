@@ -1905,7 +1905,7 @@ app.get('/collector/:userId/:token', async (req, res) => {
         }
         
         // Serve collector-progress.html
-        res.sendFile(path.join(__dirname, 'collector-progress.html'));
+        res.sendFile(path.join(__dirname, 'html', 'collector-progress.html'));
     } catch (error) {
         console.error('Error serving collector overlay:', error);
         res.status(500).send('Error loading overlay');
@@ -1932,7 +1932,7 @@ app.get('/kappa/:userId/:token', async (req, res) => {
         }
         
         // Serve kappa-overview.html
-        res.sendFile(path.join(__dirname, 'kappa-overview.html'));
+        res.sendFile(path.join(__dirname, 'html', 'kappa-overview.html'));
     } catch (error) {
         console.error('Error serving kappa overlay:', error);
         res.status(500).send('Error loading overlay');
@@ -1941,7 +1941,7 @@ app.get('/kappa/:userId/:token', async (req, res) => {
 
 // Collector Items overlay (public - no auth required for now)
 app.get('/collector-items-overlay', (req, res) => {
-    res.sendFile(path.join(__dirname, 'collector-items-overlay.html'));
+    res.sendFile(path.join(__dirname, 'html', 'collector-items-overlay.html'));
 });
 
 // API endpoint for collector items overlay data
@@ -2043,10 +2043,13 @@ app.post('/api/collector-items/save', requireAuth, async (req, res) => {
 // ============================================================================
 // STATIC FILES (must be after API routes)
 // ============================================================================
-// Explicitly serve fonts directory
+// Explicitly serve static directories
 app.use('/fonts', express.static(path.join(__dirname, 'fonts')));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/imgs', express.static(path.join(__dirname, 'imgs')));
 
-// Serve all static files
+// Serve all static files (fallback)
 app.use(express.static('.'));
 
 // ============================================================================
@@ -2055,9 +2058,9 @@ app.use(express.static('.'));
 
 app.get('/', (req, res) => {
     if (!req.isAuthenticated()) {
-        res.sendFile(path.join(__dirname, 'login.html'));
+        res.sendFile(path.join(__dirname, 'html', 'login.html'));
     } else {
-        res.sendFile(path.join(__dirname, 'index.html'));
+        res.sendFile(path.join(__dirname, 'html', 'index.html'));
     }
 });
 
@@ -2067,19 +2070,19 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'html', 'login.html'));
 });
 
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'));
+    res.sendFile(path.join(__dirname, 'html', 'register.html'));
 });
 
 app.get('/rankings', (req, res) => {
-    res.sendFile(path.join(__dirname, 'rankings.html'));
+    res.sendFile(path.join(__dirname, 'html', 'rankings.html'));
 });
 
 app.get('/profile', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'profile.html'));
+    res.sendFile(path.join(__dirname, 'html', 'profile.html'));
 });
 
 // Public profile with server-side rendering for SEO
@@ -2088,7 +2091,7 @@ app.get('/public-profile', async (req, res) => {
     
     // If no username, serve basic page
     if (!username) {
-        return res.sendFile(path.join(__dirname, 'public-profile.html'));
+        return res.sendFile(path.join(__dirname, 'html', 'public-profile.html'));
     }
     
     try {
@@ -2120,7 +2123,7 @@ app.get('/public-profile', async (req, res) => {
         
         // If user not found or private, serve basic page
         if (!user || !user.isPublic) {
-            return res.sendFile(path.join(__dirname, 'public-profile.html'));
+            return res.sendFile(path.join(__dirname, 'html', 'public-profile.html'));
         }
         
         // Generate dynamic meta tags
@@ -2219,7 +2222,7 @@ app.get('/public-profile', async (req, res) => {
         res.send(html);
     } catch (error) {
         console.error('Error serving public profile:', error);
-        res.sendFile(path.join(__dirname, 'public-profile.html'));
+        res.sendFile(path.join(__dirname, 'html', 'public-profile.html'));
     }
 });
 

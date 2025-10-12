@@ -33,7 +33,7 @@
     <meta name="msapplication-TileColor" content="#c7aa6a">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
     
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -607,7 +607,7 @@
                 
                 // Load tracker script only after auth confirmed
                 const script = document.createElement('script');
-                script.src = 'script.js';
+                script.src = '/js/script.js';
                 script.onload = function() {
                     // Initialize tracker after script loads
                     if (typeof QuestTracker !== 'undefined') {
