@@ -204,10 +204,10 @@ class QuestTracker {
                 const questCards = document.querySelectorAll('.fix-quest-card');
                 
                 questCards.forEach(card => {
-                    const title = card.querySelector('.fix-quest-title').textContent.toLowerCase();
-                    const trader = card.querySelector('.trader-badge')?.textContent.toLowerCase() || '';
+                    const questName = card.getAttribute('data-quest-name') || '';
+                    const trader = card.getAttribute('data-trader') || '';
                     
-                    if (title.includes(searchTerm) || trader.includes(searchTerm)) {
+                    if (questName.includes(searchTerm) || trader.includes(searchTerm)) {
                         card.style.display = 'flex';
                     } else {
                         card.style.display = 'none';
@@ -523,6 +523,13 @@ class QuestTracker {
         this.showView('collector-items');
         this.updateNavigationState();
         this.loadCollectorItems();
+    }
+    
+    loadCollectorItems() {
+        // Collector items are already loaded in the HTML
+        // This function exists to maintain consistency
+        // The collector items functionality is handled by the HTML
+        console.log('Collector items view loaded');
     }
 
     showView(view) {
@@ -1459,7 +1466,7 @@ class QuestTracker {
             const isCompleted = this.userProgress.completedQuests.includes(quest.id);
             
             return `
-                <div class="fix-quest-card ${isCompleted ? 'completed' : ''}">
+                <div class="fix-quest-card ${isCompleted ? 'completed' : ''}" data-quest-name="${quest.name.toLowerCase()}" data-trader="${questTrader.toLowerCase()}">
                     <div class="fix-quest-title">${quest.name}</div>
                     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
                         <span class="level-badge">Level ${quest.level}</span>
@@ -1471,14 +1478,65 @@ class QuestTracker {
                     <div style="color: #888; font-size: 14px; margin-bottom: 12px;">
                         ${quest.description || 'No description available'}
                     </div>
-                    <button class="fix-quest-btn" onclick="window.tracker.toggleQuestCompletion('${quest.id}')">
-                        <i class="fas ${isCompleted ? 'fa-undo' : 'fa-check'}"></i> ${isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+                    <button class="fix-quest-btn" onclick="window.tracker.openFixQuestDialog('${quest.id}')">
+                        <i class="fas fa-wrench"></i> Fix Quest
                     </button>
                 </div>
             `;
         }).join('');
         
         container.innerHTML = questsHTML;
+    }
+    
+    openFixQuestDialog(questId) {
+        const quest = this.quests.find(q => q.id === questId);
+        if (!quest) return;
+        
+        const isCompleted = this.userProgress.completedQuests.includes(questId);
+        
+        // Create dialog overlay
+        const dialog = document.createElement('div');
+        dialog.className = 'dialog-overlay';
+        dialog.style.display = 'flex';
+        dialog.innerHTML = `
+            <div class="dialog-content" style="max-width: 600px;">
+                <h2 style="color: var(--text-highlight); margin-bottom: 20px;">
+                    <i class="fas fa-wrench"></i> Fix Quest: ${quest.name}
+                </h2>
+                <div style="margin-bottom: 20px;">
+                    <p style="color: #888; margin-bottom: 16px;">${quest.description || 'No description available'}</p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+                        <span class="level-badge">Level ${quest.level}</span>
+                        <span class="trader-badge">${quest.trader}</span>
+                        <span class="map-badge">${quest.mapName || 'Any Location'}</span>
+                        ${quest.requiredForKappa ? '<span class="kappa-badge">Kappa</span>' : ''}
+                    </div>
+                    <p style="color: #fff; font-weight: 600; margin-bottom: 8px;">Current Status:</p>
+                    <p style="color: ${isCompleted ? '#4CAF50' : '#FF9800'}; font-size: 18px; font-weight: 700;">
+                        ${isCompleted ? '✓ Completed' : '○ Not Completed'}
+                    </p>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button onclick="this.closest('.dialog-overlay').remove()" 
+                            style="padding: 12px 24px; background: var(--post-bg); border: 2px solid var(--post-border); border-radius: 6px; color: #fff; cursor: pointer;">
+                        Cancel
+                    </button>
+                    <button onclick="window.tracker.toggleQuestCompletion('${questId}'); this.closest('.dialog-overlay').remove();" 
+                            style="padding: 12px 24px; background: var(--text-highlight); border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">
+                        <i class="fas ${isCompleted ? 'fa-undo' : 'fa-check'}"></i> ${isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Close on background click
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                dialog.remove();
+            }
+        });
+        
+        document.body.appendChild(dialog);
     }
     
     fixQuest(questId) {
