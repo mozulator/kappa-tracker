@@ -6,6 +6,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "update-quests": "node scripts/update-quests.js",
+    "fetch-avatars": "node scripts/fetch-twitch-avatars.js",
     "setup": "npm install && npx prisma generate && npx prisma migrate dev",
     "reset-db": "npx prisma migrate reset",
     "generate": "npx prisma generate",
