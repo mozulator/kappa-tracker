@@ -1421,6 +1421,67 @@ class QuestTracker {
         }, 3000);
     }
 
+    async loadFixQuests() {
+        const container = document.getElementById('fix-quests-grid');
+        container.innerHTML = '<div class="loading" style="padding: 60px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading quests...</div>';
+        
+        try {
+            const response = await fetch('/api/quests', { credentials: 'include' });
+            const data = await response.json();
+            
+            if (!data.quests || data.quests.length === 0) {
+                container.innerHTML = '<div style="padding: 60px; text-align: center; color: #888;">No quests found</div>';
+                return;
+            }
+            
+            // Filter quests that need fixing (have issues)
+            const fixQuests = data.quests.filter(quest => {
+                // Add your logic here for what constitutes a "fix" quest
+                // For now, let's show all quests
+                return quest.requiredForKappa;
+            });
+            
+            if (fixQuests.length === 0) {
+                container.innerHTML = '<div style="padding: 60px; text-align: center; color: #4CAF50;"><i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px;"></i><p>All quests look good! No fixes needed.</p></div>';
+                return;
+            }
+            
+            // Build quest cards HTML
+            const questsHTML = fixQuests.map(quest => {
+                const questMap = quest.mapName || 'Any Location';
+                const questTrader = quest.trader || 'Unknown';
+                
+                return `
+                    <div class="fix-quest-card">
+                        <div class="fix-quest-title">${quest.name}</div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <span class="level-badge">Level ${quest.level}</span>
+                            <span class="trader-badge">${questTrader}</span>
+                            <span class="map-badge">${questMap}</span>
+                            ${quest.requiredForKappa ? '<span class="kappa-badge">Kappa</span>' : ''}
+                        </div>
+                        <div style="color: #888; font-size: 14px; margin-bottom: 12px;">
+                            ${quest.description || 'No description available'}
+                        </div>
+                        <button class="fix-quest-btn" onclick="window.tracker.fixQuest('${quest.id}')">
+                            <i class="fas fa-wrench"></i> Fix Quest
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = questsHTML;
+        } catch (error) {
+            console.error('Error loading fix quests:', error);
+            container.innerHTML = '<div style="padding: 60px; text-align: center; color: #ef4444;">Failed to load quests</div>';
+        }
+    }
+    
+    fixQuest(questId) {
+        // Placeholder for quest fixing logic
+        this.showNotification('Quest fix functionality coming soon!', 'info');
+    }
+
     async loadRankings() {
         const container = document.getElementById('rankings-content');
         container.innerHTML = '<div class="loading" style="padding: 60px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading rankings...</div>';

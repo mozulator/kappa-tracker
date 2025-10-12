@@ -118,8 +118,7 @@
         <div class="header-right">
             <div class="nav-dropdown user-dropdown">
                 <a href="#" class="nav-link user-nav-link" id="user-dropdown-tab">
-                    <span id="user-display-name">User</span>
-                    <img id="user-avatar" src="" alt="User" class="user-avatar-header" style="display: none;">
+                    <img id="user-avatar" src="" alt="User" class="user-avatar-header">
                     <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" id="user-dropdown">
@@ -629,17 +628,27 @@
             const userDropdown = document.getElementById('user-dropdown');
             const accountLink = document.getElementById('account-link');
             const logoutLink = document.getElementById('logout-link');
-            const userDisplayName = document.getElementById('user-display-name');
             const userAvatar = document.getElementById('user-avatar');
             
-            // Set user info
+            // Set user avatar
             if (window.currentUser) {
-                if (userDisplayName) {
-                    userDisplayName.textContent = window.currentUser.displayName || window.currentUser.username;
-                }
-                if (userAvatar && window.currentUser.avatarUrl) {
-                    userAvatar.src = window.currentUser.avatarUrl;
-                    userAvatar.style.display = 'block';
+                if (userAvatar) {
+                    if (window.currentUser.avatarUrl) {
+                        userAvatar.src = window.currentUser.avatarUrl;
+                        userAvatar.alt = window.currentUser.displayName || window.currentUser.username;
+                    } else {
+                        // Create a default avatar with user initial
+                        const displayName = window.currentUser.displayName || window.currentUser.username;
+                        const initial = displayName.charAt(0).toUpperCase();
+                        userAvatar.style.display = 'none';
+                        
+                        // Create a div with the initial
+                        const defaultAvatar = document.createElement('div');
+                        defaultAvatar.className = 'user-avatar-header default-avatar-initial';
+                        defaultAvatar.textContent = initial;
+                        defaultAvatar.title = displayName;
+                        userDropdownTab.insertBefore(defaultAvatar, userAvatar);
+                    }
                 }
             }
             
