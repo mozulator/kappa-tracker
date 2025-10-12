@@ -290,6 +290,17 @@
             margin-top: 4px;
         }
 
+        .user-email {
+            color: #888;
+            filter: blur(5px);
+            transition: filter 0.2s;
+            cursor: help;
+        }
+
+        .user-email:hover {
+            filter: blur(0px);
+        }
+
         @media (max-width: 1600px) {
             .dashboard-container {
                 grid-template-columns: 1fr 1fr;
@@ -558,7 +569,7 @@
                     <div class="user-info-section">
                         <div class="name">${user.displayName || user.username}</div>
                         <div class="details">
-                            <span class="username">@${user.username}</span> • ${user.email}
+                            <span class="username">@${user.username}</span> • <span class="user-email">${user.email}</span>
                         </div>
                         <div class="date">Registered: ${new Date(user.createdAt).toLocaleString()}</div>
                         ${user.tarkovDevId || user.twitchUrl ? `
@@ -605,7 +616,7 @@
                             ${!user.approved ? '<i class="fas fa-ban" style="color: #ff9800; margin-left: 8px;" title="Not on Leaderboard"></i>' : '<i class="fas fa-trophy" style="color: #4CAF50; margin-left: 8px;" title="On Leaderboard"></i>'}
                         </div>
                         <div class="details">
-                            <span class="username">@${user.username}</span> • ${user.email}
+                            <span class="username">@${user.username}</span> • <span class="user-email">${user.email}</span>
                         </div>
                         <div class="date">
                             Joined: ${new Date(user.createdAt).toLocaleDateString()} • 

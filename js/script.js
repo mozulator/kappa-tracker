@@ -1463,20 +1463,36 @@ class QuestTracker {
         const questsHTML = fixQuests.map(quest => {
             const questMap = quest.mapName || 'Any Location';
             const questTrader = quest.trader || 'Unknown';
-            const isCompleted = this.userProgress.completedQuests.includes(quest.id);
+            
+            // Get description from objectives
+            let description = 'No objectives available';
+            try {
+                const objectives = JSON.parse(quest.objectives || '[]');
+                if (objectives.length > 0) {
+                    const firstObjective = objectives[0];
+                    if (typeof firstObjective === 'string') {
+                        description = firstObjective;
+                    } else if (firstObjective.description) {
+                        description = firstObjective.description;
+                    } else if (firstObjective.text) {
+                        description = firstObjective.text;
+                    }
+                }
+            } catch (e) {
+                description = 'No objectives available';
+            }
             
             return `
-                <div class="fix-quest-card ${isCompleted ? 'completed' : ''}" data-quest-name="${quest.name.toLowerCase()}" data-trader="${questTrader.toLowerCase()}">
+                <div class="fix-quest-card" data-quest-name="${quest.name.toLowerCase()}" data-trader="${questTrader.toLowerCase()}">
                     <div class="fix-quest-title">${quest.name}</div>
                     <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
                         <span class="level-badge">Level ${quest.level}</span>
                         <span class="trader-badge">${questTrader}</span>
                         <span class="map-badge">${questMap}</span>
                         ${quest.requiredForKappa ? '<span class="kappa-badge">Kappa</span>' : ''}
-                        ${isCompleted ? '<span class="badge" style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; border: 1px solid rgba(76, 175, 80, 0.3);">✓ Completed</span>' : ''}
                     </div>
                     <div style="color: #888; font-size: 14px; margin-bottom: 12px;">
-                        ${quest.description || 'No description available'}
+                        ${description}
                     </div>
                     <button class="fix-quest-btn" onclick="openQuestEditDialog('${quest.id}')">
                         <i class="fas fa-wrench"></i> Fix Quest
