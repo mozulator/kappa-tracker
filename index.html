@@ -631,75 +631,76 @@
             const userAvatar = document.getElementById('user-avatar');
             
             // Set user avatar
-            if (window.currentUser) {
-                if (userAvatar) {
-                    if (window.currentUser.avatarUrl) {
-                        userAvatar.src = window.currentUser.avatarUrl;
-                        userAvatar.alt = window.currentUser.displayName || window.currentUser.username;
-                        
-                        // Handle image load error
-                        userAvatar.onerror = function() {
-                            console.log('Avatar failed to load, trying Twitch API...');
-                            // Try to fetch from Twitch API if user has twitchName
-                            if (window.currentUser.twitchName) {
-                                fetchTwitchAvatar(window.currentUser.twitchName).then(avatarUrl => {
-                                    if (avatarUrl) {
-                                        userAvatar.src = avatarUrl;
-                                    } else {
-                                        showDefaultAvatar();
-                                    }
-                                }).catch(() => {
-                                    showDefaultAvatar();
-                                });
-                            } else {
-                                showDefaultAvatar();
-                            }
+            async function loadUserAvatar() {
+                if (!window.currentUser || !userAvatar) return;
+                
+                const displayName = window.currentUser.displayName || window.currentUser.username;
+                let avatarLoaded = false;
+                
+                // Try 1: Use avatarUrl from database
+                if (window.currentUser.avatarUrl) {
+                    try {
+                        const img = new Image();
+                        img.onload = function() {
+                            userAvatar.src = window.currentUser.avatarUrl;
+                            userAvatar.alt = displayName;
+                            userAvatar.style.display = 'block';
+                            avatarLoaded = true;
                         };
-                    } else if (window.currentUser.twitchName) {
-                        // Try to fetch Twitch avatar if no avatarUrl but has twitchName
-                        fetchTwitchAvatar(window.currentUser.twitchName).then(avatarUrl => {
-                            if (avatarUrl) {
-                                userAvatar.src = avatarUrl;
-                                userAvatar.alt = window.currentUser.displayName || window.currentUser.username;
-                            } else {
-                                showDefaultAvatar();
-                            }
-                        }).catch(() => {
-                            showDefaultAvatar();
-                        });
-                    } else {
-                        showDefaultAvatar();
+                        img.onerror = function() {
+                            tryTwitchAvatar();
+                        };
+                        img.src = window.currentUser.avatarUrl;
+                        return;
+                    } catch (e) {
+                        console.log('Avatar URL failed, trying Twitch...');
                     }
                 }
-            }
-            
-            function showDefaultAvatar() {
-                const displayName = window.currentUser.displayName || window.currentUser.username;
-                const initial = displayName.charAt(0).toUpperCase();
-                userAvatar.style.display = 'none';
                 
-                // Create a div with the initial
-                const defaultAvatar = document.createElement('div');
-                defaultAvatar.className = 'user-avatar-header default-avatar-initial';
-                defaultAvatar.textContent = initial;
-                defaultAvatar.title = displayName;
-                userDropdownTab.insertBefore(defaultAvatar, userAvatar);
-            }
-            
-            async function fetchTwitchAvatar(twitchName) {
-                try {
-                    const response = await fetch(`https://decapi.me/twitch/avatar/${twitchName}`);
-                    if (response.ok) {
-                        const avatarUrl = await response.text();
-                        if (avatarUrl && avatarUrl.startsWith('http')) {
-                            return avatarUrl.trim();
+                // Try 2: Fetch from Twitch API
+                async function tryTwitchAvatar() {
+                    if (window.currentUser.twitchName) {
+                        try {
+                            const response = await fetch(`https://decapi.me/twitch/avatar/${window.currentUser.twitchName}`);
+                            if (response.ok) {
+                                const avatarUrl = await response.text();
+                                if (avatarUrl && avatarUrl.trim().startsWith('http')) {
+                                    userAvatar.src = avatarUrl.trim();
+                                    userAvatar.alt = displayName;
+                                    userAvatar.style.display = 'block';
+                                    return;
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error fetching Twitch avatar:', error);
                         }
                     }
-                } catch (error) {
-                    console.error('Error fetching Twitch avatar:', error);
+                    
+                    // Try 3: Show default avatar with initial
+                    showDefaultAvatar();
                 }
-                return null;
+                
+                function showDefaultAvatar() {
+                    const initial = displayName.charAt(0).toUpperCase();
+                    userAvatar.style.display = 'none';
+                    
+                    // Check if default avatar already exists
+                    const existing = userDropdownTab.querySelector('.default-avatar-initial');
+                    if (existing) return;
+                    
+                    const defaultAvatar = document.createElement('div');
+                    defaultAvatar.className = 'user-avatar-header default-avatar-initial';
+                    defaultAvatar.textContent = initial;
+                    defaultAvatar.title = displayName;
+                    userDropdownTab.insertBefore(defaultAvatar, userAvatar);
+                }
+                
+                if (!avatarLoaded && !window.currentUser.avatarUrl) {
+                    await tryTwitchAvatar();
+                }
             }
+            
+            loadUserAvatar();
             
             // Toggle user dropdown
             if (userDropdownTab && userDropdown) {

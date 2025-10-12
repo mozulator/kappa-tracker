@@ -195,6 +195,26 @@ class QuestTracker {
                 this.updateUI();
             });
         }
+        
+        // Fix Quest search functionality
+        const fixQuestSearch = document.getElementById('fix-quest-search');
+        if (fixQuestSearch) {
+            fixQuestSearch.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const questCards = document.querySelectorAll('.fix-quest-card');
+                
+                questCards.forEach(card => {
+                    const title = card.querySelector('.fix-quest-title').textContent.toLowerCase();
+                    const trader = card.querySelector('.trader-badge')?.textContent.toLowerCase() || '';
+                    
+                    if (title.includes(searchTerm) || trader.includes(searchTerm)) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
 
         // Reset progress button (now in sidebar)
         const resetBtnSidebar = document.getElementById('reset-progress-btn-sidebar');
