@@ -167,10 +167,10 @@ class QuestTracker {
             this.updateUI();
         });
 
-        const sortQuestsBy = document.getElementById('sort-quests-by');
-        if (sortQuestsBy) {
-            sortQuestsBy.addEventListener('change', (e) => {
-                this.sortBy = e.target.value;
+        const sortByTraderToggle = document.getElementById('sort-by-trader');
+        if (sortByTraderToggle) {
+            sortByTraderToggle.addEventListener('change', (e) => {
+                this.sortBy = e.target.checked ? 'trader' : 'map';
                 if (this.sortBy === 'trader') {
                     this.currentTrader = this.traders[0] || 'Prapor';
                 } else {
@@ -481,6 +481,7 @@ class QuestTracker {
         const mapOverview = document.getElementById('map-overview');
         const mapTabsSection = document.querySelector('.map-tabs-section');
         const sidebar = document.querySelector('.sidebar');
+        const rightSidebar = document.getElementById('right-sidebar');
         const rankingsSection = document.getElementById('rankings-section');
         const profileSection = document.getElementById('profile-section');
         const fixQuestsSection = document.getElementById('fix-quests-section');
@@ -490,6 +491,7 @@ class QuestTracker {
         mapOverview.style.display = 'none';
         mapTabsSection.style.display = 'none';
         sidebar.style.display = 'none';
+        if (rightSidebar) rightSidebar.style.display = 'none';
         rankingsSection.style.display = 'none';
         profileSection.style.display = 'none';
         if (fixQuestsSection) fixQuestsSection.style.display = 'none';
@@ -498,15 +500,14 @@ class QuestTracker {
         // Show relevant sections based on view
         if (view === 'dashboard') {
             questsSection.style.display = 'block';
-            mapOverview.style.display = 'block';
             mapTabsSection.style.display = 'block';
             sidebar.style.display = 'flex'; // Use flex to maintain sidebar layout
+            if (rightSidebar) rightSidebar.style.display = 'block'; // Show right sidebar only on dashboard
         } else if (view === 'finished') {
             questsSection.style.display = 'block';
             mapTabsSection.style.display = 'block';
             sidebar.style.display = 'flex';
-            // Hide map-overview on finished quests page
-            mapOverview.style.display = 'none';
+            // Hide map-overview and right sidebar on finished quests page
         } else if (view === 'rankings') {
             rankingsSection.style.display = 'block';
         } else if (view === 'profile') {

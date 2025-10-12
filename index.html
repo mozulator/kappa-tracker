@@ -125,7 +125,7 @@
         <aside class="sidebar">
             <div class="sidebar-content">
                 <!-- Player Stats Section -->
-                <div class="sidebar-section">
+                <div class="sidebar-section sidebar-section-player-stats">
                     <div class="sidebar-section-title">
                         <i class="fas fa-user"></i> PLAYER STATS
                     </div>
@@ -147,7 +147,7 @@
                 </div>
 
                 <!-- Progress Section -->
-                <div class="sidebar-section">
+                <div class="sidebar-section sidebar-section-kappa-progress">
                     <div class="sidebar-section-title">
                         <i class="fas fa-chart-line"></i> KAPPA PROGRESS
                     </div>
@@ -160,7 +160,7 @@
                 </div>
 
                 <!-- View Options Section -->
-                <div class="sidebar-section">
+                <div class="sidebar-section sidebar-section-view-options">
                     <div class="sidebar-section-title">
                         <i class="fas fa-eye"></i> VIEW OPTIONS
                     </div>
@@ -171,12 +171,12 @@
                             <span class="quest-mode-label">Show All Future Quests</span>
                         </label>
                     </div>
-                    <div class="level-section" style="margin-top: 20px;">
-                        <label for="sort-quests-by">Sort Quests By</label>
-                        <select id="sort-quests-by" class="level-input" style="width: 100%;">
-                            <option value="map" selected>Map</option>
-                            <option value="trader">Trader</option>
-                        </select>
+                    <div class="quest-mode-section" style="margin-top: 16px;">
+                        <label class="quest-mode-toggle">
+                            <input type="checkbox" id="sort-by-trader" class="quest-mode-checkbox">
+                            <span class="quest-mode-slider"></span>
+                            <span class="quest-mode-label">Sort Quests by Trader</span>
+                        </label>
                     </div>
                 </div>
             </div>
