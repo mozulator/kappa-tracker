@@ -1,0 +1,148 @@
+/* Dialog Styles */
+.dialog-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.dialog-content {
+    background: var(--header-bg);
+    border: 2px solid var(--post-border);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.dialog-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-highlight);
+    margin-bottom: 20px;
+}
+
+.dialog-message {
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.dialog-warning {
+    background: rgba(239, 68, 68, 0.1);
+    border: 2px solid var(--danger);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    color: var(--danger);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.dialog-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dialog-btn-primary {
+    background: var(--text-highlight);
+    color: #000;
+}
+
+.dialog-btn-primary:hover {
+    background: var(--text-alt-highlight);
+}
+
+.dialog-btn-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.dialog-btn-danger:hover {
+    background: #b91c1c;
+}
+
+.dialog-btn-secondary {
+    background: var(--post-bg);
+    color: var(--text-primary);
+    border: 2px solid var(--post-border);
+}
+
+.dialog-btn-secondary:hover {
+    background: var(--post-bg-secondary);
+    border-color: var(--text-highlight);
+}
+
+/* Form Elements in Dialogs */
+.dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-highlight);
+    font-size: 14px;
+}
+
+.form-input,
+.form-textarea {
+    background: var(--post-bg);
+    border: 2px solid var(--post-border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--text-highlight);
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-error {
+    color: var(--danger);
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.form-success {
+    color: var(--success);
+    font-size: 14px;
+    margin-top: 8px;
+}
+

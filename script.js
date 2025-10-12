@@ -138,28 +138,44 @@ class QuestTracker {
 
         const dashboardTab = document.getElementById('dashboard-tab');
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
+        const fixQuestsTab = document.getElementById('fix-quests-tab');
         const rankingsTab = document.getElementById('rankings-tab');
-        const profileTab = document.getElementById('profile-tab');
+        const collectorItemsTab = document.getElementById('collector-items-tab');
         
-        dashboardTab.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.switchToDashboard();
-        });
+        if (dashboardTab) {
+            dashboardTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchToDashboard();
+            });
+        }
         
-        finishedQuestsTab.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.switchToFinishedQuests();
-        });
+        if (finishedQuestsTab) {
+            finishedQuestsTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchToFinishedQuests();
+            });
+        }
+        
+        if (fixQuestsTab) {
+            fixQuestsTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchToFixQuests();
+            });
+        }
 
-        rankingsTab.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.switchToRankings();
-        });
-
-        profileTab.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.switchToProfile();
-        });
+        if (rankingsTab) {
+            rankingsTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchToRankings();
+            });
+        }
+        
+        if (collectorItemsTab) {
+            collectorItemsTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showCollectorSection();
+            });
+        }
 
         const futureQuestsToggle = document.getElementById('show-future-quests');
         futureQuestsToggle.addEventListener('change', (e) => {
@@ -474,6 +490,20 @@ class QuestTracker {
         this.updateNavigationState();
         this.loadProfile();
     }
+    
+    switchToFixQuests() {
+        this.currentView = 'fix-quests';
+        this.showView('fix-quests');
+        this.updateNavigationState();
+        this.loadFixQuests();
+    }
+    
+    showCollectorSection() {
+        this.currentView = 'collector-items';
+        this.showView('collector-items');
+        this.updateNavigationState();
+        this.loadCollectorItems();
+    }
 
     showView(view) {
         /*
@@ -525,12 +555,11 @@ class QuestTracker {
         const dashboardTab = document.getElementById('dashboard-tab');
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
         const rankingsTab = document.getElementById('rankings-tab');
-        const profileTab = document.getElementById('profile-tab');
         const fixQuestsTab = document.getElementById('fix-quests-tab');
         const collectorItemsTab = document.getElementById('collector-items-tab');
         
         // Remove active class from all tabs
-        [dashboardTab, finishedQuestsTab, rankingsTab, profileTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
+        [dashboardTab, finishedQuestsTab, rankingsTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
             if (tab) tab.classList.remove('active');
         });
         
@@ -541,8 +570,10 @@ class QuestTracker {
             finishedQuestsTab?.classList.add('active');
         } else if (this.currentView === 'rankings') {
             rankingsTab?.classList.add('active');
-        } else if (this.currentView === 'profile') {
-            profileTab?.classList.add('active');
+        } else if (this.currentView === 'fix-quests') {
+            fixQuestsTab?.classList.add('active');
+        } else if (this.currentView === 'collector-items') {
+            collectorItemsTab?.classList.add('active');
         }
     }
 
@@ -1502,13 +1533,14 @@ class QuestTracker {
             
             // Build profile HTML
             container.innerHTML = `
-                <div style="padding: 20px;">
-                    <h2 style="color: #c7aa6a; font-size: 28px; margin-bottom: 20px;">
-                        <i class="fas fa-user"></i> My Profile
-                    </h2>
-                    
-                    <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
-                        <h3 style="color: #c7aa6a; font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">Account Information</h3>
+                <div style="padding: 20px; display: flex; justify-content: center;">
+                    <div style="max-width: 800px; width: 100%;">
+                        <h2 style="color: #c7aa6a; font-size: 28px; margin-bottom: 20px;">
+                            <i class="fas fa-user"></i> Account
+                        </h2>
+                        
+                        <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; padding: 30px;">
+                            <h3 style="color: #c7aa6a; font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">Account Information</h3>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                             <div>
                                 <div style="color: #888; font-size: 14px; margin-bottom: 5px;">Username</div>
@@ -1586,23 +1618,6 @@ class QuestTracker {
                             ` : ''}
                         </div>
                         
-                    </div>
-                    
-                    <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; padding: 30px;">
-                        <h3 style="color: #c7aa6a; font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">Quest Progress</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                            <div style="background: rgba(199, 170, 106, 0.1); border: 2px solid #c7aa6a; border-radius: 8px; padding: 20px; text-align: center;">
-                                <div style="color: #888; font-size: 14px; margin-bottom: 10px;">PMC Level</div>
-                                <div style="color: #c7aa6a; font-size: 32px; font-weight: 700;">${this.userProgress.pmcLevel}</div>
-                            </div>
-                            <div style="background: rgba(76, 175, 80, 0.1); border: 2px solid #4CAF50; border-radius: 8px; padding: 20px; text-align: center;">
-                                <div style="color: #888; font-size: 14px; margin-bottom: 10px;">Quests Completed</div>
-                                <div style="color: #4CAF50; font-size: 32px; font-weight: 700;">${this.userProgress.completedQuests.length}</div>
-                            </div>
-                            <div style="background: rgba(255, 152, 0, 0.1); border: 2px solid #FF9800; border-radius: 8px; padding: 20px; text-align: center;">
-                                <div style="color: #888; font-size: 14px; margin-bottom: 10px;">Completion Rate</div>
-                                <div style="color: #FF9800; font-size: 32px; font-weight: 700;">${this.userProgress.completionRate.toFixed(1)}%</div>
-                            </div>
                         </div>
                     </div>
                 </div>

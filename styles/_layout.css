@@ -1,0 +1,134 @@
+/* App Container */
+.app-container {
+    display: flex;
+    flex: 1 1 auto;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* Content with Sidebar Layout */
+.content-with-sidebar {
+    display: flex;
+    gap: 24px;
+    height: 100%;
+}
+
+.main-quests-area {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Right Sidebar (Quest Requirements) */
+.right-sidebar {
+    width: 320px;
+    background: var(--post-bg);
+    border: 1px solid var(--post-border);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.right-sidebar-content {
+    padding: 20px;
+}
+
+.right-sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-highlight);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--post-border);
+}
+
+/* Map Overview Section */
+.map-overview {
+    margin-bottom: 0;
+}
+
+.overview-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    background: var(--post-bg-secondary);
+    border: 1px solid var(--post-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    gap: 12px;
+}
+
+.stat-label {
+    font-weight: 600;
+    color: var(--subtext);
+    flex-shrink: 0;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--text-highlight);
+    text-align: right;
+}
+
+/* Keys List Styling */
+.keys-list-item,
+.fir-list-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 6px;
+}
+
+.keys-list,
+.fir-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    width: 100%;
+}
+
+.key-item {
+    padding: 4px 8px;
+    background: rgba(199, 170, 106, 0.15);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--text-highlight);
+    border: 1px solid rgba(199, 170, 106, 0.3);
+}
+
+.fir-item {
+    padding: 4px 8px;
+    background: rgba(76, 175, 80, 0.15);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--success);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+

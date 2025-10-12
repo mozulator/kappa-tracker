@@ -361,7 +361,14 @@
 <body>
     <div class="rankings-container">
         <div class="rankings-header">
-            <h1><i class="fas fa-trophy"></i> KAPPA RANKINGS</h1>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px;">
+                <h1 style="margin: 0;"><i class="fas fa-trophy"></i> KAPPA RANKINGS</h1>
+                <label class="quest-mode-toggle" style="margin: 0;">
+                    <input type="checkbox" id="include-prestige-toggle" class="quest-mode-checkbox">
+                    <span class="quest-mode-slider"></span>
+                    <span class="quest-mode-label">Include Prestige</span>
+                </label>
+            </div>
             <p>Global Leaderboard of Quest Completion</p>
 
             <div class="stats-grid" id="stats-grid">
@@ -401,6 +408,8 @@
     </footer>
 
     <script>
+        let rankingsData = [];
+        
         async function loadRankings() {
             try {
                 const response = await fetch('/api/rankings?limit=100');
@@ -415,22 +424,89 @@
                     `;
                     return;
                 }
+                
+                rankingsData = data.rankings;
+                renderRankings();
+            } catch (error) {
+                console.error('Error loading rankings:', error);
+                document.getElementById('rankings-list').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load rankings. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderRankings() {
+            const includePrestige = document.getElementById('include-prestige-toggle').checked;
+            
+            // Sort rankings based on toggle state
+            const sortedRankings = [...rankingsData].sort((a, b) => {
+                // PVE players (-1 prestige) always rank below Prestige players (0-4)
+                const isPVE_A = a.progress.prestige === -1;
+                const isPVE_B = b.progress.prestige === -1;
+                
+                // If one is PVE and the other isn't, non-PVE ranks higher
+                if (isPVE_A && !isPVE_B) return 1;
+                if (!isPVE_A && isPVE_B) return -1;
+                
+                if (includePrestige) {
+                    // Include Prestige: Sort by Prestige > Completion % > Level
+                    const prestigeA = a.progress.prestige || 0;
+                    const prestigeB = b.progress.prestige || 0;
+                    
+                    if (prestigeB !== prestigeA) {
+                        return prestigeB - prestigeA; // Higher prestige first
+                    }
+                    
+                    // If same prestige, sort by completion rate
+                    const completionA = a.progress.completionRate;
+                    const completionB = b.progress.completionRate;
+                    
+                    if (completionB !== completionA) {
+                        return completionB - completionA;
+                    }
+                    
+                    // If same completion, sort by level
+                    return b.progress.pmcLevel - a.progress.pmcLevel;
+                } else {
+                    // Default: Sort by Completion % > Prestige > Level
+                    const completionA = a.progress.completionRate;
+                    const completionB = b.progress.completionRate;
+                    
+                    if (completionB !== completionA) {
+                        return completionB - completionA;
+                    }
+                    
+                    // If same completion, sort by prestige
+                    const prestigeA = a.progress.prestige || 0;
+                    const prestigeB = b.progress.prestige || 0;
+                    
+                    if (prestigeB !== prestigeA) {
+                        return prestigeB - prestigeA;
+                    }
+                    
+                    // If same prestige, sort by level
+                    return b.progress.pmcLevel - a.progress.pmcLevel;
+                }
+            });
 
-                const tableHTML = `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 80px;">Rank</th>
-                                <th>Player</th>
-                                <th class="center" style="width: 120px;">PMC Level</th>
-                                <th class="center" style="width: 120px;">Prestige</th>
-                                <th class="center" style="width: 150px;">Quests</th>
-                                <th class="center" style="width: 130px;">Completion</th>
-                                <th class="center" style="width: 150px;">Last Active</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.rankings.map((user, index) => {
+            const tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Rank</th>
+                            <th>Player</th>
+                            <th class="center" style="width: 120px;">PMC Level</th>
+                            <th class="center" style="width: 120px;">Prestige</th>
+                            <th class="center" style="width: 150px;">Quests</th>
+                            <th class="center" style="width: 130px;">Completion</th>
+                            <th class="center" style="width: 150px;">Last Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedRankings.map((user, index) => {
                                 const rank = index + 1;
                                 const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
                                 const displayName = user.displayName || user.username;
@@ -495,16 +571,7 @@
                     </table>
                 `;
 
-                document.getElementById('rankings-list').innerHTML = tableHTML;
-            } catch (error) {
-                console.error('Error loading rankings:', error);
-                document.getElementById('rankings-list').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>Failed to load rankings. Please try again later.</p>
-                    </div>
-                `;
-            }
+            document.getElementById('rankings-list').innerHTML = tableHTML;
         }
 
         async function loadGlobalStats() {
@@ -544,6 +611,16 @@
             return 'Just now';
         }
 
+        // Toggle event listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const includePrestigeToggle = document.getElementById('include-prestige-toggle');
+            if (includePrestigeToggle) {
+                includePrestigeToggle.addEventListener('change', () => {
+                    renderRankings();
+                });
+            }
+        });
+        
         // Load data on page load
         loadRankings();
         loadGlobalStats();

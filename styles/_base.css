@@ -1,0 +1,81 @@
+/* Font Face Declarations */
+@font-face {
+    font-family: 'Bender';
+    src: url('/fonts/bender.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Bender';
+    src: url('/fonts/bender-bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Bender', 'Arial', sans-serif;
+    background: #0d0d0d;
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar Styling */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-highlight) var(--post-bg-secondary);
+}
+
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--post-bg-secondary);
+    border-radius: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--text-highlight);
+    border-radius: 6px;
+    border: 2px solid var(--post-bg-secondary);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--text-alt-highlight);
+}
+
+*::-webkit-scrollbar-corner {
+    background: var(--post-bg-secondary);
+}
+
+/* Loading Spinner */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--subtext);
+    font-size: 16px;
+}
+
+.loading i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+

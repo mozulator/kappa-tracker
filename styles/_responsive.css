@@ -1,0 +1,139 @@
+/* Responsive Design */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+    .content-with-sidebar {
+        flex-direction: column;
+    }
+    
+    .right-sidebar {
+        width: 100%;
+        order: -1;
+    }
+    
+    .quests-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .main-header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    
+    .title {
+        font-size: 1.5rem;
+    }
+    
+    .nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .nav-link {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .app-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--post-border);
+    }
+    
+    .sidebar-content {
+        padding: 16px;
+    }
+    
+    .main-content {
+        padding: 16px;
+    }
+    
+    .quests-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .map-tabs {
+        gap: 4px;
+        padding: 8px;
+    }
+    
+    .map-tab {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .quest-card {
+        padding: 16px;
+    }
+    
+    .quest-name {
+        font-size: 14px;
+    }
+    
+    .level-sections-inline {
+        flex-direction: column;
+    }
+    
+    .dialog-content {
+        padding: 20px;
+        max-width: 95%;
+    }
+    
+    .dialog-buttons {
+        flex-direction: column;
+    }
+    
+    .dialog-btn {
+        width: 100%;
+    }
+    
+    .collector-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .title {
+        font-size: 1.2rem;
+    }
+    
+    .nav-link {
+        font-size: 11px;
+        padding: 6px 10px;
+    }
+    
+    .quest-card {
+        padding: 12px;
+    }
+    
+    .sidebar-section {
+        padding: 16px 0;
+    }
+    
+    .collector-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

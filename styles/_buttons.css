@@ -1,0 +1,73 @@
+/* Buttons */
+.reset-btn {
+    padding: 10px 20px;
+    background: rgba(199, 170, 106, 0.15);
+    color: var(--text-highlight);
+    border: 2px solid var(--text-highlight);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.reset-btn:hover {
+    background: var(--text-highlight);
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.reset-btn:active {
+    transform: translateY(0);
+}
+
+.report-bug {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.report-bug:hover {
+    background: var(--danger);
+    color: #fff;
+}
+
+.request-feature {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.request-feature:hover {
+    background: var(--success);
+    color: #fff;
+}
+
+/* Checkbox */
+.quest-checkbox {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    accent-color: var(--success);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--subtext);
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 18px;
+}
+

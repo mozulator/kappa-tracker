@@ -70,7 +70,7 @@
 <body>
     <header class="main-header">
         <div class="header-left">
-            <h1 class="title" id="main-title" style="margin: 0;">KAPPA TRACKER</h1>
+            <h1 class="title" id="main-title" style="margin: 0;">OBS KAPPA TRACKER</h1>
             <nav class="nav">
                 <a href="#" class="nav-link active" id="dashboard-tab">Dashboard</a>
                 <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
@@ -78,7 +78,6 @@
                     Fix Quests
                 </a>
                 <a href="#" class="nav-link" id="rankings-tab">Rankings</a>
-                <a href="#" class="nav-link" id="profile-tab">Profile</a>
                 <a href="#" class="nav-link" id="collector-items-tab">
                     Collector Items
                 </a>
@@ -101,18 +100,37 @@
                         </a>
                     </div>
                 </div>
+                <div class="nav-dropdown">
+                    <a href="#" class="nav-link" id="feedback-tab">
+                        Feedback <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+                    </a>
+                    <div class="dropdown-menu" id="feedback-dropdown">
+                        <a href="#" class="dropdown-item" id="report-bug-link">
+                            <i class="fas fa-bug"></i> Report a Bug
+                        </a>
+                        <a href="#" class="dropdown-item" id="request-feature-link">
+                            <i class="fas fa-lightbulb"></i> Request a Feature
+                        </a>
+                    </div>
+                </div>
             </nav>
         </div>
         <div class="header-right">
-            <button id="report-bug-btn" class="reset-btn report-bug" title="Report a Bug">
-                REPORT BUG
-            </button>
-            <button id="request-feature-btn" class="reset-btn request-feature" title="Request a Feature">
-                REQUEST FEATURE
-            </button>
-            <button id="logout-btn" class="reset-btn" title="Logout" style="margin-left: 10px;">
-                LOGOUT
-            </button>
+            <div class="nav-dropdown user-dropdown">
+                <a href="#" class="nav-link user-nav-link" id="user-dropdown-tab">
+                    <span id="user-display-name">User</span>
+                    <img id="user-avatar" src="" alt="User" class="user-avatar-header" style="display: none;">
+                    <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 4px;"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" id="user-dropdown">
+                    <a href="#" class="dropdown-item" id="account-link">
+                        <i class="fas fa-user-cog"></i> Account
+                    </a>
+                    <a href="#" class="dropdown-item" id="logout-link">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </a>
+                </div>
+            </div>
         </div>
     </header>
     
@@ -139,19 +157,19 @@
                     </div>
                     <div class="level-sections-inline">
                         <div class="level-section">
-                            <label for="pmc-level">PMC Level</label>
-                            <input type="number" id="pmc-level" min="1" max="79" value="1" class="level-input">
+                            <label for="prestige-level">Prestige</label>
+                            <select id="prestige-level" class="level-input">
+                                <option value="-1">PVE</option>
+                                <option value="0" selected>P0</option>
+                                <option value="1">P1</option>
+                                <option value="2">P2</option>
+                                <option value="3">P3</option>
+                                <option value="4">P4</option>
+                            </select>
                         </div>
                         <div class="level-section">
-                            <label for="prestige-level">Prestige</label>
-                            <select id="prestige-level" class="level-input" style="width: 100%;">
-                                <option value="-1">PVE</option>
-                                <option value="0" selected>Prestige 0</option>
-                                <option value="1">Prestige 1</option>
-                                <option value="2">Prestige 2</option>
-                                <option value="3">Prestige 3</option>
-                                <option value="4">Prestige 4</option>
-                            </select>
+                            <label for="pmc-level">PMC Level</label>
+                            <input type="number" id="pmc-level" min="1" max="79" value="1" class="level-input">
                         </div>
                     </div>
                 </div>
@@ -584,14 +602,9 @@
                     return; // Stop execution
                 }
                 
-                    // Set title with username
-                    const mainTitle = document.getElementById('main-title');
-                    if (mainTitle) {
-                        mainTitle.textContent = `${data.user.displayName || data.user.username} TRACKER`;
-                    }
-
-                    // Store user ID for collector items
+                    // Store user info for later use
                     window.currentUserId = data.user.id;
+                    window.currentUser = data.user;
                 
                 // Load tracker script only after auth confirmed
                 const script = document.createElement('script');
@@ -609,11 +622,55 @@
             }
         })();
 
-        // Logout functionality
+        // Logout and User dropdown functionality
         document.addEventListener('DOMContentLoaded', () => {
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', async () => {
+            // Setup user dropdown
+            const userDropdownTab = document.getElementById('user-dropdown-tab');
+            const userDropdown = document.getElementById('user-dropdown');
+            const accountLink = document.getElementById('account-link');
+            const logoutLink = document.getElementById('logout-link');
+            const userDisplayName = document.getElementById('user-display-name');
+            const userAvatar = document.getElementById('user-avatar');
+            
+            // Set user info
+            if (window.currentUser) {
+                if (userDisplayName) {
+                    userDisplayName.textContent = window.currentUser.displayName || window.currentUser.username;
+                }
+                if (userAvatar && window.currentUser.avatarUrl) {
+                    userAvatar.src = window.currentUser.avatarUrl;
+                    userAvatar.style.display = 'block';
+                }
+            }
+            
+            // Toggle user dropdown
+            if (userDropdownTab && userDropdown) {
+                userDropdownTab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                    // Close other dropdowns
+                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                        if (menu !== userDropdown) menu.classList.remove('show');
+                    });
+                });
+            }
+            
+            // Handle account link (profile)
+            if (accountLink) {
+                accountLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (window.tracker) {
+                        window.tracker.switchToProfile();
+                    }
+                    userDropdown.classList.remove('show');
+                });
+            }
+            
+            // Handle logout
+            if (logoutLink) {
+                logoutLink.addEventListener('click', async (e) => {
+                    e.preventDefault();
                     await fetch('/api/auth/logout', { 
                         method: 'POST', 
                         credentials: 'include' 
@@ -684,15 +741,65 @@
                     e.preventDefault();
                     e.stopPropagation();
                     obsDropdown.classList.toggle('show');
-                });
-                
-                // Close dropdown when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (!obsIntegrationTab.contains(e.target) && !obsDropdown.contains(e.target)) {
-                        obsDropdown.classList.remove('show');
-                    }
+                    // Close other dropdowns
+                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                        if (menu !== obsDropdown) menu.classList.remove('show');
+                    });
                 });
             }
+            
+            // Feedback dropdown functionality
+            const feedbackTab = document.getElementById('feedback-tab');
+            const feedbackDropdown = document.getElementById('feedback-dropdown');
+            const reportBugLink = document.getElementById('report-bug-link');
+            const requestFeatureLink = document.getElementById('request-feature-link');
+            
+            if (feedbackTab && feedbackDropdown) {
+                // Toggle dropdown on click
+                feedbackTab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    feedbackDropdown.classList.toggle('show');
+                    // Close other dropdowns
+                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                        if (menu !== feedbackDropdown) menu.classList.remove('show');
+                    });
+                });
+            }
+            
+            // Handle report bug from dropdown
+            if (reportBugLink) {
+                reportBugLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openReportDialog('bug');
+                    feedbackDropdown.classList.remove('show');
+                });
+            }
+            
+            // Handle request feature from dropdown
+            if (requestFeatureLink) {
+                requestFeatureLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openReportDialog('feature');
+                    feedbackDropdown.classList.remove('show');
+                });
+            }
+            
+            // Close all dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                const dropdowns = document.querySelectorAll('.nav-dropdown');
+                let clickedInside = false;
+                dropdowns.forEach(dropdown => {
+                    if (dropdown.contains(e.target)) {
+                        clickedInside = true;
+                    }
+                });
+                if (!clickedInside) {
+                    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                        menu.classList.remove('show');
+                    });
+                }
+            });
             
             // Update links with current username and handle clicks
             fetch('/api/auth/me', { credentials: 'include' })
@@ -765,8 +872,8 @@
                 reportDialog.style.display = 'none';
             }
             
-            reportBugBtn.addEventListener('click', () => openReportDialog('bug'));
-            requestFeatureBtn.addEventListener('click', () => openReportDialog('feature'));
+            if (reportBugBtn) reportBugBtn.addEventListener('click', () => openReportDialog('bug'));
+            if (requestFeatureBtn) requestFeatureBtn.addEventListener('click', () => openReportDialog('feature'));
             cancelReportBtn.addEventListener('click', closeReportDialog);
             
             reportDialog.addEventListener('click', (e) => {
