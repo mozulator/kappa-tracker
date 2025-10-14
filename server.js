@@ -1561,11 +1561,10 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
             });
 
             const usersData = await Promise.all(users.map(async (user) => {
-                // Get all quest activities for this user
-                const activities = await prisma.questActivity.findMany({
+                // Get ALL quest activities for this user (completed AND uncompleted)
+                const allActivities = await prisma.questActivity.findMany({
                     where: {
-                        userId: user.id,
-                        action: 'completed'
+                        userId: user.id
                     },
                     orderBy: {
                         timestamp: 'asc'
@@ -1580,8 +1579,28 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
                     }
                 });
 
-                // Get quest details for activities
-                const activitiesWithDetails = await Promise.all(activities.map(async (activity) => {
+                // Track unique completed quests over time
+                const completedQuestIds = new Set();
+                const progressData = [];
+                const completedActivities = [];
+
+                allActivities.forEach((activity) => {
+                    if (activity.action === 'completed') {
+                        completedQuestIds.add(activity.questId);
+                    } else if (activity.action === 'uncompleted') {
+                        completedQuestIds.delete(activity.questId);
+                    }
+                    
+                    // Record the net count at this timestamp
+                    progressData.push({
+                        x: activity.timestamp,
+                        y: completedQuestIds.size
+                    });
+                });
+
+                // Get only completed activities for the activity log
+                const completedOnly = allActivities.filter(a => a.action === 'completed');
+                const activitiesWithDetails = await Promise.all(completedOnly.map(async (activity) => {
                     const quest = await prisma.quest.findUnique({
                         where: { id: activity.questId },
                         select: { trader: true }
@@ -1595,18 +1614,6 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
                         displayName: user.displayName
                     };
                 }));
-
-                // Build cumulative progress data
-                const progressData = [];
-                let cumulativeCount = 0;
-                
-                activities.forEach((activity) => {
-                    cumulativeCount++;
-                    progressData.push({
-                        x: activity.timestamp,
-                        y: cumulativeCount
-                    });
-                });
 
                 return {
                     username: user.username,
@@ -1623,20 +1630,38 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
             const userId = req.user.id;
             console.log('Fetching statistics for user ID:', userId);
 
-            // Get all quest activities for current user
-            const activities = await prisma.questActivity.findMany({
+            // Get ALL quest activities for current user (completed AND uncompleted)
+            const allActivities = await prisma.questActivity.findMany({
                 where: {
-                    userId: userId,
-                    action: 'completed'
+                    userId: userId
                 },
                 orderBy: {
                     timestamp: 'asc'
                 }
             });
-            console.log('Found activities:', activities.length);
+            console.log('Found activities:', allActivities.length);
 
-            // Get quest details for activities
-            const activitiesWithDetails = await Promise.all(activities.map(async (activity) => {
+            // Track unique completed quests over time
+            const completedQuestIds = new Set();
+            const progressData = [];
+
+            allActivities.forEach((activity) => {
+                if (activity.action === 'completed') {
+                    completedQuestIds.add(activity.questId);
+                } else if (activity.action === 'uncompleted') {
+                    completedQuestIds.delete(activity.questId);
+                }
+                
+                // Record the net count at this timestamp
+                progressData.push({
+                    x: activity.timestamp,
+                    y: completedQuestIds.size
+                });
+            });
+
+            // Get only completed activities for the activity log
+            const completedOnly = allActivities.filter(a => a.action === 'completed');
+            const activitiesWithDetails = await Promise.all(completedOnly.map(async (activity) => {
                 const quest = await prisma.quest.findUnique({
                     where: { id: activity.questId },
                     select: { trader: true }
@@ -1650,18 +1675,6 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
                     displayName: req.user.displayName
                 };
             }));
-
-            // Build cumulative progress data
-            const progressData = [];
-            let cumulativeCount = 0;
-            
-            activities.forEach((activity) => {
-                cumulativeCount++;
-                progressData.push({
-                    x: activity.timestamp,
-                    y: cumulativeCount
-                });
-            });
 
             console.log('Sending response with', progressData.length, 'progress points');
             res.json({
