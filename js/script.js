@@ -631,9 +631,108 @@ class QuestTracker {
         this.savePreferences();
         this.showView('bsg-tweets');
         this.updateNavigationState();
-        // Reload Twitter widgets
-        if (window.twttr && window.twttr.widgets) {
-            window.twttr.widgets.load();
+        // Load Twitter feeds from our API
+        this.loadTwitterFeeds();
+    }
+
+    async loadTwitterFeeds() {
+        const feeds = [
+            { username: 'nikgeneburn', containerId: 'twitter-feed-nikgeneburn' },
+            { username: 'tarkov', containerId: 'twitter-feed-tarkov' },
+            { username: 'bstategames', containerId: 'twitter-feed-bstategames' }
+        ];
+
+        for (const feed of feeds) {
+            try {
+                const response = await fetch(`/api/twitter-feed/${feed.username}`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById(feed.containerId);
+                if (!container) continue;
+
+                if (data.fallback) {
+                    // Show fallback link
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #888;">
+                            <i class="fab fa-twitter" style="font-size: 48px; margin-bottom: 15px; color: #1DA1F2;"></i>
+                            <p style="margin-bottom: 15px;">${data.message || 'Tweets not available'}</p>
+                            <a href="${data.profileUrl}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-weight: 600;">
+                                View on Twitter <i class="fas fa-external-link-alt" style="margin-left: 5px; font-size: 12px;"></i>
+                            </a>
+                        </div>
+                    `;
+                } else if (data.tweets && data.tweets.length > 0) {
+                    // Display tweets
+                    container.innerHTML = data.tweets.map(tweet => `
+                        <div class="tweet-card" style="border-bottom: 1px solid #3a3a3a; padding: 15px 0; margin-bottom: 15px;">
+                            <div style="color: #fff; margin-bottom: 10px; line-height: 1.5;">${this.linkifyTweet(tweet.text)}</div>
+                            <div style="display: flex; gap: 15px; font-size: 12px; color: #888; margin-bottom: 8px;">
+                                <span><i class="fas fa-heart"></i> ${tweet.likes}</span>
+                                <span><i class="fas fa-retweet"></i> ${tweet.retweets}</span>
+                                <span><i class="fas fa-reply"></i> ${tweet.replies}</span>
+                            </div>
+                            <div style="font-size: 11px; color: #666;">
+                                ${this.formatTweetDate(tweet.createdAt)} · 
+                                <a href="${tweet.url}" target="_blank" style="color: #1DA1F2; text-decoration: none;">View on Twitter</a>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #888;">
+                            No recent tweets available
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error(`Error loading ${feed.username} feed:`, error);
+                const container = document.getElementById(feed.containerId);
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #888;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                            <p>Failed to load tweets</p>
+                            <a href="https://twitter.com/${feed.username}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-weight: 600;">
+                                View on Twitter <i class="fas fa-external-link-alt" style="margin-left: 5px; font-size: 12px;"></i>
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+        }
+    }
+
+    linkifyTweet(text) {
+        // Convert URLs to links
+        text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #1DA1F2; text-decoration: none;">$1</a>');
+        // Convert @mentions to links
+        text = text.replace(/@(\w+)/g, '<a href="https://twitter.com/$1" target="_blank" style="color: #1DA1F2; text-decoration: none;">@$1</a>');
+        // Convert #hashtags to links
+        text = text.replace(/#(\w+)/g, '<a href="https://twitter.com/hashtag/$1" target="_blank" style="color: #1DA1F2; text-decoration: none;">#$1</a>');
+        return text;
+    }
+
+    formatTweetDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = now - date;
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (days > 7) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } else if (days > 0) {
+            return `${days}d ago`;
+        } else if (hours > 0) {
+            return `${hours}h ago`;
+        } else if (minutes > 0) {
+            return `${minutes}m ago`;
+        } else {
+            return 'Just now';
         }
     }
 

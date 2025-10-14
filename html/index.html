@@ -36,7 +36,6 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -316,46 +315,31 @@
                     <!-- Nikita Buyanov (@nikgeneburn) -->
                     <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
                         <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
-                            <i class="fas fa-user-tie"></i> Nikita Buyanov
+                            <i class="fas fa-user-tie"></i> Nikita Buyanov <a href="https://twitter.com/nikgeneburn" target="_blank" style="color: #1DA1F2; text-decoration: none; font-size: 0.9rem; margin-left: 8px;">@nikgeneburn</a>
                         </h3>
-                        <a class="twitter-timeline" 
-                           data-height="600" 
-                           data-theme="dark"
-                           data-chrome="noheader nofooter noborders transparent"
-                           data-tweet-limit="5"
-                           href="https://twitter.com/nikgeneburn?ref_src=twsrc%5Etfw">
-                            Loading tweets from @nikgeneburn...
-                        </a>
+                        <div id="twitter-feed-nikgeneburn" class="twitter-feed-container">
+                            <div class="loading" style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading tweets...</div>
+                        </div>
                     </div>
 
                     <!-- Escape from Tarkov (@tarkov) -->
                     <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
                         <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
-                            <i class="fas fa-skull-crossbones"></i> Escape from Tarkov
+                            <i class="fas fa-skull-crossbones"></i> Escape from Tarkov <a href="https://twitter.com/tarkov" target="_blank" style="color: #1DA1F2; text-decoration: none; font-size: 0.9rem; margin-left: 8px;">@tarkov</a>
                         </h3>
-                        <a class="twitter-timeline" 
-                           data-height="600" 
-                           data-theme="dark"
-                           data-chrome="noheader nofooter noborders transparent"
-                           data-tweet-limit="5"
-                           href="https://twitter.com/tarkov?ref_src=twsrc%5Etfw">
-                            Loading tweets from @tarkov...
-                        </a>
+                        <div id="twitter-feed-tarkov" class="twitter-feed-container">
+                            <div class="loading" style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading tweets...</div>
+                        </div>
                     </div>
 
                     <!-- BSG (@bstategames) -->
                     <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
                         <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
-                            <i class="fas fa-gamepad"></i> Battlestate Games
+                            <i class="fas fa-gamepad"></i> Battlestate Games <a href="https://twitter.com/bstategames" target="_blank" style="color: #1DA1F2; text-decoration: none; font-size: 0.9rem; margin-left: 8px;">@bstategames</a>
                         </h3>
-                        <a class="twitter-timeline" 
-                           data-height="600" 
-                           data-theme="dark"
-                           data-chrome="noheader nofooter noborders transparent"
-                           data-tweet-limit="5"
-                           href="https://twitter.com/bstategames?ref_src=twsrc%5Etfw">
-                            Loading tweets from @bstategames...
-                        </a>
+                        <div id="twitter-feed-bstategames" class="twitter-feed-container">
+                            <div class="loading" style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading tweets...</div>
+                        </div>
                     </div>
                 </div>
             </section>
