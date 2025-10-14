@@ -214,7 +214,6 @@ class QuestTracker {
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
         const fixQuestsTab = document.getElementById('fix-quests-tab');
         const rankingsTab = document.getElementById('rankings-tab');
-        const bsgTweetsTab = document.getElementById('bsg-tweets-tab');
         const collectorItemsTab = document.getElementById('collector-items-tab');
         
         if (dashboardTab) {
@@ -242,13 +241,6 @@ class QuestTracker {
             rankingsTab.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.switchToRankings();
-            });
-        }
-        
-        if (bsgTweetsTab) {
-            bsgTweetsTab.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.switchToBSGTweets();
             });
         }
         
@@ -626,119 +618,6 @@ class QuestTracker {
         this.loadRankings();
     }
 
-    switchToBSGTweets() {
-        this.currentView = 'bsg-tweets';
-        this.savePreferences();
-        this.showView('bsg-tweets');
-        this.updateNavigationState();
-        // Load Twitter feeds from our API
-        this.loadTwitterFeeds();
-    }
-
-    async loadTwitterFeeds() {
-        const feeds = [
-            { username: 'nikgeneburn', containerId: 'twitter-feed-nikgeneburn' },
-            { username: 'tarkov', containerId: 'twitter-feed-tarkov' },
-            { username: 'bstategames', containerId: 'twitter-feed-bstategames' }
-        ];
-
-        for (const feed of feeds) {
-            try {
-                const response = await fetch(`/api/twitter-feed/${feed.username}`, {
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                
-                const container = document.getElementById(feed.containerId);
-                if (!container) continue;
-
-                if (data.fallback) {
-                    // Show fallback link with better messaging
-                    const icon = data.rateLimited ? 'fa-clock' : 'fa-twitter';
-                    const iconColor = data.rateLimited ? '#ff9800' : '#1DA1F2';
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #888;">
-                            <i class="fas ${icon}" style="font-size: 48px; margin-bottom: 15px; color: ${iconColor};"></i>
-                            <p style="margin-bottom: 15px; color: ${data.rateLimited ? '#ff9800' : '#888'};">${data.message || 'Tweets not available'}</p>
-                            ${data.rateLimited ? '<p style="font-size: 12px; color: #666; margin-bottom: 15px;">Tweets will be available again in 1 hour</p>' : ''}
-                            <a href="${data.profileUrl}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-weight: 600;">
-                                View on Twitter <i class="fas fa-external-link-alt" style="margin-left: 5px; font-size: 12px;"></i>
-                            </a>
-                        </div>
-                    `;
-                } else if (data.tweets && data.tweets.length > 0) {
-                    // Display tweets
-                    container.innerHTML = data.tweets.map(tweet => `
-                        <div class="tweet-card" style="border-bottom: 1px solid #3a3a3a; padding: 15px 0; margin-bottom: 15px;">
-                            <div style="color: #fff; margin-bottom: 10px; line-height: 1.5;">${this.linkifyTweet(tweet.text)}</div>
-                            <div style="display: flex; gap: 15px; font-size: 12px; color: #888; margin-bottom: 8px;">
-                                <span><i class="fas fa-heart"></i> ${tweet.likes}</span>
-                                <span><i class="fas fa-retweet"></i> ${tweet.retweets}</span>
-                                <span><i class="fas fa-reply"></i> ${tweet.replies}</span>
-                            </div>
-                            <div style="font-size: 11px; color: #666;">
-                                ${this.formatTweetDate(tweet.createdAt)} · 
-                                <a href="${tweet.url}" target="_blank" style="color: #1DA1F2; text-decoration: none;">View on Twitter</a>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #888;">
-                            No recent tweets available
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error(`Error loading ${feed.username} feed:`, error);
-                const container = document.getElementById(feed.containerId);
-                if (container) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #888;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px;"></i>
-                            <p>Failed to load tweets</p>
-                            <a href="https://twitter.com/${feed.username}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-weight: 600;">
-                                View on Twitter <i class="fas fa-external-link-alt" style="margin-left: 5px; font-size: 12px;"></i>
-                            </a>
-                        </div>
-                    `;
-                }
-            }
-        }
-    }
-
-    linkifyTweet(text) {
-        // Convert URLs to links
-        text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color: #1DA1F2; text-decoration: none;">$1</a>');
-        // Convert @mentions to links
-        text = text.replace(/@(\w+)/g, '<a href="https://twitter.com/$1" target="_blank" style="color: #1DA1F2; text-decoration: none;">@$1</a>');
-        // Convert #hashtags to links
-        text = text.replace(/#(\w+)/g, '<a href="https://twitter.com/hashtag/$1" target="_blank" style="color: #1DA1F2; text-decoration: none;">#$1</a>');
-        return text;
-    }
-
-    formatTweetDate(dateString) {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-        const seconds = Math.floor(diff / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-
-        if (days > 7) {
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        } else if (days > 0) {
-            return `${days}d ago`;
-        } else if (hours > 0) {
-            return `${hours}h ago`;
-        } else if (minutes > 0) {
-            return `${minutes}m ago`;
-        } else {
-            return 'Just now';
-        }
-    }
-
     switchToProfile() {
         this.currentView = 'profile';
         this.savePreferences();
@@ -805,7 +684,6 @@ class QuestTracker {
         const finishedQuests = document.getElementById('finished-quests');
         const fixQuests = document.getElementById('fix-quests');
         const rankings = document.getElementById('rankings');
-        const bsgTweets = document.getElementById('bsg-tweets');
         const profile = document.getElementById('profile');
         const collectorItems = document.getElementById('collector-items');
         const statistics = document.getElementById('statistics');
@@ -815,7 +693,6 @@ class QuestTracker {
         if (finishedQuests) finishedQuests.style.display = 'none';
         if (fixQuests) fixQuests.style.display = 'none';
         if (rankings) rankings.style.display = 'none';
-        if (bsgTweets) bsgTweets.style.display = 'none';
         if (profile) profile.style.display = 'none';
         if (collectorItems) collectorItems.style.display = 'none';
         if (statistics) statistics.style.display = 'none';
@@ -832,8 +709,6 @@ class QuestTracker {
             if (fixQuests) fixQuests.style.display = 'block';
         } else if (view === 'rankings') {
             if (rankings) rankings.style.display = 'block';
-        } else if (view === 'bsg-tweets') {
-            if (bsgTweets) bsgTweets.style.display = 'block';
         } else if (view === 'profile') {
             if (profile) profile.style.display = 'block';
         } else if (view === 'collector-items') {
@@ -847,12 +722,11 @@ class QuestTracker {
         const dashboardTab = document.getElementById('dashboard-tab');
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
         const rankingsTab = document.getElementById('rankings-tab');
-        const bsgTweetsTab = document.getElementById('bsg-tweets-tab');
         const fixQuestsTab = document.getElementById('fix-quests-tab');
         const collectorItemsTab = document.getElementById('collector-items-tab');
         
         // Remove active class from all tabs
-        [dashboardTab, finishedQuestsTab, rankingsTab, bsgTweetsTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
+        [dashboardTab, finishedQuestsTab, rankingsTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
             if (tab) tab.classList.remove('active');
         });
         
@@ -863,8 +737,6 @@ class QuestTracker {
             finishedQuestsTab?.classList.add('active');
         } else if (this.currentView === 'rankings') {
             rankingsTab?.classList.add('active');
-        } else if (this.currentView === 'bsg-tweets') {
-            bsgTweetsTab?.classList.add('active');
         } else if (this.currentView === 'fix-quests') {
             fixQuestsTab?.classList.add('active');
         } else if (this.currentView === 'collector-items') {

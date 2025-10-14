@@ -8,7 +8,6 @@ const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 const SQLiteStore = require('connect-sqlite3')(session);
-const fetch = require('node-fetch');
 
 // Add error handling for uncaught exceptions
 process.on('uncaughtException', (error) => {
@@ -1885,111 +1884,6 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
         console.error('Error fetching statistics:', error);
         console.error('Error stack:', error.stack);
         res.status(500).json({ error: 'Failed to fetch statistics' });
-    }
-});
-
-// ============================================================================
-// TWITTER FEED (Server-side with caching)
-// ============================================================================
-
-// Simple in-memory cache for Twitter feeds
-const twitterCache = new Map();
-const TWITTER_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes (1 hour)
-
-// Twitter API configuration (set via environment variables)
-const TWITTER_BEARER_TOKEN = process.env.TWITTER_BEARER_TOKEN;
-
-app.get('/api/twitter-feed/:username', async (req, res) => {
-    try {
-        const { username } = req.params;
-        const cacheKey = `twitter_${username}`;
-        
-        // Check cache first
-        const cached = twitterCache.get(cacheKey);
-        if (cached && Date.now() - cached.timestamp < TWITTER_CACHE_DURATION) {
-            return res.json(cached.data);
-        }
-        
-        // If no Twitter API token, return fallback
-        if (!TWITTER_BEARER_TOKEN) {
-            return res.json({
-                success: false,
-                fallback: true,
-                message: 'Twitter API not configured',
-                profileUrl: `https://twitter.com/${username}`
-            });
-        }
-        
-        // Fetch from Twitter API v2
-        const userResponse = await fetch(
-            `https://api.twitter.com/2/users/by/username/${username}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${TWITTER_BEARER_TOKEN}`
-                }
-            }
-        );
-        
-        if (!userResponse.ok) {
-            throw new Error(`Twitter API error: ${userResponse.status}`);
-        }
-        
-        const userData = await userResponse.json();
-        const userId = userData.data.id;
-        
-        // Fetch tweets
-        const tweetsResponse = await fetch(
-            `https://api.twitter.com/2/users/${userId}/tweets?max_results=5&tweet.fields=created_at,public_metrics&expansions=author_id&user.fields=profile_image_url,username`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${TWITTER_BEARER_TOKEN}`
-                }
-            }
-        );
-        
-        if (!tweetsResponse.ok) {
-            throw new Error(`Twitter API error: ${tweetsResponse.status}`);
-        }
-        
-        const tweetsData = await tweetsResponse.json();
-        
-        // Format response
-        const formattedData = {
-            success: true,
-            username: username,
-            profileUrl: `https://twitter.com/${username}`,
-            tweets: tweetsData.data?.map(tweet => ({
-                id: tweet.id,
-                text: tweet.text,
-                createdAt: tweet.created_at,
-                url: `https://twitter.com/${username}/status/${tweet.id}`,
-                likes: tweet.public_metrics?.like_count || 0,
-                retweets: tweet.public_metrics?.retweet_count || 0,
-                replies: tweet.public_metrics?.reply_count || 0
-            })) || []
-        };
-        
-        // Cache the result
-        twitterCache.set(cacheKey, {
-            timestamp: Date.now(),
-            data: formattedData
-        });
-        
-        res.json(formattedData);
-        
-    } catch (error) {
-        console.error('Twitter feed error:', error);
-        
-        // Check if it's a rate limit error (429)
-        const isRateLimited = error.message && error.message.includes('429');
-        
-        res.json({
-            success: false,
-            fallback: true,
-            message: isRateLimited ? 'Twitter API rate limit reached. Try again later.' : 'Failed to load tweets',
-            profileUrl: `https://twitter.com/${req.params.username}`,
-            rateLimited: isRateLimited
-        });
     }
 });
 
