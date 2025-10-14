@@ -1894,7 +1894,7 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
 
 // Simple in-memory cache for Twitter feeds
 const twitterCache = new Map();
-const TWITTER_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+const TWITTER_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes (1 hour)
 
 // Twitter API configuration (set via environment variables)
 const TWITTER_BEARER_TOKEN = process.env.TWITTER_BEARER_TOKEN;
@@ -1979,11 +1979,16 @@ app.get('/api/twitter-feed/:username', async (req, res) => {
         
     } catch (error) {
         console.error('Twitter feed error:', error);
+        
+        // Check if it's a rate limit error (429)
+        const isRateLimited = error.message && error.message.includes('429');
+        
         res.json({
             success: false,
             fallback: true,
-            message: 'Failed to load tweets',
-            profileUrl: `https://twitter.com/${req.params.username}`
+            message: isRateLimited ? 'Twitter API rate limit reached. Try again later.' : 'Failed to load tweets',
+            profileUrl: `https://twitter.com/${req.params.username}`,
+            rateLimited: isRateLimited
         });
     }
 });

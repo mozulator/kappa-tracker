@@ -672,7 +672,7 @@
                             ${!user.approved ? '<i class="fas fa-ban" style="color: #ff9800; margin-left: 8px;" title="Not on Leaderboard"></i>' : '<i class="fas fa-trophy" style="color: #4CAF50; margin-left: 8px;" title="On Leaderboard"></i>'}
                         </div>
                         <div class="details">
-                            <span class="username">@${user.username}</span> • <span class="user-email">${user.email}</span>
+                            <span class="username">@${user.username}</span> • <span class="user-email" style="filter: blur(4px); cursor: pointer;" onmouseover="this.style.filter='blur(0px)'" onmouseout="this.style.filter='blur(4px)'" title="Hover to reveal">${user.email}</span>
                         </div>
                         <div class="date">
                             Joined: ${new Date(user.createdAt).toLocaleDateString()} • 

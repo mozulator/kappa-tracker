@@ -653,11 +653,14 @@ class QuestTracker {
                 if (!container) continue;
 
                 if (data.fallback) {
-                    // Show fallback link
+                    // Show fallback link with better messaging
+                    const icon = data.rateLimited ? 'fa-clock' : 'fa-twitter';
+                    const iconColor = data.rateLimited ? '#ff9800' : '#1DA1F2';
                     container.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: #888;">
-                            <i class="fab fa-twitter" style="font-size: 48px; margin-bottom: 15px; color: #1DA1F2;"></i>
-                            <p style="margin-bottom: 15px;">${data.message || 'Tweets not available'}</p>
+                            <i class="fas ${icon}" style="font-size: 48px; margin-bottom: 15px; color: ${iconColor};"></i>
+                            <p style="margin-bottom: 15px; color: ${data.rateLimited ? '#ff9800' : '#888'};">${data.message || 'Tweets not available'}</p>
+                            ${data.rateLimited ? '<p style="font-size: 12px; color: #666; margin-bottom: 15px;">Tweets will be available again in 1 hour</p>' : ''}
                             <a href="${data.profileUrl}" target="_blank" style="color: #1DA1F2; text-decoration: none; font-weight: 600;">
                                 View on Twitter <i class="fas fa-external-link-alt" style="margin-left: 5px; font-size: 12px;"></i>
                             </a>
