@@ -539,6 +539,52 @@ app.put('/api/admin/toggle-admin/:userId', requireAdmin, async (req, res) => {
     }
 });
 
+// Toggle verified status (admin only)
+app.put('/api/admin/toggle-verified/:userId', requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { verified } = req.body;
+        
+        // Get target user
+        const targetUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, username: true, verified: true }
+        });
+        
+        if (!targetUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Update verified status
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { verified: Boolean(verified) },
+            select: { id: true, username: true, verified: true }
+        });
+        
+        // Log admin action
+        await createAdminLog({
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: verified ? 'verified_user' : 'unverified_user',
+                targetUserId: userId,
+                targetUsername: targetUser.username,
+                description: verified 
+                    ? `Verified ${targetUser.username}`
+                    : `Removed verification from ${targetUser.username}`
+        });
+        
+        console.log(`Admin ${req.user.username} ${verified ? 'verified' : 'unverified'} user: ${targetUser.username}`);
+        res.json({ 
+            message: verified ? 'User verified' : 'Verification removed',
+            user: updatedUser 
+        });
+    } catch (error) {
+        console.error('Error toggling verified status:', error);
+        res.status(500).json({ error: 'Failed to update verified status' });
+    }
+});
+
 // Toggle leaderboard status (admin only)
 app.put('/api/admin/toggle-leaderboard/:userId', requireAdmin, async (req, res) => {
     try {

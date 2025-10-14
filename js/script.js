@@ -1821,8 +1821,9 @@ class QuestTracker {
                                                         </div>
                                                     `}
                                                     <div>
-                                                        <a href="/public-profile?user=${user.username}" style="color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
+                                                        <a href="/public-profile?user=${user.username}" style="color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                                                             ${displayName}
+                                                            ${user.verified ? '<i class="fas fa-badge-check" style="color: #2196F3; font-size: 14px;" title="Verified User"></i>' : ''}
                                                         </a>
                                                         <div style="color: #888; font-size: 14px;">@${user.username}</div>
                                                         <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">

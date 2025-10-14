@@ -1690,7 +1690,7 @@ input[type="checkbox"]:focus {
 /* Statistics Page Styles */
 .statistics-container {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1.5fr 0.5fr;
     gap: 25px;
     height: calc(100vh - 200px);
     max-height: calc(100vh - 200px);

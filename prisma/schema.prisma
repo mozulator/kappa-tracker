@@ -35,6 +35,7 @@ model User {
   // Account status
   approved      Boolean  @default(false)
   isAdmin       Boolean  @default(false)
+  verified      Boolean  @default(false) // Verified streamers/trusted users
   
   // Relations
   progress      UserProgress?
