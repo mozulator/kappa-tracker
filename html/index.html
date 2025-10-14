@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
     
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -77,6 +78,7 @@
                 <a href="#" class="nav-link active" id="dashboard-tab">Dashboard</a>
                 <a href="#" class="nav-link" id="finished-quests-tab">Finished Quests</a>
                 <a href="#" class="nav-link" id="rankings-tab">Rankings</a>
+                <a href="#" class="nav-link" id="bsg-tweets-tab">BSG Tweets</a>
                 <a href="#" class="nav-link" id="collector-items-tab">
                     Collector Items
                 </a>
@@ -302,6 +304,57 @@
             <!-- Rankings Section -->
             <section class="rankings" id="rankings" style="display: none;">
                 <div id="rankings-content"></div>
+            </section>
+
+            <!-- BSG Tweets Section -->
+            <section class="bsg-tweets" id="bsg-tweets" style="display: none;">
+                <h2 style="color: var(--text-highlight); font-size: 2rem; margin-bottom: 20px;">
+                    <i class="fab fa-twitter" style="margin-right: 10px;"></i>
+                    BSG & Tarkov News
+                </h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                    <!-- Nikita Buyanov (@nikgeneburn) -->
+                    <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
+                        <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
+                            <i class="fas fa-user-tie"></i> Nikita Buyanov
+                        </h3>
+                        <a class="twitter-timeline" 
+                           data-height="600" 
+                           data-theme="dark"
+                           data-chrome="noheader nofooter noborders transparent"
+                           href="https://twitter.com/nikgeneburn?ref_src=twsrc%5Etfw">
+                            Loading tweets from @nikgeneburn...
+                        </a>
+                    </div>
+
+                    <!-- BSG (@bstategames) -->
+                    <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
+                        <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
+                            <i class="fas fa-gamepad"></i> Battlestate Games
+                        </h3>
+                        <a class="twitter-timeline" 
+                           data-height="600" 
+                           data-theme="dark"
+                           data-chrome="noheader nofooter noborders transparent"
+                           href="https://twitter.com/bstategames?ref_src=twsrc%5Etfw">
+                            Loading tweets from @bstategames...
+                        </a>
+                    </div>
+
+                    <!-- Escape from Tarkov (@tarkov) -->
+                    <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
+                        <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
+                            <i class="fas fa-skull-crossbones"></i> Escape from Tarkov
+                        </h3>
+                        <a class="twitter-timeline" 
+                           data-height="600" 
+                           data-theme="dark"
+                           data-chrome="noheader nofooter noborders transparent"
+                           href="https://twitter.com/tarkov?ref_src=twsrc%5Etfw">
+                            Loading tweets from @tarkov...
+                        </a>
+                    </div>
+                </div>
             </section>
 
             <!-- Profile Section -->
@@ -707,6 +760,25 @@
                     // Initialize tracker after script loads
                     if (typeof QuestTracker !== 'undefined') {
                         window.tracker = new QuestTracker();
+                        
+                        // Check if coming from admin log
+                        const adminQuestData = localStorage.getItem('openQuestFromAdmin');
+                        if (adminQuestData) {
+                            try {
+                                const data = JSON.parse(adminQuestData);
+                                // Only process if less than 10 seconds old
+                                if (Date.now() - data.timestamp < 10000) {
+                                    localStorage.removeItem('openQuestFromAdmin');
+                                    // Wait for tracker to initialize and quests to load
+                                    setTimeout(() => {
+                                        openQuestFromAdminLog(data.questName, data.changedFields);
+                                    }, 1500);
+                                }
+                            } catch (e) {
+                                console.error('Error parsing admin quest data:', e);
+                                localStorage.removeItem('openQuestFromAdmin');
+                            }
+                        }
                     }
                 };
                 document.body.appendChild(script);
@@ -1405,7 +1477,33 @@
                 }
             }
 
-            window.openQuestEditDialog = async function(questId) {
+            window.openQuestFromAdminLog = async function(questName, changedFields) {
+                // Switch to Fix Quests tab
+                if (window.tracker) {
+                    window.tracker.switchToFixQuests();
+                }
+                
+                // Wait for Fix Quests to load
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Load quests if not already loaded
+                if (allQuestsForEdit.length === 0) {
+                    await loadQuestsForFixing();
+                }
+                
+                // Find quest by name
+                const quest = allQuestsForEdit.find(q => q.name === questName);
+                if (!quest) {
+                    console.error('Quest not found:', questName);
+                    alert(`Quest "${questName}" not found`);
+                    return;
+                }
+                
+                // Open the dialog and highlight changed fields
+                await window.openQuestEditDialog(quest.id, changedFields);
+            };
+
+            window.openQuestEditDialog = async function(questId, changedFields = []) {
                 // Load quests if not already loaded
                 if (allQuestsForEdit.length === 0) {
                     await loadQuestsForFixing();
@@ -1418,6 +1516,15 @@
                 }
 
                 const dialog = document.getElementById('quest-editor-dialog');
+                
+                // Clear any previous highlights
+                setTimeout(() => {
+                    dialog.querySelectorAll('[style*="border"]').forEach(el => {
+                        if (el.style.border && el.style.border.includes('red')) {
+                            el.style.border = '';
+                        }
+                    });
+                }, 100);
                 
                 // Populate basic info
                 document.getElementById('editing-quest-name-dialog').textContent = selectedQuestForEdit.name;
@@ -1674,6 +1781,39 @@
                 document.addEventListener('keydown', handleEscapeKey);
 
                 dialog.style.display = 'flex';
+                
+                // Highlight changed fields if provided
+                if (changedFields && changedFields.length > 0) {
+                    setTimeout(() => {
+                        const fieldMapping = {
+                            'trader': 'edit-trader-dialog',
+                            'level': 'edit-level-dialog',
+                            'mapName': 'edit-map-dialog',
+                            'requiredForKappa': 'edit-kappa-required-dialog',
+                            'notes': 'edit-notes-dialog',
+                            'images': 'edit-images-dialog',
+                            'shoppingList': 'shopping-list-section-dialog',
+                            'prerequisiteQuests': 'selected-prereqs-dialog',
+                            'requiredItems': 'edit-markers-dialog'
+                        };
+                        
+                        changedFields.forEach(field => {
+                            const elementId = fieldMapping[field];
+                            if (elementId) {
+                                const element = document.getElementById(elementId);
+                                if (element) {
+                                    element.style.border = '3px solid #f44336';
+                                    element.style.boxShadow = '0 0 10px rgba(244, 67, 54, 0.5)';
+                                    
+                                    // Scroll to first highlighted field
+                                    if (changedFields.indexOf(field) === 0) {
+                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }
+                                }
+                            }
+                        });
+                    }, 300);
+                }
             };
 
             function updateImagePreview() {

@@ -1191,9 +1191,40 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
         if (requiredItems !== undefined && requiredItems !== quest.requiredItems) {
             // Validate it's valid JSON
             try {
-                JSON.parse(requiredItems);
+                const oldItems = JSON.parse(quest.requiredItems || '[]');
+                const newItems = JSON.parse(requiredItems);
                 updateData.requiredItems = requiredItems;
-                changes.push('Required items updated');
+                
+                // Extract specific changes
+                const oldMarkers = oldItems.find(i => i.category === 'markers')?.count || 0;
+                const newMarkers = newItems.find(i => i.category === 'markers')?.count || 0;
+                const oldCameras = oldItems.find(i => i.name?.includes('WI-FI Camera'))?.count || 0;
+                const newCameras = newItems.find(i => i.name?.includes('WI-FI Camera'))?.count || 0;
+                const oldJammers = oldItems.find(i => i.category === 'jammers')?.count || 0;
+                const newJammers = newItems.find(i => i.category === 'jammers')?.count || 0;
+                const oldKeys = oldItems.filter(i => i.category === 'keys');
+                const newKeys = newItems.filter(i => i.category === 'keys');
+                const oldFir = oldItems.filter(i => i.category === 'fir');
+                const newFir = newItems.filter(i => i.category === 'fir');
+                
+                const itemChanges = [];
+                if (oldMarkers !== newMarkers) itemChanges.push(`Markers: ${oldMarkers} → ${newMarkers}`);
+                if (oldCameras !== newCameras) itemChanges.push(`Cameras: ${oldCameras} → ${newCameras}`);
+                if (oldJammers !== newJammers) itemChanges.push(`Jammers: ${oldJammers} → ${newJammers}`);
+                if (oldKeys.length !== newKeys.length) {
+                    const oldKeyNames = oldKeys.map(k => k.name).join(', ');
+                    const newKeyNames = newKeys.map(k => k.name).join(', ');
+                    itemChanges.push(`Keys: [${oldKeyNames || 'none'}] → [${newKeyNames || 'none'}]`);
+                }
+                if (oldFir.length !== newFir.length) {
+                    itemChanges.push(`FIR items: ${oldFir.length} → ${newFir.length}`);
+                }
+                
+                if (itemChanges.length > 0) {
+                    changes.push(...itemChanges);
+                } else {
+                    changes.push('Required items updated');
+                }
             } catch (e) {
                 return res.status(400).json({ error: 'Invalid requiredItems JSON' });
             }
@@ -1216,11 +1247,15 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
             // Allow null or empty string to clear notes, otherwise store as string
             updateData.notes = notes || null;
             if (!quest.notes && notes) {
-                changes.push('Notes added');
+                const notePreview = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
+                changes.push(`Notes added: "${notePreview}"`);
             } else if (quest.notes && !notes) {
-                changes.push('Notes removed');
+                const oldNotePreview = quest.notes.length > 50 ? quest.notes.substring(0, 50) + '...' : quest.notes;
+                changes.push(`Notes removed: "${oldNotePreview}"`);
             } else {
-                changes.push('Notes updated');
+                const oldNotePreview = quest.notes.length > 30 ? quest.notes.substring(0, 30) + '...' : quest.notes;
+                const newNotePreview = notes.length > 30 ? notes.substring(0, 30) + '...' : notes;
+                changes.push(`Notes: "${oldNotePreview}" → "${newNotePreview}"`);
             }
             console.log('Notes received:', notes, '-> Storing as:', updateData.notes);
         }

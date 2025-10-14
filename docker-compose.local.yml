@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: kappa-local-db
+    environment:
+      - POSTGRES_USER=kappauser
+      - POSTGRES_PASSWORD=kappapass
+      - POSTGRES_DB=kappatracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_local:/var/lib/postgresql/data
+
+volumes:
+  postgres_local:

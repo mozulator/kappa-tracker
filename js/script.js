@@ -214,6 +214,7 @@ class QuestTracker {
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
         const fixQuestsTab = document.getElementById('fix-quests-tab');
         const rankingsTab = document.getElementById('rankings-tab');
+        const bsgTweetsTab = document.getElementById('bsg-tweets-tab');
         const collectorItemsTab = document.getElementById('collector-items-tab');
         
         if (dashboardTab) {
@@ -241,6 +242,13 @@ class QuestTracker {
             rankingsTab.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.switchToRankings();
+            });
+        }
+        
+        if (bsgTweetsTab) {
+            bsgTweetsTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchToBSGTweets();
             });
         }
         
@@ -618,6 +626,17 @@ class QuestTracker {
         this.loadRankings();
     }
 
+    switchToBSGTweets() {
+        this.currentView = 'bsg-tweets';
+        this.savePreferences();
+        this.showView('bsg-tweets');
+        this.updateNavigationState();
+        // Reload Twitter widgets
+        if (window.twttr && window.twttr.widgets) {
+            window.twttr.widgets.load();
+        }
+    }
+
     switchToProfile() {
         this.currentView = 'profile';
         this.savePreferences();
@@ -684,6 +703,7 @@ class QuestTracker {
         const finishedQuests = document.getElementById('finished-quests');
         const fixQuests = document.getElementById('fix-quests');
         const rankings = document.getElementById('rankings');
+        const bsgTweets = document.getElementById('bsg-tweets');
         const profile = document.getElementById('profile');
         const collectorItems = document.getElementById('collector-items');
         const statistics = document.getElementById('statistics');
@@ -693,6 +713,7 @@ class QuestTracker {
         if (finishedQuests) finishedQuests.style.display = 'none';
         if (fixQuests) fixQuests.style.display = 'none';
         if (rankings) rankings.style.display = 'none';
+        if (bsgTweets) bsgTweets.style.display = 'none';
         if (profile) profile.style.display = 'none';
         if (collectorItems) collectorItems.style.display = 'none';
         if (statistics) statistics.style.display = 'none';
@@ -709,6 +730,8 @@ class QuestTracker {
             if (fixQuests) fixQuests.style.display = 'block';
         } else if (view === 'rankings') {
             if (rankings) rankings.style.display = 'block';
+        } else if (view === 'bsg-tweets') {
+            if (bsgTweets) bsgTweets.style.display = 'block';
         } else if (view === 'profile') {
             if (profile) profile.style.display = 'block';
         } else if (view === 'collector-items') {
@@ -722,11 +745,12 @@ class QuestTracker {
         const dashboardTab = document.getElementById('dashboard-tab');
         const finishedQuestsTab = document.getElementById('finished-quests-tab');
         const rankingsTab = document.getElementById('rankings-tab');
+        const bsgTweetsTab = document.getElementById('bsg-tweets-tab');
         const fixQuestsTab = document.getElementById('fix-quests-tab');
         const collectorItemsTab = document.getElementById('collector-items-tab');
         
         // Remove active class from all tabs
-        [dashboardTab, finishedQuestsTab, rankingsTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
+        [dashboardTab, finishedQuestsTab, rankingsTab, bsgTweetsTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
             if (tab) tab.classList.remove('active');
         });
         
@@ -737,6 +761,8 @@ class QuestTracker {
             finishedQuestsTab?.classList.add('active');
         } else if (this.currentView === 'rankings') {
             rankingsTab?.classList.add('active');
+        } else if (this.currentView === 'bsg-tweets') {
+            bsgTweetsTab?.classList.add('active');
         } else if (this.currentView === 'fix-quests') {
             fixQuestsTab?.classList.add('active');
         } else if (this.currentView === 'collector-items') {

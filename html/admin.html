@@ -592,7 +592,21 @@
                     const questName = parts[0];
                     const changes = parts.slice(1);
                     
-                    displayContent = `<strong style="color: #c7aa6a;">Quest:</strong> ${questName}`;
+                    // Extract field names that were changed for highlighting
+                    const changedFields = changes.map(change => {
+                        if (change.includes('Trader:')) return 'trader';
+                        if (change.includes('Level:')) return 'level';
+                        if (change.includes('Map:')) return 'mapName';
+                        if (change.includes('Kappa:')) return 'requiredForKappa';
+                        if (change.includes('Notes')) return 'notes';
+                        if (change.includes('Images:')) return 'images';
+                        if (change.includes('Shopping list:')) return 'shoppingList';
+                        if (change.includes('Prerequisites')) return 'prerequisiteQuests';
+                        if (change.includes('Required items')) return 'requiredItems';
+                        return null;
+                    }).filter(f => f);
+                    
+                    displayContent = `<strong style="color: #c7aa6a;">Quest:</strong> <a href="#" onclick="openQuestFromLog('${questName.replace(/'/g, "\\'")}', ${JSON.stringify(changedFields).replace(/"/g, '&quot;')}); return false;" style="color: #2196F3; text-decoration: none; border-bottom: 1px dotted #2196F3;">${questName}</a>`;
                     if (changes.length > 0) {
                         changesHtml = `
                             <div style="margin-top: 6px; padding-left: 28px; font-size: 12px; color: #aaa;">
@@ -931,6 +945,19 @@
             setTimeout(() => {
                 notification.style.display = 'none';
             }, 3000);
+        }
+
+        // Open quest from log in main app
+        function openQuestFromLog(questName, changedFields) {
+            // Store quest info in localStorage so main page can pick it up
+            localStorage.setItem('openQuestFromAdmin', JSON.stringify({
+                questName: questName,
+                changedFields: changedFields,
+                timestamp: Date.now()
+            }));
+            
+            // Open main page in new tab
+            window.open('/', '_blank');
         }
 
         // Load data on page load
