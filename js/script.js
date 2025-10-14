@@ -1336,9 +1336,9 @@ class QuestTracker {
                     <div class="shopping-list-title">
                         <i class="fas fa-shopping-cart"></i> Shopping List
                     </div>
-                    <i id="${uniqueId}-icon" class="fas fa-chevron-up shopping-toggle-icon"></i>
+                    <i id="${uniqueId}-icon" class="fas fa-chevron-down shopping-toggle-icon"></i>
                 </div>
-                <div id="${uniqueId}" class="shopping-list-items">
+                <div id="${uniqueId}" class="shopping-list-items collapsed">
                     ${itemsHtml}
                 </div>
             </div>
