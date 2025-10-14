@@ -496,6 +496,20 @@ app.put('/api/admin/toggle-admin/:userId', requireAdmin, async (req, res) => {
             select: { id: true, username: true, isAdmin: true }
         });
         
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: isAdmin ? 'granted_admin' : 'revoked_admin',
+                targetUserId: userId,
+                targetUsername: targetUser.username,
+                description: isAdmin 
+                    ? `Granted admin access to ${targetUser.username}`
+                    : `Revoked admin access from ${targetUser.username}`
+            }
+        });
+        
         console.log(`Admin ${req.user.username} ${isAdmin ? 'granted' : 'revoked'} admin access for user: ${targetUser.username}`);
         res.json({ 
             message: isAdmin ? 'Admin access granted' : 'Admin access revoked',
@@ -504,6 +518,53 @@ app.put('/api/admin/toggle-admin/:userId', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error toggling admin status:', error);
         res.status(500).json({ error: 'Failed to update admin status' });
+    }
+});
+
+// Toggle leaderboard status (admin only)
+app.put('/api/admin/toggle-leaderboard/:userId', requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { approved } = req.body;
+        
+        const targetUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, username: true, approved: true }
+        });
+        
+        if (!targetUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Update leaderboard status
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { approved: Boolean(approved) },
+            select: { id: true, username: true, approved: true }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: approved ? 'added_to_leaderboard' : 'removed_from_leaderboard',
+                targetUserId: userId,
+                targetUsername: targetUser.username,
+                description: approved 
+                    ? `Added ${targetUser.username} to leaderboard`
+                    : `Removed ${targetUser.username} from leaderboard`
+            }
+        });
+        
+        console.log(`Admin ${req.user.username} ${approved ? 'added to' : 'removed from'} leaderboard: ${targetUser.username}`);
+        res.json({ 
+            message: approved ? 'User added to leaderboard' : 'User removed from leaderboard',
+            user: updatedUser 
+        });
+    } catch (error) {
+        console.error('Error toggling leaderboard status:', error);
+        res.status(500).json({ error: 'Failed to update leaderboard status' });
     }
 });
 
@@ -534,6 +595,18 @@ app.delete('/api/admin/delete-user/:userId', requireAdmin, async (req, res) => {
         // Delete user (cascade will delete progress and activities)
         await prisma.user.delete({
             where: { id: userId }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'deleted_user',
+                targetUserId: userId,
+                targetUsername: targetUser.username,
+                description: `Deleted user ${targetUser.username}`
+            }
         });
         
         console.log(`Admin ${req.user.username} deleted user: ${targetUser.username}`);
@@ -630,14 +703,23 @@ app.post('/api/reports', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Description must be at least 10 characters' });
         }
         
+        const reportData = {
+            userId: req.user.id,
+            type,
+            title: title.trim(),
+            description: description.trim(),
+            status: 'pending'
+        };
+        
+        // Add quest info if it's a quest-error report
+        if (type === 'quest-error') {
+            const { questName, questId } = req.body;
+            if (questName) reportData.questName = questName;
+            if (questId) reportData.questId = questId;
+        }
+        
         const report = await prisma.report.create({
-            data: {
-                userId: req.user.id,
-                type,
-                title: title.trim(),
-                description: description.trim(),
-                status: 'pending'
-            },
+            data: reportData,
             include: {
                 user: {
                     select: {
@@ -735,6 +817,21 @@ app.delete('/api/admin/reports/:reportId', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error deleting report:', error);
         res.status(500).json({ error: 'Failed to delete report' });
+    }
+});
+
+// Get admin logs (admin only)
+app.get('/api/admin/logs', requireAdmin, async (req, res) => {
+    try {
+        const logs = await prisma.adminLog.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 100 // Limit to most recent 100 logs
+        });
+        
+        res.json({ logs });
+    } catch (error) {
+        console.error('Error fetching admin logs:', error);
+        res.status(500).json({ error: 'Failed to fetch admin logs' });
     }
 });
 
