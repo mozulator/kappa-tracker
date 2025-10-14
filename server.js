@@ -1227,6 +1227,32 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
             data: updateData
         });
 
+        // Build description of changes
+        const changedFields = [];
+        if (trader !== undefined) changedFields.push(`trader: ${trader}`);
+        if (level !== undefined) changedFields.push(`level: ${level}`);
+        if (requiredForKappa !== undefined) changedFields.push(`requiredForKappa: ${requiredForKappa}`);
+        if (mapName !== undefined) changedFields.push(`map: ${mapName}`);
+        if (prerequisiteQuests !== undefined) changedFields.push(`prerequisites`);
+        if (requiredItems !== undefined) changedFields.push(`required items`);
+        if (images !== undefined) changedFields.push(`images`);
+        if (notes !== undefined) changedFields.push(`notes`);
+        if (shoppingList !== undefined) changedFields.push(`shopping list`);
+        
+        const description = `Fixed quest "${quest.name}"${changedFields.length > 0 ? ` - Changed: ${changedFields.join(', ')}` : ''}`;
+
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'fixed_quest',
+                targetUserId: null,
+                targetUsername: null,
+                description: description
+            }
+        });
+
         console.log(`Admin ${req.user.username} updated quest: ${quest.name}`);
         console.log('Updated quest notes:', updatedQuest.notes);
         res.json({
