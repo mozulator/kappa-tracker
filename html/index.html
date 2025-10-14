@@ -702,7 +702,7 @@
                 
                 // Load tracker script only after auth confirmed
                 const script = document.createElement('script');
-                script.src = '/js/script.js';
+                script.src = '/js/script.js?v=' + Date.now();
                 script.onload = function() {
                     // Initialize tracker after script loads
                     if (typeof QuestTracker !== 'undefined') {
