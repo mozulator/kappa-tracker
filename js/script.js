@@ -2300,6 +2300,13 @@ class StatisticsManager {
             });
             console.log('User colors assigned:', this.userColors);
             
+            // Default to only current user selected if no saved selections
+            // MUST happen BEFORE initChart so the chart has data to display
+            if (this.selectedUsers.size === 0 && window.currentUser) {
+                this.selectedUsers.add(window.currentUser.username);
+                this.saveSelections(); // Save the default
+            }
+            
             // Initialize chart
             try {
                 this.initChart(data, true);
@@ -2308,14 +2315,7 @@ class StatisticsManager {
                 console.error('Error initializing chart:', chartError);
             }
             
-            // Render activity log (do this even if chart fails)
-            
-            // Default to only current user selected if no saved selections
-            if (this.selectedUsers.size === 0 && window.currentUser) {
-                this.selectedUsers.add(window.currentUser.username);
-                this.saveSelections(); // Save the default
-            }
-            
+            // Populate user selector
             this.populateUserSelector(data.users);
             this.updateUserFilter(data.users);
             
@@ -2385,7 +2385,8 @@ class StatisticsManager {
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: {
-                    mode: 'index',
+                    mode: 'nearest',
+                    axis: 'x',
                     intersect: false
                 },
                 plugins: {
@@ -2393,6 +2394,8 @@ class StatisticsManager {
                         display: false
                     },
                     tooltip: {
+                        enabled: true,
+                        position: 'nearest',
                         backgroundColor: 'rgba(0, 0, 0, 0.9)',
                         titleColor: '#c7aa6a',
                         bodyColor: '#fff',
@@ -2460,14 +2463,24 @@ class StatisticsManager {
         const menu = document.getElementById('user-selector-menu');
         if (!menu) return;
 
-        menu.innerHTML = users.map(user => {
+        const searchBoxHtml = `
+            <div style="padding: 8px 12px; border-bottom: 1px solid var(--post-border); position: sticky; top: 0; background: var(--post-bg); z-index: 1;">
+                <input type="text" 
+                       id="user-search-input" 
+                       placeholder="Search users..." 
+                       style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--post-border); border-radius: 4px; color: var(--text); font-size: 14px;"
+                       autocomplete="off">
+            </div>
+        `;
+
+        const userItemsHtml = users.map(user => {
             const color = this.userColors[user.username];
             const isSelected = this.selectedUsers.has(user.username);
             const isCurrentUser = user.username === window.currentUser?.username;
             const displayName = (user.displayName || user.username) + (isCurrentUser ? ' (You)' : '');
             
             return `
-                <div class="user-checkbox-item">
+                <div class="user-checkbox-item" data-username="${user.username.toLowerCase()}" data-displayname="${(user.displayName || user.username).toLowerCase()}">
                     <input type="checkbox" 
                            id="user-${user.username}" 
                            ${isSelected ? 'checked' : ''}
@@ -2479,6 +2492,22 @@ class StatisticsManager {
                 </div>
             `;
         }).join('');
+
+        menu.innerHTML = searchBoxHtml + userItemsHtml;
+
+        // Add search functionality
+        const searchInput = document.getElementById('user-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                menu.querySelectorAll('.user-checkbox-item').forEach(item => {
+                    const username = item.dataset.username || '';
+                    const displayname = item.dataset.displayname || '';
+                    const matches = username.includes(searchTerm) || displayname.includes(searchTerm);
+                    item.style.display = matches ? 'flex' : 'none';
+                });
+            });
+        }
 
         // Add event listeners to checkboxes
         menu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
