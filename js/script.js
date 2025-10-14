@@ -795,7 +795,7 @@ class QuestTracker {
             const notesHtml = this.renderNotes(quest.notes);
             
             // Render shopping list if it exists (for Gunsmith quests)
-            const shoppingListHtml = this.renderShoppingList(quest.shoppingList);
+            const shoppingListHtml = this.renderShoppingList(quest.shoppingList, quest.name);
             
             // Parse required items from server data
             const requiredItems = this.parseRequiredItems(quest.requiredItems);
@@ -1292,7 +1292,10 @@ class QuestTracker {
         `;
     }
 
-    renderShoppingList(shoppingListJson) {
+    renderShoppingList(shoppingListJson, questName) {
+        // Only show shopping lists for Gunsmith quests
+        if (!questName || !questName.startsWith('Gunsmith')) return '';
+        
         if (!shoppingListJson) return '';
         
         let shoppingList;
