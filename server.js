@@ -409,15 +409,13 @@ app.post('/api/admin/approve-user/:userId', requireAdmin, async (req, res) => {
         });
         
         // Log admin action
-        await prisma.adminLog.create({
-            data: {
-                adminId: req.user.id,
-                adminUsername: req.user.username,
-                action: 'approved_user',
-                targetUserId: userId,
-                targetUsername: user.username,
-                description: `Approved ${user.username} for leaderboard`
-            }
+        await createAdminLog({
+            adminId: req.user.id,
+            adminUsername: req.user.username,
+            action: 'approved_user',
+            targetUserId: userId,
+            targetUsername: user.username,
+            description: `Approved ${user.username} for leaderboard`
         });
         
         console.log(`Admin ${req.user.username} approved user for leaderboard: ${user.username}`);
@@ -444,15 +442,13 @@ app.delete('/api/admin/reject-user/:userId', requireAdmin, async (req, res) => {
         });
         
         // Log admin action
-        await prisma.adminLog.create({
-            data: {
-                adminId: req.user.id,
-                adminUsername: req.user.username,
-                action: 'removed_user',
-                targetUserId: userId,
-                targetUsername: user.username,
-                description: `Removed ${user.username} from leaderboard`
-            }
+        await createAdminLog({
+            adminId: req.user.id,
+            adminUsername: req.user.username,
+            action: 'removed_user',
+            targetUserId: userId,
+            targetUsername: user.username,
+            description: `Removed ${user.username} from leaderboard`
         });
         
         console.log(`Admin ${req.user.username} removed user from leaderboard: ${user.username}`);
@@ -521,8 +517,7 @@ app.put('/api/admin/toggle-admin/:userId', requireAdmin, async (req, res) => {
         });
         
         // Log admin action
-        await prisma.adminLog.create({
-            data: {
+        await createAdminLog({
                 adminId: req.user.id,
                 adminUsername: req.user.username,
                 action: isAdmin ? 'granted_admin' : 'revoked_admin',
@@ -568,8 +563,7 @@ app.put('/api/admin/toggle-leaderboard/:userId', requireAdmin, async (req, res) 
         });
         
         // Log admin action
-        await prisma.adminLog.create({
-            data: {
+        await createAdminLog({
                 adminId: req.user.id,
                 adminUsername: req.user.username,
                 action: approved ? 'added_to_leaderboard' : 'removed_from_leaderboard',
@@ -622,8 +616,7 @@ app.delete('/api/admin/delete-user/:userId', requireAdmin, async (req, res) => {
         });
         
         // Log admin action
-        await prisma.adminLog.create({
-            data: {
+        await createAdminLog({
                 adminId: req.user.id,
                 adminUsername: req.user.username,
                 action: 'deleted_user',
@@ -844,6 +837,38 @@ app.delete('/api/admin/reports/:reportId', requireAdmin, async (req, res) => {
     }
 });
 
+// Helper function to create admin log with automatic cleanup
+async function createAdminLog(logData) {
+    // Create the new log
+    const newLog = await prisma.adminLog.create({ data: logData });
+    
+    // Count total logs
+    const totalLogs = await prisma.adminLog.count();
+    
+    // If we have more than 100, delete the oldest ones
+    if (totalLogs > 100) {
+        const logsToDelete = totalLogs - 100;
+        
+        // Get the IDs of the oldest logs
+        const oldestLogs = await prisma.adminLog.findMany({
+            orderBy: { createdAt: 'asc' },
+            take: logsToDelete,
+            select: { id: true }
+        });
+        
+        // Delete them
+        await prisma.adminLog.deleteMany({
+            where: {
+                id: {
+                    in: oldestLogs.map(log => log.id)
+                }
+            }
+        });
+    }
+    
+    return newLog;
+}
+
 // Get admin logs (admin only)
 app.get('/api/admin/logs', requireAdmin, async (req, res) => {
     try {
@@ -856,6 +881,19 @@ app.get('/api/admin/logs', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error fetching admin logs:', error);
         res.status(500).json({ error: 'Failed to fetch admin logs' });
+    }
+});
+
+// Clear all admin logs (admin only)
+app.delete('/api/admin/logs/clear', requireAdmin, async (req, res) => {
+    try {
+        const result = await prisma.adminLog.deleteMany({});
+        
+        console.log(`Admin ${req.user.username} cleared all admin logs (${result.count} logs deleted)`);
+        res.json({ message: `Cleared ${result.count} admin logs` });
+    } catch (error) {
+        console.error('Error clearing admin logs:', error);
+        res.status(500).json({ error: 'Failed to clear admin logs' });
     }
 });
 
@@ -1293,8 +1331,7 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
         const description = `${quest.name}|${changes.join('|')}`;
 
         // Log admin action
-        await prisma.adminLog.create({
-            data: {
+        await createAdminLog({
                 adminId: req.user.id,
                 adminUsername: req.user.username,
                 action: 'fixed_quest',

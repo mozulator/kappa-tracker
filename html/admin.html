@@ -408,6 +408,9 @@
                     Admin Log
                     <span class="badge" id="log-count">0</span>
                 </h2>
+                <button onclick="clearAdminLogs()" class="btn-danger" style="padding: 8px 16px; font-size: 12px; border-radius: 6px; cursor: pointer; background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid #dc3545; transition: all 0.3s;">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
             </div>
             <div class="panel-content" id="admin-log-list">
                 <div class="loading">
@@ -939,6 +942,28 @@
             } catch (error) {
                 console.error('Error:', error);
                 showNotification('Failed to delete report', 'error');
+            }
+        }
+
+        async function clearAdminLogs() {
+            if (!confirm('⚠️ This will permanently delete ALL admin logs. Are you sure?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/logs/clear', {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error('Failed to clear logs');
+
+                const data = await response.json();
+                showNotification(`🗑️ ${data.message}`, 'success');
+                await loadData(); // Reload all data including logs
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Failed to clear admin logs', 'error');
             }
         }
 
