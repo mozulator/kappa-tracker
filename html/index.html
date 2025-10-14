@@ -107,6 +107,9 @@
                         <a href="#" class="dropdown-item" id="report-bug-link">
                             <i class="fas fa-bug"></i> Report a Bug
                         </a>
+                        <a href="#" class="dropdown-item" id="report-quest-error-link">
+                            <i class="fas fa-exclamation-triangle"></i> Report Quest Error
+                        </a>
                         <a href="#" class="dropdown-item" id="request-feature-link">
                             <i class="fas fa-lightbulb"></i> Request a Feature
                         </a>
@@ -450,6 +453,11 @@
                 <h3 id="report-dialog-title">Report Bug</h3>
             </div>
             <div class="dialog-body">
+                <div id="quest-search-container" style="margin-bottom: 15px; display: none;">
+                    <label style="display: block; color: #c7aa6a; margin-bottom: 5px; font-weight: 600;">Quest Name:</label>
+                    <input type="text" id="report-quest-search" placeholder="Search for a quest..." style="width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #3a3a3a; border-radius: 6px; color: #fff;">
+                    <div id="quest-suggestions" style="max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.6); border: 1px solid #3a3a3a; border-radius: 6px; margin-top: 5px; display: none;"></div>
+                </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; color: #c7aa6a; margin-bottom: 5px; font-weight: 600;">Title:</label>
                     <input type="text" id="report-title" placeholder="Brief description" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid #3a3a3a; border-radius: 6px; color: #fff;">
@@ -926,6 +934,16 @@
                 });
             }
             
+            // Handle report quest error from dropdown
+            const reportQuestErrorLink = document.getElementById('report-quest-error-link');
+            if (reportQuestErrorLink) {
+                reportQuestErrorLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openReportDialog('quest-error');
+                    feedbackDropdown.classList.remove('show');
+                });
+            }
+            
             // Handle request feature from dropdown
             if (requestFeatureLink) {
                 requestFeatureLink.addEventListener('click', (e) => {
@@ -1012,12 +1030,29 @@
             const reportDialogTitle = document.getElementById('report-dialog-title');
             
             let currentReportType = 'bug';
+            let selectedQuest = null;
             
             function openReportDialog(type) {
                 currentReportType = type;
-                reportDialogTitle.textContent = type === 'bug' ? 'Report a Bug' : 'Request a Feature';
+                if (type === 'bug') {
+                    reportDialogTitle.textContent = 'Report a Bug';
+                } else if (type === 'quest-error') {
+                    reportDialogTitle.textContent = 'Report Quest Error';
+                } else {
+                    reportDialogTitle.textContent = 'Request a Feature';
+                }
+                
+                // Show/hide quest search based on type
+                const questSearchContainer = document.getElementById('quest-search-container');
+                if (questSearchContainer) {
+                    questSearchContainer.style.display = type === 'quest-error' ? 'block' : 'none';
+                }
+                
                 reportTitle.value = '';
                 reportDescription.value = '';
+                document.getElementById('report-quest-search').value = '';
+                document.getElementById('quest-suggestions').style.display = 'none';
+                selectedQuest = null;
                 reportError.style.display = 'none';
                 reportSuccess.style.display = 'none';
                 reportDialog.style.display = 'flex';
@@ -1035,12 +1070,72 @@
                 if (e.target === reportDialog) closeReportDialog();
             });
             
+            // Quest search functionality
+            const questSearchInput = document.getElementById('report-quest-search');
+            const questSuggestions = document.getElementById('quest-suggestions');
+            
+            if (questSearchInput) {
+                questSearchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase().trim();
+                    
+                    if (searchTerm.length < 2) {
+                        questSuggestions.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Get quests from window.questTracker
+                    const quests = window.questTracker?.quests || [];
+                    const matches = quests
+                        .filter(q => q.name.toLowerCase().includes(searchTerm))
+                        .slice(0, 10); // Limit to 10 results
+                    
+                    if (matches.length === 0) {
+                        questSuggestions.style.display = 'none';
+                        return;
+                    }
+                    
+                    questSuggestions.innerHTML = matches.map(quest => `
+                        <div class="quest-suggestion-item" data-quest-id="${quest.id}" data-quest-name="${quest.name}" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #2a2a2a; color: #fff; transition: background 0.2s;">
+                            <div style="font-weight: 600;">${quest.name}</div>
+                            <div style="font-size: 0.85rem; color: #888;">${quest.trader}</div>
+                        </div>
+                    `).join('');
+                    
+                    questSuggestions.style.display = 'block';
+                    
+                    // Add click handlers to suggestions
+                    questSuggestions.querySelectorAll('.quest-suggestion-item').forEach(item => {
+                        item.addEventListener('mouseover', () => {
+                            item.style.background = 'rgba(199, 170, 106, 0.2)';
+                        });
+                        item.addEventListener('mouseout', () => {
+                            item.style.background = 'transparent';
+                        });
+                        item.addEventListener('click', () => {
+                            selectedQuest = {
+                                id: item.dataset.questId,
+                                name: item.dataset.questName
+                            };
+                            questSearchInput.value = item.dataset.questName;
+                            questSuggestions.style.display = 'none';
+                        });
+                    });
+                });
+            }
+            
             submitReportBtn.addEventListener('click', async () => {
                 const title = reportTitle.value.trim();
                 const description = reportDescription.value.trim();
                 
                 reportError.style.display = 'none';
                 reportSuccess.style.display = 'none';
+                
+                // Validate quest selection for quest-error type
+                if (currentReportType === 'quest-error' && !selectedQuest) {
+                    reportError.textContent = 'Please select a quest from the search';
+                    reportError.style.display = 'block';
+                    return;
+                }
                 
                 if (!title || title.length < 3) {
                     reportError.textContent = 'Title must be at least 3 characters';
@@ -1058,11 +1153,23 @@
                 submitReportBtn.textContent = 'Submitting...';
                 
                 try {
+                    const reportData = { 
+                        type: currentReportType, 
+                        title, 
+                        description
+                    };
+                    
+                    // Include quest info if it's a quest error
+                    if (currentReportType === 'quest-error' && selectedQuest) {
+                        reportData.questName = selectedQuest.name;
+                        reportData.questId = selectedQuest.id;
+                    }
+                    
                     const response = await fetch('/api/reports', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({ type: currentReportType, title, description })
+                        body: JSON.stringify(reportData)
                     });
                     
                     const data = await response.json();

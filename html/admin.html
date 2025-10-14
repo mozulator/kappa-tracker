@@ -333,6 +333,11 @@
             color: #fff;
         }
 
+        .report-type-quest-error {
+            background: #ff9800;
+            color: #fff;
+        }
+
         .report-status {
             display: inline-block;
             padding: 2px 8px;
@@ -395,16 +400,16 @@
     </div>
 
     <div class="dashboard-container">
-        <!-- Pending Leaderboard Approvals Panel -->
+        <!-- Admin Log Panel -->
         <div class="panel">
             <div class="panel-header">
                 <h2>
-                    <i class="fas fa-trophy"></i>
-                    Leaderboard Approvals
-                    <span class="badge" id="pending-count">0</span>
+                    <i class="fas fa-history"></i>
+                    Admin Log
+                    <span class="badge" id="log-count">0</span>
                 </h2>
             </div>
-            <div class="panel-content" id="pending-users-list">
+            <div class="panel-content" id="admin-log-list">
                 <div class="loading">
                     <i class="fas fa-spinner fa-spin"></i>
                     <p>Loading...</p>
@@ -480,17 +485,17 @@
     </div>
 
     <script>
-        let pendingUsers = [];
+        let adminLogs = [];
         let allUsers = [];
         let reports = [];
 
         async function loadData() {
-            await Promise.all([loadPendingUsers(), loadAllUsers(), loadReports()]);
+            await Promise.all([loadAdminLogs(), loadAllUsers(), loadReports()]);
         }
 
-        async function loadPendingUsers() {
+        async function loadAdminLogs() {
             try {
-                const response = await fetch('/api/admin/pending-users', {
+                const response = await fetch('/api/admin/logs', {
                     credentials: 'include'
                 });
 
@@ -500,16 +505,16 @@
                         setTimeout(() => window.location.href = '/', 2000);
                         return;
                     }
-                    throw new Error('Failed to load pending users');
+                    throw new Error('Failed to load admin logs');
                 }
 
                 const data = await response.json();
-                pendingUsers = data.users;
+                adminLogs = data.logs;
                 
-                displayPendingUsers();
+                displayAdminLogs();
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('pending-users-list').innerHTML = `
+                document.getElementById('admin-log-list').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle"></i>
                         <p>Failed to load</p>
@@ -548,47 +553,50 @@
             document.getElementById('admin-users').textContent = allUsers.filter(u => u.isAdmin).length;
         }
 
-        function displayPendingUsers() {
-            const container = document.getElementById('pending-users-list');
-            const countEl = document.getElementById('pending-count');
+        function displayAdminLogs() {
+            const container = document.getElementById('admin-log-list');
+            const countEl = document.getElementById('log-count');
             
-            countEl.textContent = pendingUsers.length;
+            countEl.textContent = adminLogs.length;
 
-            if (pendingUsers.length === 0) {
+            if (adminLogs.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-check-circle"></i>
-                        <p>No pending leaderboard approvals</p>
+                        <i class="fas fa-info-circle"></i>
+                        <p>No admin actions logged yet</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = pendingUsers.map(user => `
-                <div class="user-card" id="pending-${user.id}">
-                    <div class="user-info-section">
-                        <div class="name">${user.displayName || user.username}</div>
-                        <div class="details">
-                            <span class="username">@${user.username}</span> • <span class="user-email">${user.email}</span>
-                        </div>
-                        <div class="date">Registered: ${new Date(user.createdAt).toLocaleString()}</div>
-                        ${user.tarkovDevId || user.twitchUrl ? `
-                            <div class="user-links" style="margin-top: 8px;">
-                                ${user.twitchUrl ? `<a href="${user.twitchUrl}" target="_blank" style="color: #9147ff; margin-right: 12px;"><i class="fab fa-twitch"></i> Twitch</a>` : ''}
-                                ${user.tarkovDevId ? `<a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank" style="color: #c7aa6a;"><i class="fas fa-gamepad"></i> Tarkov.dev</a>` : ''}
+            container.innerHTML = adminLogs.map(log => {
+                const actionIcons = {
+                    'approved_user': '<i class="fas fa-trophy" style="color: #4CAF50;"></i>',
+                    'removed_user': '<i class="fas fa-ban" style="color: #ff9800;"></i>',
+                    'deleted_user': '<i class="fas fa-trash" style="color: #f44336;"></i>',
+                    'granted_admin': '<i class="fas fa-crown" style="color: #ffd700;"></i>',
+                    'revoked_admin': '<i class="fas fa-user-minus" style="color: #ff9800;"></i>',
+                    'added_to_leaderboard': '<i class="fas fa-trophy" style="color: #4CAF50;"></i>',
+                    'removed_from_leaderboard': '<i class="fas fa-user-slash" style="color: #ff9800;"></i>'
+                };
+                
+                const icon = actionIcons[log.action] || '<i class="fas fa-cog"></i>';
+                
+                return `
+                    <div class="user-card" style="padding: 12px;">
+                        <div class="user-info-section" style="flex: 1;">
+                            <div class="name" style="font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                ${icon}
+                                <span>${log.description}</span>
                             </div>
-                        ` : ''}
+                            <div class="date" style="margin-top: 4px; font-size: 11px;">
+                                By: <span style="color: #c7aa6a;">${log.adminUsername}</span> • 
+                                ${new Date(log.createdAt).toLocaleString()}
+                            </div>
+                        </div>
                     </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-approve" onclick="approveUser('${user.id}')">
-                            <i class="fas fa-trophy"></i> Add to Leaderboard
-                        </button>
-                        <button class="btn btn-delete" onclick="rejectUser('${user.id}')">
-                            <i class="fas fa-times"></i> Deny
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function displayAllUsers() {
@@ -624,8 +632,17 @@
                         </div>
                     </div>
                     <div class="action-buttons">
+                        ${user.approved ? `
+                            <button class="btn btn-warning" onclick="toggleLeaderboard('${user.id}', '${user.username}', false)">
+                                <i class="fas fa-trophy"></i> Remove from Leaderboard
+                            </button>
+                        ` : `
+                            <button class="btn btn-approve" onclick="toggleLeaderboard('${user.id}', '${user.username}', true)">
+                                <i class="fas fa-trophy"></i> Add to Leaderboard
+                            </button>
+                        `}
                         ${!user.isAdmin ? `
-                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)">
+                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)" style="background: #ffd700; color: #000;">
                                 <i class="fas fa-crown"></i> Make Admin
                             </button>
                             <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.username}')">
@@ -635,59 +652,38 @@
                             <button class="btn btn-warning" onclick="toggleAdmin('${user.id}', '${user.username}', false)">
                                 <i class="fas fa-crown"></i> Remove Admin
                             </button>
-                            <span style="color: #ffd700; font-size: 12px; margin-left: 8px;">Protected from deletion</span>
                         `}
                     </div>
                 </div>
             `).join('');
         }
 
-        async function approveUser(userId) {
-            const card = document.getElementById(`pending-${userId}`);
-            const buttons = card.querySelectorAll('button');
-            buttons.forEach(btn => btn.disabled = true);
-
-            try {
-                const response = await fetch(`/api/admin/approve-user/${userId}`, {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-
-                if (!response.ok) throw new Error('Failed to approve user');
-
-                const data = await response.json();
-                showNotification(`✓ Added to leaderboard: ${data.user.username}`, 'success');
-                
-                // Reload both lists
-                await loadData();
-            } catch (error) {
-                console.error('Error:', error);
-                showNotification('Failed to approve user', 'error');
-                buttons.forEach(btn => btn.disabled = false);
-            }
-        }
-
-        async function rejectUser(userId) {
-            const user = pendingUsers.find(u => u.id === userId);
-            if (!confirm(`Deny leaderboard access for ${user.username}?\n\nNote: This will NOT delete their account. They can still use the tracker, but won't appear on rankings.`)) {
+        async function toggleLeaderboard(userId, username, addToLeaderboard) {
+            const action = addToLeaderboard ? 'ADD TO LEADERBOARD' : 'REMOVE FROM LEADERBOARD';
+            if (!confirm(`${action}: ${username}?\n\n${addToLeaderboard ? 'This user will appear on public rankings.' : 'This user will be hidden from public rankings.'}`)) {
                 return;
             }
 
             try {
-                const response = await fetch(`/api/admin/reject-user/${userId}`, {
-                    method: 'DELETE',
-                    credentials: 'include'
+                const response = await fetch(`/api/admin/toggle-leaderboard/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ approved: addToLeaderboard })
                 });
 
-                if (!response.ok) throw new Error('Failed to reject user');
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to update leaderboard status');
+                }
 
                 const data = await response.json();
-                showNotification(`✗ Removed from leaderboard: ${data.user.username}`, 'success');
+                showNotification(addToLeaderboard ? `🏆 Added to leaderboard: ${username}` : `📊 Removed from leaderboard: ${username}`, 'success');
                 
                 await loadData();
             } catch (error) {
                 console.error('Error:', error);
-                showNotification('Failed to remove user from leaderboard', 'error');
+                showNotification(error.message, 'error');
             }
         }
 
@@ -773,7 +769,7 @@
         function updateReportStats() {
             document.getElementById('reports-count').textContent = reports.length;
             document.getElementById('pending-reports').textContent = reports.filter(r => r.status === 'pending').length;
-            document.getElementById('bug-reports').textContent = reports.filter(r => r.type === 'bug').length;
+            document.getElementById('bug-reports').textContent = reports.filter(r => r.type === 'bug' || r.type === 'quest-error').length;
             document.getElementById('feature-reports').textContent = reports.filter(r => r.type === 'feature').length;
         }
 
@@ -791,7 +787,10 @@
             }
 
             container.innerHTML = reports.map(report => {
-                const typeBadge = report.type === 'bug' ? 'report-type-bug' : 'report-type-feature';
+                let typeBadge = 'report-type-bug';
+                if (report.type === 'feature') typeBadge = 'report-type-feature';
+                if (report.type === 'quest-error') typeBadge = 'report-type-quest-error';
+                
                 const statusClass = `status-${report.status}`;
                 const userName = report.user.displayName || report.user.username;
                 
@@ -803,6 +802,11 @@
                                 <span class="report-status ${statusClass}">${report.status}</span>
                                 ${report.title}
                             </div>
+                            ${report.questName ? `
+                                <div class="details" style="margin-top: 4px; color: #c7aa6a; font-size: 13px;">
+                                    <i class="fas fa-compass"></i> Quest: ${report.questName}
+                                </div>
+                            ` : ''}
                             <div class="details" style="margin-top: 8px;">
                                 ${report.description}
                             </div>

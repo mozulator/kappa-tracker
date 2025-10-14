@@ -1774,7 +1774,7 @@ class QuestTracker {
                 <div style="padding: 20px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                         <h2 style="color: #c7aa6a; font-size: 28px; margin: 0;">
-                            <i class="fas fa-trophy"></i> Global Rankings
+                            <i class="fas fa-trophy"></i> Global Rankings for 16.9 Patch
                         </h2>
                         <label class="quest-mode-toggle" style="margin: 0;">
                             <input type="checkbox" id="include-prestige-dashboard" class="quest-mode-checkbox" checked>
@@ -2354,13 +2354,16 @@ class StatisticsManager {
             const color = this.userColors[userData.username];
             const isCurrentUser = userData.username === window.currentUser?.username;
             
+            // Aggregate nearby points (within 1 hour) to reduce clutter
+            const aggregatedData = this.aggregateDataPoints(userData.progressData, 60 * 60 * 1000); // 1 hour in ms
+            
             datasets.push({
                 label: userData.displayName || userData.username,
-                data: userData.progressData,
+                data: aggregatedData,
                 borderColor: color,
                 backgroundColor: color + '20',
                 borderWidth: isCurrentUser ? 3 : 2,
-                tension: 0.4,
+                tension: 0, // Straight lines, no bezier curves
                 fill: false,
                 pointRadius: isCurrentUser ? 4 : 3,
                 pointHoverRadius: isCurrentUser ? 6 : 5
@@ -2565,6 +2568,34 @@ class StatisticsManager {
             }
         }
         return 'Just now';
+    }
+
+    aggregateDataPoints(dataPoints, timeWindowMs) {
+        if (!dataPoints || dataPoints.length === 0) return [];
+        
+        const aggregated = [];
+        let currentGroup = [dataPoints[0]];
+        
+        for (let i = 1; i < dataPoints.length; i++) {
+            const currentTime = new Date(dataPoints[i].x).getTime();
+            const lastTime = new Date(currentGroup[currentGroup.length - 1].x).getTime();
+            
+            // If within time window, add to current group
+            if (currentTime - lastTime <= timeWindowMs) {
+                currentGroup.push(dataPoints[i]);
+            } else {
+                // Time window exceeded, save the last point of the group
+                aggregated.push(currentGroup[currentGroup.length - 1]);
+                currentGroup = [dataPoints[i]];
+            }
+        }
+        
+        // Don't forget the last group
+        if (currentGroup.length > 0) {
+            aggregated.push(currentGroup[currentGroup.length - 1]);
+        }
+        
+        return aggregated;
     }
 
     updateUserFilter(users) {

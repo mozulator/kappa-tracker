@@ -119,9 +119,11 @@ model Report {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // "bug" | "feature"
+  type        String   // "bug" | "feature" | "quest-error"
   title       String
   description String
+  questName   String?  // For quest-error reports
+  questId     String?  // For quest-error reports
   status      String   @default("pending") // "pending" | "reviewed" | "resolved" | "closed"
   adminNotes  String?
   createdAt   DateTime @default(now())
@@ -131,4 +133,19 @@ model Report {
   @@index([status])
   @@index([type])
   @@map("reports")
+}
+
+model AdminLog {
+  id            String   @id @default(cuid())
+  adminId       String
+  adminUsername String
+  action        String   // "approved_user" | "removed_user" | "deleted_user" | "granted_admin" | "revoked_admin" | "added_to_leaderboard" | "removed_from_leaderboard"
+  targetUserId  String?
+  targetUsername String?
+  description   String
+  createdAt     DateTime @default(now())
+  
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("admin_logs")
 }
