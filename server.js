@@ -1021,7 +1021,7 @@ app.post('/api/refresh-quests', requireAuth, async (req, res) => {
 app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
     try {
         const { questId } = req.params;
-        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, requiredItems, images } = req.body;
+        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, requiredItems, images, notes, shoppingList } = req.body;
 
         // Validate quest exists
         const quest = await prisma.quest.findUnique({
@@ -1081,6 +1081,24 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
                 return res.status(400).json({ error: 'Invalid images JSON' });
             }
         }
+        
+        if (notes !== undefined) {
+            // Allow null or empty string to clear notes, otherwise store as string
+            updateData.notes = notes || null;
+            console.log('Notes received:', notes, '-> Storing as:', updateData.notes);
+        }
+        
+        if (shoppingList !== undefined) {
+            // Validate it's valid JSON
+            try {
+                JSON.parse(shoppingList);
+                updateData.shoppingList = shoppingList;
+            } catch (e) {
+                return res.status(400).json({ error: 'Invalid shoppingList JSON' });
+            }
+        }
+
+        console.log('Update data being sent to Prisma:', updateData);
 
         // Update quest
         const updatedQuest = await prisma.quest.update({
@@ -1089,6 +1107,7 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
         });
 
         console.log(`Admin ${req.user.username} updated quest: ${quest.name}`);
+        console.log('Updated quest notes:', updatedQuest.notes);
         res.json({
             message: 'Quest updated successfully',
             quest: updatedQuest

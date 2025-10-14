@@ -66,16 +66,18 @@
             flex: 1;
             display: flex;
             padding: 24px;
-            gap: 24px;
+            gap: 16px;
             background: var(--background-tertiary);
-            align-items: baseline;
+            align-items: stretch;
+            overflow: hidden;
         }
 
         .map-column {
-            flex: 1;
+            flex: 1 1 0;
+            min-width: 0;
             background: var(--post-bg);
             border: 1px dashed var(--post-border);
-            padding: 20px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             border-radius: 8px;
@@ -106,20 +108,26 @@
         .quests-list {
             flex: 1;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
 
         .quest-item {
             background: var(--post-bg-secondary);
-            padding: 8px;
-            margin-bottom: 4px;
-            border-radius: 8px;
+            padding: 6px 8px;
+            margin-bottom: 3px;
+            border-radius: 6px;
         }
 
         .quest-title {
-            font-size: 16px;
+            font-size: 20px;
             font-weight: 500;
-            line-height: 1.4;
+            line-height: 1.3;
+            padding: 12px;
             color: var(--subtext);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .loading {
@@ -324,6 +332,92 @@
                     </div>
                 `;
             }).join('');
+            
+            // Auto-scale content to fit
+            autoScaleContent();
+        }
+        
+        // Auto-scale the content to fit all columns in the viewport
+        function autoScaleContent() {
+            // Wait for render
+            requestAnimationFrame(() => {
+                // Start auto-scroll animation for columns with scrollbars
+                startAutoScroll();
+            });
+        }
+        
+        // Auto-scroll animation for quest lists with scrollbars
+        function startAutoScroll() {
+            const questLists = document.querySelectorAll('.quests-list');
+            
+            questLists.forEach((list, index) => {
+                // Check if this list has a scrollbar
+                const hasScroll = list.scrollHeight > list.clientHeight;
+                
+                if (hasScroll) {
+                    // Stagger the animation start for each column
+                    const delay = index * 2000; // 2 second delay between columns
+                    
+                    setTimeout(() => {
+                        animateScroll(list);
+                    }, delay);
+                }
+            });
+        }
+        
+        // Animate scrolling for a single quest list
+        function animateScroll(list) {
+            const scrollHeight = list.scrollHeight;
+            const clientHeight = list.clientHeight;
+            const maxScroll = scrollHeight - clientHeight;
+            
+            if (maxScroll <= 0) return;
+            
+            let direction = 1; // 1 for down, -1 for up
+            let currentPosition = 0;
+            const speed = 0.5; // pixels per frame
+            const pauseAtEnd = 2000; // pause 2 seconds at top/bottom
+            let isPaused = false;
+            
+            function scroll() {
+                if (isPaused) return;
+                
+                currentPosition += speed * direction;
+                
+                // Check if we've reached the bottom
+                if (currentPosition >= maxScroll) {
+                    currentPosition = maxScroll;
+                    direction = -1;
+                    isPaused = true;
+                    list.scrollTop = currentPosition;
+                    
+                    setTimeout(() => {
+                        isPaused = false;
+                        requestAnimationFrame(scroll);
+                    }, pauseAtEnd);
+                    return;
+                }
+                
+                // Check if we've reached the top
+                if (currentPosition <= 0) {
+                    currentPosition = 0;
+                    direction = 1;
+                    isPaused = true;
+                    list.scrollTop = currentPosition;
+                    
+                    setTimeout(() => {
+                        isPaused = false;
+                        requestAnimationFrame(scroll);
+                    }, pauseAtEnd);
+                    return;
+                }
+                
+                list.scrollTop = currentPosition;
+                requestAnimationFrame(scroll);
+            }
+            
+            // Start the animation
+            requestAnimationFrame(scroll);
         }
 
         // Get available (unlocked and incomplete) quests for a specific map
@@ -404,6 +498,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
             startAutoRefresh();
+            
+            // Re-scale on window resize (for OBS browser source)
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    autoScaleContent();
+                }, 100);
+            });
         });
     </script>
 </body>

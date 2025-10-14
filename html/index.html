@@ -420,6 +420,9 @@
         <div class="dialog-content" style="max-width: 98vw; max-height: 98vh; width: 98%; height: 98vh;">
             <div class="dialog-header">
                 <h3><i class="fas fa-image"></i> <span id="quest-image-quest-name">Quest Images</span></h3>
+                <button class="dialog-close-btn" onclick="document.getElementById('quest-image-viewer').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="dialog-body" style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
                 <div style="position: relative; display: flex; justify-content: center; align-items: center; flex: 1;">
@@ -435,9 +438,6 @@
                     <span id="quest-image-counter" style="color: #c7aa6a; font-size: 16px; font-weight: 600;">1 / 1</span>
                 </div>
             </div>
-            <div class="dialog-footer">
-                <button onclick="document.getElementById('quest-image-viewer').style.display='none'" class="dialog-btn cancel-btn">Close</button>
-            </div>
         </div>
     </div>
 
@@ -446,6 +446,9 @@
         <div class="dialog-content" style="max-width: 1400px; max-height: 90vh; overflow-y: auto; width: 95%;">
             <div class="dialog-header">
                 <h3><i class="fas fa-tools"></i> Edit Quest: <span id="editing-quest-name-dialog">Quest Name</span></h3>
+                <button class="dialog-close-btn" onclick="document.getElementById('quest-editor-dialog').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="dialog-body">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
@@ -577,13 +580,37 @@
                                 <!-- Image previews will appear here -->
                             </div>
                         </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-sticky-note"></i> Quest Notes
+                            </h4>
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">Additional notes or tips for this quest</label>
+                            <textarea id="edit-notes-dialog" rows="3" placeholder="Add any helpful notes, tips, or important information about this quest..." style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 12px; resize: vertical;"></textarea>
+                            <small style="color: #666; font-size: 11px;">These notes will be displayed in the quest card below the objectives.</small>
+                        </div>
+
+                        <!-- Shopping List (Gunsmith Quests Only) -->
+                        <div id="shopping-list-section-dialog" style="margin-bottom: 25px; display: none;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-shopping-cart"></i> Shopping List
+                            </h4>
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px; text-transform: uppercase;">Attachments to Buy</label>
+                            <div id="shopping-list-editor-dialog" style="margin-bottom: 10px;">
+                                <!-- Shopping list items will be added here -->
+                            </div>
+                            <button onclick="addShoppingListItemDialog()" style="padding: 8px 16px; background: #c7aa6a; border: none; border-radius: 4px; color: #000; cursor: pointer; font-weight: 600; font-size: 12px;">
+                                <i class="fas fa-plus"></i> Add Item
+                            </button>
+                            <small style="display: block; color: #666; font-size: 11px; margin-top: 10px;">Add items needed to buy from traders for this Gunsmith quest.</small>
+                        </div>
                     </div>
                 </div>
 
                 <div id="quest-edit-alert" style="display: none; padding: 15px; border-radius: 8px; margin-top: 20px;"></div>
             </div>
             <div class="dialog-footer">
-                <button id="cancel-quest-edit" class="dialog-btn cancel-btn">Cancel</button>
+                <button id="cancel-quest-edit" class="dialog-btn cancel-btn" onclick="document.getElementById('quest-editor-dialog').style.display='none'">Cancel</button>
                 <button id="save-quest-edit" class="dialog-btn confirm-btn">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
@@ -1170,19 +1197,8 @@
             }
 
             function setupQuestEditDialog() {
-                const dialog = document.getElementById('quest-editor-dialog');
-                const cancelBtn = document.getElementById('cancel-quest-edit');
-                const saveBtn = document.getElementById('save-quest-edit');
-
-                if (cancelBtn) {
-                    cancelBtn.addEventListener('click', () => {
-                        dialog.style.display = 'none';
-                    });
-                }
-
-                if (saveBtn) {
-                    saveBtn.addEventListener('click', saveQuestEdit);
-                }
+                // Event listener is now attached in openQuestEditDialog() each time the dialog opens
+                // This function is kept for the prerequisite search setup only
 
                 // Prerequisite quest search
                 const prereqSearch = document.getElementById('prereq-search-dialog');
@@ -1360,6 +1376,136 @@
                 // Add image preview update on textarea change
                 imagesTextarea.addEventListener('input', updateImagePreview);
 
+                // Load notes
+                const notesTextarea = document.getElementById('edit-notes-dialog');
+                notesTextarea.value = selectedQuestForEdit.notes || '';
+
+                // Load and display shopping list for Gunsmith quests
+                const shoppingListSection = document.getElementById('shopping-list-section-dialog');
+                const isGunsmithQuest = selectedQuestForEdit.name && selectedQuestForEdit.name.startsWith('Gunsmith');
+                
+                if (isGunsmithQuest) {
+                    shoppingListSection.style.display = 'block';
+                    
+                    // Parse and display shopping list
+                    const shoppingList = JSON.parse(selectedQuestForEdit.shoppingList || '[]');
+                    const shoppingListEditor = document.getElementById('shopping-list-editor-dialog');
+                    
+                    shoppingListEditor.innerHTML = shoppingList.map((item, idx) => `
+                        <div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;">
+                            <div style="flex:1;position:relative;">
+                                <input type="text" 
+                                       value="${item.name || ''}" 
+                                       placeholder="Search item name..." 
+                                       data-shopping-search-idx="${idx}" 
+                                       autocomplete="off"
+                                       style="width:100%;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                                <div class="shopping-dropdown" data-shopping-dropdown-idx="${idx}" style="position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:rgba(20,20,20,0.98);border:2px solid #c7aa6a;border-radius:6px;margin-top:2px;z-index:9999;display:none;"></div>
+                                <input type="hidden" data-shopping-item-idx="${idx}" value="${item.name || ''}">
+                            </div>
+                            <select data-shopping-trader-idx="${idx}" style="width:140px;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                                <option value="">Trader</option>
+                                <option value="Base Weapon" ${item.trader === 'Base Weapon' ? 'selected' : ''}>Base Weapon</option>
+                                <option value="Prapor" ${item.trader === 'Prapor' ? 'selected' : ''}>Prapor</option>
+                                <option value="Therapist" ${item.trader === 'Therapist' ? 'selected' : ''}>Therapist</option>
+                                <option value="Fence" ${item.trader === 'Fence' ? 'selected' : ''}>Fence</option>
+                                <option value="Skier" ${item.trader === 'Skier' ? 'selected' : ''}>Skier</option>
+                                <option value="Peacekeeper" ${item.trader === 'Peacekeeper' ? 'selected' : ''}>Peacekeeper</option>
+                                <option value="Mechanic" ${item.trader === 'Mechanic' ? 'selected' : ''}>Mechanic</option>
+                                <option value="Ragman" ${item.trader === 'Ragman' ? 'selected' : ''}>Ragman</option>
+                                <option value="Jaeger" ${item.trader === 'Jaeger' ? 'selected' : ''}>Jaeger</option>
+                                <option value="Ref" ${item.trader === 'Ref' ? 'selected' : ''}>Ref</option>
+                                <option value="Loot Only" ${item.trader === 'Loot Only' ? 'selected' : ''}>Loot Only</option>
+                            </select>
+                            <input type="number" value="${item.loyaltyLevel || 1}" min="1" max="4" placeholder="LL" data-shopping-ll-idx="${idx}" style="width:60px;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;" title="Loyalty Level">
+                            <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:#888;font-size:12px;">
+                                <input type="checkbox" data-shopping-barter-idx="${idx}" ${item.isBarter ? 'checked' : ''} style="margin:0;">
+                                Barter
+                            </label>
+                            <button onclick="this.parentElement.remove()" style="padding:8px 12px;background:#c83232;border:none;border-radius:4px;color:#fff;cursor:pointer;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                    
+                    // Setup search for existing items
+                    await fetchTarkovItems();
+                    shoppingList.forEach((item, idx) => {
+                        const searchInput = document.querySelector(`[data-shopping-search-idx="${idx}"]`);
+                        const dropdown = document.querySelector(`[data-shopping-dropdown-idx="${idx}"]`);
+                        const hiddenInput = document.querySelector(`[data-shopping-item-idx="${idx}"]`);
+                        
+                        if (searchInput && dropdown) {
+                            searchInput.addEventListener('input', function() {
+                                const searchTerm = this.value.toLowerCase().trim();
+                                
+                                if (searchTerm.length === 0) {
+                                    dropdown.style.display = 'none';
+                                    return;
+                                }
+                                
+                                const filtered = tarkovItems.filter(item => 
+                                    item.name.toLowerCase().includes(searchTerm) || 
+                                    (item.shortName && item.shortName.toLowerCase().includes(searchTerm))
+                                ).slice(0, 50);
+                                
+                                if (filtered.length === 0) {
+                                    dropdown.innerHTML = '<div style="padding:8px;color:#888;">No items found</div>';
+                                    dropdown.style.display = 'block';
+                                    return;
+                                }
+                                
+                                dropdown.innerHTML = filtered.map(item => `
+                                    <div onclick="selectShoppingItem(${idx}, '${item.name.replace(/'/g, "\\'")}', '${item.id}')" 
+                                         style="padding:8px;cursor:pointer;color:#fff;border-bottom:1px solid #333;"
+                                         onmouseover="this.style.background='rgba(199,170,106,0.2)'"
+                                         onmouseout="this.style.background='transparent'">
+                                        ${item.name} ${item.shortName ? `(${item.shortName})` : ''}
+                                    </div>
+                                `).join('');
+                                
+                                dropdown.style.display = 'block';
+                            });
+                        }
+                    });
+                } else {
+                    shoppingListSection.style.display = 'none';
+                }
+
+                // Setup save button event listener
+                const saveBtn = document.getElementById('save-quest-edit');
+                if (saveBtn) {
+                    console.log('Attaching save button event listener');
+                    // Clone and replace to remove all old event listeners
+                    const newSaveBtn = saveBtn.cloneNode(true);
+                    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+                    newSaveBtn.addEventListener('click', saveQuestEdit);
+                }
+
+                // Add event listeners for closing the dialog
+                // Click outside to close
+                const handleOverlayClick = (e) => {
+                    if (e.target.id === 'quest-editor-dialog') {
+                        dialog.style.display = 'none';
+                        dialog.removeEventListener('click', handleOverlayClick);
+                        document.removeEventListener('keydown', handleEscapeKey);
+                    }
+                };
+
+                // Escape key to close
+                const handleEscapeKey = (e) => {
+                    if (e.key === 'Escape' || e.key === 'Esc') {
+                        if (dialog.style.display === 'flex') {
+                            dialog.style.display = 'none';
+                            dialog.removeEventListener('click', handleOverlayClick);
+                            document.removeEventListener('keydown', handleEscapeKey);
+                        }
+                    }
+                };
+
+                dialog.addEventListener('click', handleOverlayClick);
+                document.addEventListener('keydown', handleEscapeKey);
+
                 dialog.style.display = 'flex';
             };
 
@@ -1477,6 +1623,105 @@
                 if (dropdown) dropdown.style.display = 'none';
             };
 
+            window.addShoppingListItemDialog = async function() {
+                // Load items if not already loaded
+                await fetchTarkovItems();
+                
+                const shoppingListEditor = document.getElementById('shopping-list-editor-dialog');
+                const idx = shoppingListEditor.children.length;
+                const entry = document.createElement('div');
+                entry.style = 'display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;';
+                
+                entry.innerHTML = `
+                    <div style="flex:1;position:relative;">
+                        <input type="text" 
+                               placeholder="Search item name..." 
+                               data-shopping-search-idx="${idx}" 
+                               autocomplete="off"
+                               style="width:100%;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                        <div class="shopping-dropdown" data-shopping-dropdown-idx="${idx}" style="position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:rgba(20,20,20,0.98);border:2px solid #c7aa6a;border-radius:6px;margin-top:2px;z-index:9999;display:none;"></div>
+                        <input type="hidden" data-shopping-item-idx="${idx}">
+                    </div>
+                    <select data-shopping-trader-idx="${idx}" style="width:140px;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;">
+                        <option value="">Trader</option>
+                        <option value="Base Weapon">Base Weapon</option>
+                        <option value="Prapor">Prapor</option>
+                        <option value="Therapist">Therapist</option>
+                        <option value="Fence">Fence</option>
+                        <option value="Skier">Skier</option>
+                        <option value="Peacekeeper">Peacekeeper</option>
+                        <option value="Mechanic">Mechanic</option>
+                        <option value="Ragman">Ragman</option>
+                        <option value="Jaeger">Jaeger</option>
+                        <option value="Ref">Ref</option>
+                        <option value="Loot Only">Loot Only</option>
+                    </select>
+                    <input type="number" value="1" min="1" max="4" placeholder="LL" data-shopping-ll-idx="${idx}" style="width:60px;padding:8px;background:rgba(0,0,0,0.5);border:2px solid #3a3a3a;border-radius:6px;color:#fff;" title="Loyalty Level">
+                    <label style="display:flex;align-items:center;gap:4px;white-space:nowrap;color:#888;font-size:12px;">
+                        <input type="checkbox" data-shopping-barter-idx="${idx}" style="margin:0;">
+                        Barter
+                    </label>
+                    <button onclick="this.parentElement.remove()" style="padding:8px 12px;background:#c83232;border:none;border-radius:4px;color:#fff;cursor:pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                shoppingListEditor.appendChild(entry);
+                
+                // Setup search functionality
+                const searchInput = entry.querySelector(`[data-shopping-search-idx="${idx}"]`);
+                const dropdown = entry.querySelector(`[data-shopping-dropdown-idx="${idx}"]`);
+                const hiddenInput = entry.querySelector(`[data-shopping-item-idx="${idx}"]`);
+                
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    
+                    if (searchTerm.length === 0) {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+                    
+                    const filtered = tarkovItems.filter(item => 
+                        item.name.toLowerCase().includes(searchTerm) || 
+                        (item.shortName && item.shortName.toLowerCase().includes(searchTerm))
+                    ).slice(0, 50);
+                    
+                    if (filtered.length === 0) {
+                        dropdown.innerHTML = '<div style="padding:8px;color:#888;">No items found</div>';
+                        dropdown.style.display = 'block';
+                        return;
+                    }
+                    
+                    dropdown.innerHTML = filtered.map(item => `
+                        <div onclick="selectShoppingItem(${idx}, '${item.name.replace(/'/g, "\\'")}', '${item.id}')" 
+                             style="padding:8px;cursor:pointer;color:#fff;border-bottom:1px solid #333;"
+                             onmouseover="this.style.background='rgba(199,170,106,0.2)'"
+                             onmouseout="this.style.background='transparent'">
+                            ${item.name} ${item.shortName ? `(${item.shortName})` : ''}
+                        </div>
+                    `).join('');
+                    
+                    dropdown.style.display = 'block';
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!entry.contains(e.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+            };
+
+            window.selectShoppingItem = function(idx, itemName, itemId) {
+                const searchInput = document.querySelector(`[data-shopping-search-idx="${idx}"]`);
+                const hiddenInput = document.querySelector(`[data-shopping-item-idx="${idx}"]`);
+                const dropdown = document.querySelector(`[data-shopping-dropdown-idx="${idx}"]`);
+                
+                if (searchInput) searchInput.value = itemName;
+                if (hiddenInput) hiddenInput.value = itemName;
+                if (dropdown) dropdown.style.display = 'none';
+            };
+
             window.addPrereqDialog = function(id, name, trader) {
                 selectedPrereqsForEdit.add(id);
                 updatePrereqsDisplayDialog();
@@ -1508,11 +1753,16 @@
             }
 
             async function saveQuestEdit() {
-                if (!selectedQuestForEdit) return;
+                console.log('saveQuestEdit called, selectedQuestForEdit:', selectedQuestForEdit);
+                if (!selectedQuestForEdit) {
+                    console.log('No quest selected for edit, returning');
+                    return;
+                }
 
                 const saveBtn = document.getElementById('save-quest-edit');
                 const alert = document.getElementById('quest-edit-alert');
                 
+                console.log('Save button:', saveBtn);
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
@@ -1589,6 +1839,28 @@
                     const imagesText = document.getElementById('edit-images-dialog').value;
                     const imageUrls = imagesText.split('\n').filter(url => url.trim() !== '').map(url => url.trim());
 
+                    // Get notes
+                    const notes = document.getElementById('edit-notes-dialog').value.trim();
+
+                    // Get shopping list (for Gunsmith quests)
+                    const shoppingListItems = [];
+                    const shoppingListEntries = document.querySelectorAll('#shopping-list-editor-dialog > div');
+                    shoppingListEntries.forEach((entry, idx) => {
+                        const nameInput = entry.querySelector(`[data-shopping-item-idx="${idx}"]`) || entry.querySelector(`[data-shopping-search-idx="${idx}"]`);
+                        const traderSelect = entry.querySelector(`[data-shopping-trader-idx="${idx}"]`);
+                        const loyaltyInput = entry.querySelector(`[data-shopping-ll-idx="${idx}"]`);
+                        const barterCheckbox = entry.querySelector(`[data-shopping-barter-idx="${idx}"]`);
+                        
+                        if (nameInput && nameInput.value && nameInput.value.trim()) {
+                            shoppingListItems.push({
+                                name: nameInput.value.trim(),
+                                trader: traderSelect ? traderSelect.value : '',
+                                loyaltyLevel: loyaltyInput ? parseInt(loyaltyInput.value) || 1 : 1,
+                                isBarter: barterCheckbox ? barterCheckbox.checked : false
+                            });
+                        }
+                    });
+
                     const updateData = {
                         trader: document.getElementById('edit-trader-dialog').value,
                         level: parseInt(document.getElementById('edit-level-dialog').value) || 1,
@@ -1596,9 +1868,12 @@
                         mapName: document.getElementById('edit-map-dialog').value,
                         prerequisiteQuests: JSON.stringify(Array.from(selectedPrereqsForEdit)),
                         requiredItems: JSON.stringify(finalRequiredItems),
-                        images: JSON.stringify(imageUrls)
+                        images: JSON.stringify(imageUrls),
+                        notes: notes || null,
+                        shoppingList: JSON.stringify(shoppingListItems)
                     };
 
+                    console.log('Sending update data:', updateData);
                     const response = await fetch(`/api/admin/quests/${selectedQuestForEdit.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
@@ -1606,8 +1881,11 @@
                         body: JSON.stringify(updateData)
                     });
 
+                    console.log('Response status:', response.status);
                     if (!response.ok) {
-                        throw new Error('Failed to update quest');
+                        const errorData = await response.json();
+                        console.error('Error response:', errorData);
+                        throw new Error(errorData.error || 'Failed to update quest');
                     }
 
                     // Show success
@@ -1859,7 +2137,7 @@
 
             // Render found items
             if (foundItems.length === 0) {
-                foundGrid.innerHTML = '<p style="color: var(--subtext); text-align: center; padding: 40px;">No items found yet. Click items on the left to mark as found.</p>';
+                foundGrid.innerHTML = '';
             } else {
                 foundGrid.innerHTML = foundItems.map(item => renderCollectorItem(item, true)).join('');
             }

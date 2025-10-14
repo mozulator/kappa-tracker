@@ -58,6 +58,8 @@ model Quest {
   mapName           String?  // Map where quest takes place
   requiredItems     String   @default("[]") // JSON array of required items with counts
   images            String   @default("[]") // JSON array of image URLs
+  notes             String?  // Additional notes or tips for the quest
+  shoppingList      String   @default("[]") // JSON array of items to buy for Gunsmith quests
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

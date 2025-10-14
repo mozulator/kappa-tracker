@@ -11,7 +11,41 @@ class QuestTracker {
         this.currentView = 'dashboard'; // 'dashboard', 'finished', 'rankings', or 'profile'
         this.showFutureQuests = false; // Show all future quests mode
         this.isAdmin = false; // Will be set from auth check
+        
+        // Load saved preferences
+        this.loadPreferences();
+        
         this.init();
+    }
+    
+    // Save preferences to localStorage
+    savePreferences() {
+        const prefs = {
+            showFutureQuests: this.showFutureQuests,
+            sortBy: this.sortBy,
+            currentView: this.currentView,
+            currentMap: this.currentMap,
+            currentTrader: this.currentTrader
+        };
+        localStorage.setItem('kappaTrackerPrefs', JSON.stringify(prefs));
+    }
+    
+    // Load preferences from localStorage
+    loadPreferences() {
+        try {
+            const saved = localStorage.getItem('kappaTrackerPrefs');
+            if (saved) {
+                const prefs = JSON.parse(saved);
+                this.showFutureQuests = prefs.showFutureQuests || false;
+                this.sortBy = prefs.sortBy || 'map';
+                this.currentView = prefs.currentView || 'dashboard';
+                this.currentMap = prefs.currentMap || 'Any Location';
+                this.currentTrader = prefs.currentTrader || 'Prapor';
+                console.log('Loaded preferences:', prefs);
+            }
+        } catch (err) {
+            console.error('Failed to load preferences:', err);
+        }
     }
 
     async init() {
@@ -20,7 +54,47 @@ class QuestTracker {
         await this.loadProgress();
         await this.loadQuests();
         this.setupEventListeners();
+        this.restoreSavedView();
         this.updateUI();
+    }
+    
+    // Restore the saved view/tab
+    restoreSavedView() {
+        // Restore the view that was saved
+        switch (this.currentView) {
+            case 'dashboard':
+                this.showView('dashboard');
+                break;
+            case 'finished':
+                this.viewMode = 'finished';
+                this.showView('finished');
+                break;
+            case 'rankings':
+                this.showView('rankings');
+                this.loadRankings();
+                break;
+            case 'profile':
+                this.showView('profile');
+                this.loadProfile();
+                break;
+            case 'fix-quests':
+                if (this.isAdmin) {
+                    this.showView('fix-quests');
+                    this.loadFixQuests();
+                } else {
+                    // Fall back to dashboard if not admin
+                    this.currentView = 'dashboard';
+                    this.showView('dashboard');
+                }
+                break;
+            case 'collector-items':
+                this.showView('collector-items');
+                this.loadCollectorItems();
+                break;
+            default:
+                this.showView('dashboard');
+        }
+        this.updateNavigationState();
     }
 
     async checkAdminStatus() {
@@ -178,13 +252,18 @@ class QuestTracker {
         }
 
         const futureQuestsToggle = document.getElementById('show-future-quests');
+        // Restore saved state
+        futureQuestsToggle.checked = this.showFutureQuests;
         futureQuestsToggle.addEventListener('change', (e) => {
             this.showFutureQuests = e.target.checked;
+            this.savePreferences();
             this.updateUI();
         });
 
         const sortByTraderToggle = document.getElementById('sort-by-trader');
         if (sortByTraderToggle) {
+            // Restore saved state
+            sortByTraderToggle.checked = (this.sortBy === 'trader');
             sortByTraderToggle.addEventListener('change', (e) => {
                 this.sortBy = e.target.checked ? 'trader' : 'map';
                 if (this.sortBy === 'trader') {
@@ -192,6 +271,7 @@ class QuestTracker {
                 } else {
                     this.currentMap = 'Any Location';
                 }
+                this.savePreferences();
                 this.updateUI();
             });
         }
@@ -471,6 +551,29 @@ class QuestTracker {
             }
         };
         
+        // Close dialog when clicking outside
+        const handleOverlayClick = (e) => {
+            if (e.target.id === 'quest-image-viewer') {
+                dialog.style.display = 'none';
+                dialog.removeEventListener('click', handleOverlayClick);
+                document.removeEventListener('keydown', handleEscapeKey);
+            }
+        };
+        
+        // Close dialog with Escape key
+        const handleEscapeKey = (e) => {
+            if (e.key === 'Escape' || e.key === 'Esc') {
+                if (dialog.style.display === 'flex') {
+                    dialog.style.display = 'none';
+                    dialog.removeEventListener('click', handleOverlayClick);
+                    document.removeEventListener('keydown', handleEscapeKey);
+                }
+            }
+        };
+        
+        dialog.addEventListener('click', handleOverlayClick);
+        document.addEventListener('keydown', handleEscapeKey);
+        
         updateImage();
         dialog.style.display = 'flex';
     }
@@ -484,6 +587,7 @@ class QuestTracker {
     switchToDashboard() {
         this.viewMode = 'available';
         this.currentView = 'dashboard';
+        this.savePreferences();
         this.showView('dashboard');
         this.updateNavigationState();
         this.updateUI();
@@ -492,6 +596,7 @@ class QuestTracker {
     switchToFinishedQuests() {
         this.viewMode = 'finished';
         this.currentView = 'finished';
+        this.savePreferences();
         this.showView('finished');
         this.updateNavigationState();
         this.updateUI();
@@ -499,6 +604,7 @@ class QuestTracker {
 
     switchToRankings() {
         this.currentView = 'rankings';
+        this.savePreferences();
         this.showView('rankings');
         this.updateNavigationState();
         this.loadRankings();
@@ -506,6 +612,7 @@ class QuestTracker {
 
     switchToProfile() {
         this.currentView = 'profile';
+        this.savePreferences();
         this.showView('profile');
         this.updateNavigationState();
         this.loadProfile();
@@ -513,6 +620,7 @@ class QuestTracker {
     
     switchToFixQuests() {
         this.currentView = 'fix-quests';
+        this.savePreferences();
         this.showView('fix-quests');
         this.updateNavigationState();
         this.loadFixQuests();
@@ -520,6 +628,7 @@ class QuestTracker {
     
     showCollectorSection() {
         this.currentView = 'collector-items';
+        this.savePreferences();
         this.showView('collector-items');
         this.updateNavigationState();
         this.loadCollectorItems();
@@ -682,6 +791,12 @@ class QuestTracker {
             const objectives = this.parseObjectives(quest.objectives);
             const objectivesHtml = this.renderObjectives(objectives);
             
+            // Render notes if they exist
+            const notesHtml = this.renderNotes(quest.notes);
+            
+            // Render shopping list if it exists (for Gunsmith quests)
+            const shoppingListHtml = this.renderShoppingList(quest.shoppingList);
+            
             // Parse required items from server data
             const requiredItems = this.parseRequiredItems(quest.requiredItems);
             const itemsHtml = this.renderRequiredItems(requiredItems);
@@ -752,6 +867,8 @@ class QuestTracker {
                     </div>
                     <div class="quest-trader">${quest.trader}</div>
                     ${objectivesHtml}
+                    ${notesHtml}
+                    ${shoppingListHtml}
                     ${itemsHtml}
                     ${unlocksHtml}
                     ${additionalInfo}
@@ -871,6 +988,7 @@ class QuestTracker {
 
     switchMap(mapName) {
         this.currentMap = mapName;
+        this.savePreferences();
         this.updateUI();
     }
 
@@ -929,6 +1047,7 @@ class QuestTracker {
 
     switchTrader(traderName) {
         this.currentTrader = traderName;
+        this.savePreferences();
         this.updateUI();
     }
 
@@ -1149,6 +1268,86 @@ class QuestTracker {
             icon.classList.toggle('fa-chevron-down');
             icon.classList.toggle('fa-chevron-up');
         }
+    }
+
+    renderNotes(notes) {
+        if (!notes || notes.trim() === '') return '';
+        
+        // Escape HTML and preserve line breaks
+        const escapedNotes = notes
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;')
+            .replace(/\n/g, '<br>');
+        
+        return `
+            <div class="quest-notes">
+                <div class="quest-notes-icon">
+                    <i class="fas fa-sticky-note"></i>
+                </div>
+                <div class="quest-notes-text">${escapedNotes}</div>
+            </div>
+        `;
+    }
+
+    renderShoppingList(shoppingListJson) {
+        if (!shoppingListJson) return '';
+        
+        let shoppingList;
+        try {
+            shoppingList = JSON.parse(shoppingListJson);
+        } catch (e) {
+            return '';
+        }
+        
+        if (!Array.isArray(shoppingList) || shoppingList.length === 0) return '';
+        
+        // Sort: Base Weapon first, then rest in original order
+        const sortedList = [...shoppingList].sort((a, b) => {
+            if (a.trader === 'Base Weapon') return -1;
+            if (b.trader === 'Base Weapon') return 1;
+            return 0;
+        });
+        
+        const itemsHtml = sortedList.map(item => {
+            let traderInfo;
+            if (item.trader === 'Base Weapon') {
+                traderInfo = '<i class="fas fa-star"></i> Base Weapon';
+            } else {
+                const barterTag = item.isBarter ? ' <i class="fas fa-exchange-alt" title="Barter"></i>' : '';
+                traderInfo = item.trader ? `${item.trader} LL${item.loyaltyLevel || 1}${barterTag}` : 'Unknown';
+            }
+            return `
+                <div class="shopping-list-item">
+                    <span class="shopping-item-name">${this.escapeHtml(item.name)}</span>
+                    <span class="shopping-item-trader">${traderInfo}</span>
+                </div>
+            `;
+        }).join('');
+        
+        return `
+            <div class="quest-shopping-list">
+                <div class="shopping-list-header">
+                    <i class="fas fa-shopping-cart"></i> Shopping List
+                </div>
+                <div class="shopping-list-items">
+                    ${itemsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
     }
 
     parseRequiredItems(itemsJson) {
