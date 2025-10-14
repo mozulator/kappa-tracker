@@ -408,6 +408,18 @@ app.post('/api/admin/approve-user/:userId', requireAdmin, async (req, res) => {
             }
         });
         
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'approved_user',
+                targetUserId: userId,
+                targetUsername: user.username,
+                description: `Approved ${user.username} for leaderboard`
+            }
+        });
+        
         console.log(`Admin ${req.user.username} approved user for leaderboard: ${user.username}`);
         res.json({ message: 'User approved for leaderboard successfully', user });
     } catch (error) {
@@ -428,6 +440,18 @@ app.delete('/api/admin/reject-user/:userId', requireAdmin, async (req, res) => {
             select: {
                 username: true,
                 email: true
+            }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'removed_user',
+                targetUserId: userId,
+                targetUsername: user.username,
+                description: `Removed ${user.username} from leaderboard`
             }
         });
         

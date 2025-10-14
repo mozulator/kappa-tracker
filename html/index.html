@@ -1083,8 +1083,8 @@
                         return;
                     }
                     
-                    // Get quests from window.questTracker
-                    const quests = window.questTracker?.quests || [];
+                    // Get quests from window.tracker
+                    const quests = window.tracker?.quests || [];
                     const matches = quests
                         .filter(q => q.name.toLowerCase().includes(searchTerm))
                         .slice(0, 10); // Limit to 10 results
