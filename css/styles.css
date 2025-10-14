@@ -1976,10 +1976,11 @@ input[type="checkbox"]:focus {
     background: var(--post-bg);
     border: 1px solid var(--post-border);
     border-radius: 6px;
-    padding: 8px 0;
+    padding: 12px 0px;
     min-width: 250px;
     max-height: 400px;
     overflow-y: auto;
+    overflow-x: hidden;
     z-index: 1000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -1992,13 +1993,14 @@ input[type="checkbox"]:focus {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 16px;
+    padding: 8px 16px;
     cursor: pointer;
     transition: all 0.2s;
+    color: var(--text);
 }
 
 .user-checkbox-item:hover {
-    background: var(--post-bg-secondary);
+    background: rgba(199, 170, 106, 0.1);
 }
 
 .user-checkbox-item input[type="checkbox"] {
