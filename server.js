@@ -470,6 +470,7 @@ app.get('/api/admin/all-users', requireAdmin, async (req, res) => {
                 displayName: true,
                 approved: true,
                 isAdmin: true,
+                verified: true,
                 createdAt: true,
                 progress: {
                     select: {
@@ -1620,6 +1621,7 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
                 twitchUrl: true,
                 tarkovDevId: true,
                 avatarUrl: true,
+                verified: true,
                 progress: {
                     select: {
                         pmcLevel: true,
