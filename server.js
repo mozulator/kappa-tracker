@@ -1535,6 +1535,148 @@ app.get('/api/stats/global', apiLimiter, async (req, res) => {
 });
 
 // ============================================================================
+// STATISTICS ROUTES
+// ============================================================================
+
+app.get('/api/statistics', requireAuth, async (req, res) => {
+    try {
+        console.log('Statistics endpoint called by user:', req.user?.username);
+        const { compare } = req.query;
+        const isCompareMode = compare === 'true';
+        console.log('Compare mode:', isCompareMode);
+
+        if (isCompareMode) {
+            // Fetch all public users
+            const users = await prisma.user.findMany({
+                where: {
+                    isPublic: true,
+                    approved: true
+                },
+                select: {
+                    id: true,
+                    username: true,
+                    displayName: true,
+                    avatarUrl: true
+                }
+            });
+
+            const usersData = await Promise.all(users.map(async (user) => {
+                // Get all quest activities for this user
+                const activities = await prisma.questActivity.findMany({
+                    where: {
+                        userId: user.id,
+                        action: 'completed'
+                    },
+                    orderBy: {
+                        timestamp: 'asc'
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                username: true,
+                                displayName: true
+                            }
+                        }
+                    }
+                });
+
+                // Get quest details for activities
+                const activitiesWithDetails = await Promise.all(activities.map(async (activity) => {
+                    const quest = await prisma.quest.findUnique({
+                        where: { id: activity.questId },
+                        select: { trader: true }
+                    });
+                    
+                    return {
+                        questName: activity.questName,
+                        trader: quest?.trader || 'Unknown',
+                        completedAt: activity.timestamp,
+                        username: user.username,
+                        displayName: user.displayName
+                    };
+                }));
+
+                // Build cumulative progress data
+                const progressData = [];
+                let cumulativeCount = 0;
+                
+                activities.forEach((activity) => {
+                    cumulativeCount++;
+                    progressData.push({
+                        x: activity.timestamp,
+                        y: cumulativeCount
+                    });
+                });
+
+                return {
+                    username: user.username,
+                    displayName: user.displayName,
+                    avatarUrl: user.avatarUrl,
+                    progressData,
+                    activities: activitiesWithDetails
+                };
+            }));
+
+            res.json({ users: usersData });
+        } else {
+            // Single user mode
+            const userId = req.user.id;
+            console.log('Fetching statistics for user ID:', userId);
+
+            // Get all quest activities for current user
+            const activities = await prisma.questActivity.findMany({
+                where: {
+                    userId: userId,
+                    action: 'completed'
+                },
+                orderBy: {
+                    timestamp: 'asc'
+                }
+            });
+            console.log('Found activities:', activities.length);
+
+            // Get quest details for activities
+            const activitiesWithDetails = await Promise.all(activities.map(async (activity) => {
+                const quest = await prisma.quest.findUnique({
+                    where: { id: activity.questId },
+                    select: { trader: true }
+                });
+                
+                return {
+                    questName: activity.questName,
+                    trader: quest?.trader || 'Unknown',
+                    completedAt: activity.timestamp,
+                    username: req.user.username,
+                    displayName: req.user.displayName
+                };
+            }));
+
+            // Build cumulative progress data
+            const progressData = [];
+            let cumulativeCount = 0;
+            
+            activities.forEach((activity) => {
+                cumulativeCount++;
+                progressData.push({
+                    x: activity.timestamp,
+                    y: cumulativeCount
+                });
+            });
+
+            console.log('Sending response with', progressData.length, 'progress points');
+            res.json({
+                progressData,
+                activities: activitiesWithDetails
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching statistics:', error);
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ error: 'Failed to fetch statistics' });
+    }
+});
+
+// ============================================================================
 // QUEST INITIALIZATION (from original server.js)
 // ============================================================================
 

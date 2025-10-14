@@ -251,6 +251,14 @@ class QuestTracker {
             });
         }
 
+        const statisticsLink = document.getElementById('statistics-link');
+        if (statisticsLink) {
+            statisticsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showStatisticsSection();
+            });
+        }
+
         const futureQuestsToggle = document.getElementById('show-future-quests');
         // Restore saved state
         futureQuestsToggle.checked = this.showFutureQuests;
@@ -641,13 +649,32 @@ class QuestTracker {
         console.log('Collector items view loaded');
     }
 
+    showStatisticsSection() {
+        this.currentView = 'statistics';
+        this.savePreferences();
+        this.showView('statistics');
+        this.updateNavigationState();
+        this.loadStatistics();
+    }
+
+    async loadStatistics() {
+        console.log('Loading statistics...');
+        
+        // Initialize statistics
+        if (!window.statisticsManager) {
+            window.statisticsManager = new StatisticsManager();
+        }
+        
+        await window.statisticsManager.init();
+    }
+
     showView(view) {
         /*
          * Section Structure Rules:
          * - Each main page has a section in main-content with class matching the page name
          * - Class names are lowercase with hyphens instead of spaces
          * - Section IDs match the class names
-         * - Sections: dashboard, finished-quests, fix-quests, rankings, profile, collector-items
+         * - Sections: dashboard, finished-quests, fix-quests, rankings, profile, collector-items, statistics
          * - The sidebar is shown on dashboard and finished-quests only
          * - Quest Requirements sidebar (right-sidebar) is part of dashboard section only
          */
@@ -659,6 +686,7 @@ class QuestTracker {
         const rankings = document.getElementById('rankings');
         const profile = document.getElementById('profile');
         const collectorItems = document.getElementById('collector-items');
+        const statistics = document.getElementById('statistics');
         const sidebar = document.querySelector('.sidebar');
 
         if (dashboard) dashboard.style.display = 'none';
@@ -667,6 +695,7 @@ class QuestTracker {
         if (rankings) rankings.style.display = 'none';
         if (profile) profile.style.display = 'none';
         if (collectorItems) collectorItems.style.display = 'none';
+        if (statistics) statistics.style.display = 'none';
         if (sidebar) sidebar.style.display = 'none';
 
         // Show relevant section and sidebar based on view
@@ -684,6 +713,8 @@ class QuestTracker {
             if (profile) profile.style.display = 'block';
         } else if (view === 'collector-items') {
             if (collectorItems) collectorItems.style.display = 'block';
+        } else if (view === 'statistics') {
+            if (statistics) statistics.style.display = 'block';
         }
     }
 
@@ -2157,6 +2188,396 @@ class QuestTracker {
         }
         
         return 'just now';
+    }
+}
+
+// ============================================================================
+// STATISTICS MANAGER
+// ============================================================================
+
+class StatisticsManager {
+    constructor() {
+        this.chartInstance = null;
+        this.activityData = [];
+        this.compareMode = false;
+        this.allUsers = [];
+        this.selectedUsers = new Set();
+        this.userColors = {};
+        this.colors = [
+            '#c7aa6a', '#4169e1', '#dc143c', '#32cd32', '#ff69b4',
+            '#ffa500', '#9370db', '#00ced1', '#ff6347', '#98fb98'
+        ];
+    }
+
+    async init() {
+        // Restore saved user selections from localStorage
+        this.loadSavedSelections();
+        
+        // Set up event listeners
+        this.setupEventListeners();
+        
+        // Load initial data (always in compare mode)
+        await this.loadData(true);
+    }
+
+    loadSavedSelections() {
+        try {
+            const saved = localStorage.getItem('statistics_selected_users');
+            if (saved) {
+                const usernames = JSON.parse(saved);
+                this.selectedUsers = new Set(usernames);
+                console.log('Restored selected users:', Array.from(this.selectedUsers));
+            }
+        } catch (error) {
+            console.error('Error loading saved selections:', error);
+        }
+    }
+
+    saveSelections() {
+        try {
+            const usernames = Array.from(this.selectedUsers);
+            localStorage.setItem('statistics_selected_users', JSON.stringify(usernames));
+            console.log('Saved selected users:', usernames);
+        } catch (error) {
+            console.error('Error saving selections:', error);
+        }
+    }
+
+    setupEventListeners() {
+        const userFilter = document.getElementById('user-filter');
+        const userSelectorContainer = document.getElementById('user-selector-container');
+        const userSelectorBtn = document.getElementById('user-selector-btn');
+        const userSelectorMenu = document.getElementById('user-selector-menu');
+
+        // User selector dropdown toggle
+        if (userSelectorBtn && userSelectorMenu) {
+            userSelectorBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userSelectorMenu.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userSelectorContainer?.contains(e.target)) {
+                    userSelectorMenu.classList.remove('show');
+                }
+            });
+        }
+
+        if (userFilter) {
+            userFilter.addEventListener('change', () => {
+                if (this.activityData) {
+                    this.renderActivityLog(this.activityData, true);
+                }
+            });
+        }
+    }
+
+    async loadData(compareMode = true) {
+        try {
+            console.log('Loading statistics data');
+            const url = '/api/statistics?compare=true';
+            const response = await fetch(url, { credentials: 'include' });
+            
+            if (!response.ok) throw new Error('Failed to fetch statistics');
+            
+            const data = await response.json();
+            console.log('Statistics data received:', data);
+            
+            // Assign colors to users BEFORE initializing chart
+            this.allUsers = data.users;
+            data.users.forEach((user, index) => {
+                const color = this.colors[index % this.colors.length];
+                this.userColors[user.username] = color;
+            });
+            console.log('User colors assigned:', this.userColors);
+            
+            // Initialize chart
+            try {
+                this.initChart(data, true);
+                console.log('Chart initialized successfully');
+            } catch (chartError) {
+                console.error('Error initializing chart:', chartError);
+            }
+            
+            // Render activity log (do this even if chart fails)
+            
+            // Default to only current user selected if no saved selections
+            if (this.selectedUsers.size === 0 && window.currentUser) {
+                this.selectedUsers.add(window.currentUser.username);
+                this.saveSelections(); // Save the default
+            }
+            
+            this.populateUserSelector(data.users);
+            this.updateUserFilter(data.users);
+            
+            // Flatten all activities from all users
+            const allActivities = data.users.flatMap(u => u.activities || []);
+            allActivities.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+            this.activityData = allActivities;
+            this.renderActivityLog(allActivities, true);
+            console.log('Rendered activity log with', allActivities.length, 'activities (compare mode)');
+        } catch (error) {
+            console.error('Error loading statistics:', error);
+            // Show error message in activity log
+            const logContainer = document.getElementById('activity-log');
+            if (logContainer) {
+                logContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load statistics</p>
+                        <p style="font-size: 0.85rem; color: var(--subtext);">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    initChart(data, compareMode = true) {
+        const canvas = document.getElementById('questProgressChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Destroy existing chart
+        if (this.chartInstance) {
+            this.chartInstance.destroy();
+        }
+
+        const datasets = [];
+        
+        // Multi-user mode - only show selected users
+        data.users.forEach((userData) => {
+            // Only include if user is selected
+            if (!this.selectedUsers.has(userData.username)) return;
+            
+            const color = this.userColors[userData.username];
+            const isCurrentUser = userData.username === window.currentUser?.username;
+            
+            datasets.push({
+                label: userData.displayName || userData.username,
+                data: userData.progressData,
+                borderColor: color,
+                backgroundColor: color + '20',
+                borderWidth: isCurrentUser ? 3 : 2,
+                tension: 0.4,
+                fill: false,
+                pointRadius: isCurrentUser ? 4 : 3,
+                pointHoverRadius: isCurrentUser ? 6 : 5
+            });
+        });
+
+        this.chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleColor: '#c7aa6a',
+                        bodyColor: '#fff',
+                        borderColor: '#c7aa6a',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            title: function(context) {
+                                const date = new Date(context[0].parsed.x);
+                                return date.toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                            },
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y} quests`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            displayFormats: { day: 'MMM d' }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#888',
+                            font: { size: 11 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#888',
+                            font: { size: 11 },
+                            stepSize: 10
+                        },
+                        title: {
+                            display: true,
+                            text: 'Total Quests Completed',
+                            color: '#c7aa6a',
+                            font: { size: 12, weight: 'bold' }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    populateUserSelector(users) {
+        const menu = document.getElementById('user-selector-menu');
+        if (!menu) return;
+
+        menu.innerHTML = users.map(user => {
+            const color = this.userColors[user.username];
+            const isSelected = this.selectedUsers.has(user.username);
+            const isCurrentUser = user.username === window.currentUser?.username;
+            const displayName = (user.displayName || user.username) + (isCurrentUser ? ' (You)' : '');
+            
+            return `
+                <div class="user-checkbox-item">
+                    <input type="checkbox" 
+                           id="user-${user.username}" 
+                           ${isSelected ? 'checked' : ''}
+                           data-username="${user.username}">
+                    <div class="user-color-indicator" style="background: ${color};"></div>
+                    <label class="user-checkbox-label" for="user-${user.username}">
+                        ${displayName}
+                    </label>
+                </div>
+            `;
+        }).join('');
+
+        // Add event listeners to checkboxes
+        menu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const username = e.target.dataset.username;
+                if (e.target.checked) {
+                    this.selectedUsers.add(username);
+                } else {
+                    this.selectedUsers.delete(username);
+                }
+                // Save selections to localStorage
+                this.saveSelections();
+                // Reload chart with updated selection
+                this.loadData(true);
+            });
+        });
+    }
+
+    renderActivityLog(activities, compareMode = false) {
+        const logContainer = document.getElementById('activity-log');
+        if (!logContainer) return;
+
+        if (!activities || activities.length === 0) {
+            logContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No quest completions yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        const filterSelect = document.getElementById('user-filter');
+        const selectedUser = filterSelect ? filterSelect.value : 'all';
+
+        // Filter activities
+        let filteredActivities = activities;
+        if (compareMode && selectedUser !== 'all') {
+            filteredActivities = activities.filter(a => a.username === selectedUser);
+        }
+
+        logContainer.innerHTML = filteredActivities.map(activity => {
+            const date = new Date(activity.completedAt);
+            const timeAgo = this.getTimeAgo(date);
+            const isCurrentUser = activity.username === window.currentUser?.username;
+            const userColor = this.userColors[activity.username] || '#c7aa6a';
+            
+            return `
+                <div class="activity-item ${isCurrentUser ? 'current-user' : ''}" style="border-left-color: ${userColor};">
+                    <div class="activity-icon" style="background: ${userColor};">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-header">
+                            ${compareMode ? `<span class="activity-user" style="color: ${userColor};">${activity.displayName || activity.username}</span>` : ''}
+                            <span class="activity-quest">${activity.questName}</span>
+                        </div>
+                        <div class="activity-meta">
+                            <span class="activity-trader">
+                                <i class="fas fa-user-tie"></i> ${activity.trader}
+                            </span>
+                            <span class="activity-time">
+                                <i class="fas fa-clock"></i> ${timeAgo}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        const intervals = {
+            year: 31536000,
+            month: 2592000,
+            week: 604800,
+            day: 86400,
+            hour: 3600,
+            minute: 60
+        };
+
+        for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / secondsInUnit);
+            if (interval >= 1) {
+                return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+            }
+        }
+        return 'Just now';
+    }
+
+    updateUserFilter(users) {
+        const filterSelect = document.getElementById('user-filter');
+        if (!filterSelect) return;
+        
+        const currentValue = filterSelect.value;
+        
+        filterSelect.innerHTML = '<option value="all">All Users</option>';
+        
+        users.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.username;
+            option.textContent = user.displayName || user.username;
+            if (user.username === window.currentUser?.username) {
+                option.textContent += ' (You)';
+            }
+            filterSelect.appendChild(option);
+        });
+        
+        filterSelect.value = currentValue;
     }
 }
 
