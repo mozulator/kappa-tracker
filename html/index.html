@@ -322,6 +322,7 @@
                            data-height="600" 
                            data-theme="dark"
                            data-chrome="noheader nofooter noborders transparent"
+                           data-tweet-limit="5"
                            href="https://twitter.com/nikgeneburn?ref_src=twsrc%5Etfw">
                             Loading tweets from @nikgeneburn...
                         </a>
@@ -336,6 +337,7 @@
                            data-height="600" 
                            data-theme="dark"
                            data-chrome="noheader nofooter noborders transparent"
+                           data-tweet-limit="5"
                            href="https://twitter.com/bstategames?ref_src=twsrc%5Etfw">
                             Loading tweets from @bstategames...
                         </a>
@@ -350,8 +352,39 @@
                            data-height="600" 
                            data-theme="dark"
                            data-chrome="noheader nofooter noborders transparent"
+                           data-tweet-limit="5"
                            href="https://twitter.com/tarkov?ref_src=twsrc%5Etfw">
                             Loading tweets from @tarkov...
+                        </a>
+                    </div>
+
+                    <!-- Dmitri Ogorodnikov (@domontovich) -->
+                    <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
+                        <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
+                            <i class="fas fa-user"></i> Dmitri Ogorodnikov
+                        </h3>
+                        <a class="twitter-timeline" 
+                           data-height="600" 
+                           data-theme="dark"
+                           data-chrome="noheader nofooter noborders transparent"
+                           data-tweet-limit="5"
+                           href="https://twitter.com/domontovich?ref_src=twsrc%5Etfw">
+                            Loading tweets from @domontovich...
+                        </a>
+                    </div>
+
+                    <!-- Dmitry Ogay (@ogdmit) -->
+                    <div style="background: var(--post-bg); border: 1px solid var(--post-border); border-radius: 8px; padding: 20px;">
+                        <h3 style="color: var(--text-highlight); margin-bottom: 15px; font-size: 1.2rem;">
+                            <i class="fas fa-user"></i> Dmitry Ogay
+                        </h3>
+                        <a class="twitter-timeline" 
+                           data-height="600" 
+                           data-theme="dark"
+                           data-chrome="noheader nofooter noborders transparent"
+                           data-tweet-limit="5"
+                           href="https://twitter.com/ogdmit?ref_src=twsrc%5Etfw">
+                            Loading tweets from @ogdmit...
                         </a>
                     </div>
                 </div>
@@ -1226,7 +1259,7 @@
                 
                 try {
                     const reportData = { 
-                        type: currentReportType, 
+                        type: currentReportType === 'quest-error' ? 'bug' : currentReportType, 
                         title, 
                         description
                     };
@@ -1786,32 +1819,42 @@
                 if (changedFields && changedFields.length > 0) {
                     setTimeout(() => {
                         const fieldMapping = {
-                            'trader': 'edit-trader-dialog',
-                            'level': 'edit-level-dialog',
-                            'mapName': 'edit-map-dialog',
-                            'requiredForKappa': 'edit-kappa-required-dialog',
-                            'notes': 'edit-notes-dialog',
-                            'images': 'edit-images-dialog',
-                            'shoppingList': 'shopping-list-section-dialog',
-                            'prerequisiteQuests': 'selected-prereqs-dialog',
-                            'requiredItems': 'edit-markers-dialog'
+                            'trader': ['edit-trader-dialog'],
+                            'level': ['edit-level-dialog'],
+                            'mapName': ['edit-map-dialog'],
+                            'requiredForKappa': ['edit-kappa-required-dialog'],
+                            'notes': ['edit-notes-dialog'],
+                            'images': ['edit-images-dialog'],
+                            'shoppingList': ['shopping-list-section-dialog'],
+                            'prerequisiteQuests': ['selected-prereqs-dialog'],
+                            'requiredItems': ['edit-markers-dialog', 'edit-jammers-dialog', 'edit-cameras-dialog', 'keys-editor-dialog', 'fir-items-editor-dialog']
                         };
                         
-                        changedFields.forEach(field => {
-                            const elementId = fieldMapping[field];
-                            if (elementId) {
-                                const element = document.getElementById(elementId);
-                                if (element) {
-                                    element.style.border = '3px solid #f44336';
-                                    element.style.boxShadow = '0 0 10px rgba(244, 67, 54, 0.5)';
-                                    
-                                    // Scroll to first highlighted field
-                                    if (changedFields.indexOf(field) === 0) {
-                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const uniqueFields = [...new Set(changedFields)]; // Remove duplicates
+                        let firstElement = null;
+                        
+                        uniqueFields.forEach(field => {
+                            const elementIds = fieldMapping[field];
+                            if (elementIds) {
+                                elementIds.forEach(elementId => {
+                                    const element = document.getElementById(elementId);
+                                    if (element) {
+                                        element.style.border = '3px solid #f44336';
+                                        element.style.boxShadow = '0 0 10px rgba(244, 67, 54, 0.5)';
+                                        
+                                        // Track first element for scrolling
+                                        if (!firstElement) {
+                                            firstElement = element;
+                                        }
                                     }
-                                }
+                                });
                             }
                         });
+                        
+                        // Scroll to first highlighted field
+                        if (firstElement) {
+                            firstElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
                     }, 300);
                 }
             };

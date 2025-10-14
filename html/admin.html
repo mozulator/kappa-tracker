@@ -602,7 +602,13 @@
                         if (change.includes('Images:')) return 'images';
                         if (change.includes('Shopping list:')) return 'shoppingList';
                         if (change.includes('Prerequisites')) return 'prerequisiteQuests';
-                        if (change.includes('Required items')) return 'requiredItems';
+                        // All item-related changes map to requiredItems
+                        if (change.includes('Markers:') || 
+                            change.includes('Cameras:') || 
+                            change.includes('Jammers:') ||
+                            change.includes('Keys:') ||
+                            change.includes('FIR items:') ||
+                            change.includes('Required items')) return 'requiredItems';
                         return null;
                     }).filter(f => f);
                     
