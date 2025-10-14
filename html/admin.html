@@ -584,7 +584,7 @@
                     'deleted_user': '<i class="fas fa-trash" style="color: #f44336;"></i>',
                     'granted_admin': '<i class="fas fa-crown" style="color: #ffd700;"></i>',
                     'revoked_admin': '<i class="fas fa-user-minus" style="color: #ff9800;"></i>',
-                    'verified_user': '<i class="fas fa-badge-check" style="color: #2196F3;"></i>',
+                    'verified_user': '<i class="fas fa-circle-check" style="color: #2196F3;"></i>',
                     'unverified_user': '<i class="fas fa-times-circle" style="color: #ff9800;"></i>',
                     'added_to_leaderboard': '<i class="fas fa-trophy" style="color: #4CAF50;"></i>',
                     'removed_from_leaderboard': '<i class="fas fa-user-slash" style="color: #ff9800;"></i>',
@@ -679,7 +679,7 @@
                         <div class="name">
                             ${user.displayName || user.username}
                             ${user.isAdmin ? '<i class="fas fa-crown" style="color: #ffd700; margin-left: 8px;" title="Admin"></i>' : ''}
-                            ${user.verified ? '<i class="fas fa-badge-check" style="color: #2196F3; margin-left: 8px;" title="Verified User"></i>' : ''}
+                            ${user.verified ? '<i class="fas fa-circle-check" style="color: #2196F3; margin-left: 8px;" title="Verified User"></i>' : ''}
                             ${!user.approved ? '<i class="fas fa-ban" style="color: #ff9800; margin-left: 8px;" title="Not on Leaderboard"></i>' : '<i class="fas fa-trophy" style="color: #4CAF50; margin-left: 8px;" title="On Leaderboard"></i>'}
                         </div>
                         <div class="details">
@@ -702,11 +702,11 @@
                         `}
                         ${user.verified ? `
                             <button class="btn btn-warning" onclick="toggleVerified('${user.id}', '${user.username}', false)">
-                                <i class="fas fa-badge-check"></i> Remove Verification
+                                <i class="fas fa-circle-check"></i> Remove Verification
                             </button>
                         ` : `
                             <button class="btn btn-approve" onclick="toggleVerified('${user.id}', '${user.username}', true)" style="background: #2196F3; color: #fff;">
-                                <i class="fas fa-badge-check"></i> Verify User
+                                <i class="fas fa-circle-check"></i> Verify User
                             </button>
                         `}
                         ${!user.isAdmin ? `
