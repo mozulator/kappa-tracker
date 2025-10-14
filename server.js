@@ -526,7 +526,6 @@ app.put('/api/admin/toggle-admin/:userId', requireAdmin, async (req, res) => {
                 description: isAdmin 
                     ? `Granted admin access to ${targetUser.username}`
                     : `Revoked admin access from ${targetUser.username}`
-            }
         });
         
         console.log(`Admin ${req.user.username} ${isAdmin ? 'granted' : 'revoked'} admin access for user: ${targetUser.username}`);
@@ -572,7 +571,6 @@ app.put('/api/admin/toggle-leaderboard/:userId', requireAdmin, async (req, res) 
                 description: approved 
                     ? `Added ${targetUser.username} to leaderboard`
                     : `Removed ${targetUser.username} from leaderboard`
-            }
         });
         
         console.log(`Admin ${req.user.username} ${approved ? 'added to' : 'removed from'} leaderboard: ${targetUser.username}`);
@@ -623,7 +621,6 @@ app.delete('/api/admin/delete-user/:userId', requireAdmin, async (req, res) => {
                 targetUserId: userId,
                 targetUsername: targetUser.username,
                 description: `Deleted user ${targetUser.username}`
-            }
         });
         
         console.log(`Admin ${req.user.username} deleted user: ${targetUser.username}`);
@@ -1338,7 +1335,6 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
                 targetUserId: null,
                 targetUsername: null,
                 description: description
-            }
         });
 
         console.log(`Admin ${req.user.username} updated quest: ${quest.name}`);
