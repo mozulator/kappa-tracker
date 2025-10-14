@@ -1311,6 +1311,9 @@ class QuestTracker {
             return 0;
         });
         
+        // Generate unique ID for this shopping list
+        const uniqueId = 'shopping-' + Math.random().toString(36).substr(2, 9);
+        
         const itemsHtml = sortedList.map(item => {
             let traderInfo;
             if (item.trader === 'Base Weapon') {
@@ -1329,14 +1332,27 @@ class QuestTracker {
         
         return `
             <div class="quest-shopping-list">
-                <div class="shopping-list-header">
-                    <i class="fas fa-shopping-cart"></i> Shopping List
+                <div class="shopping-list-header" onclick="window.tracker.toggleShoppingList('${uniqueId}')">
+                    <div class="shopping-list-title">
+                        <i class="fas fa-shopping-cart"></i> Shopping List
+                    </div>
+                    <i id="${uniqueId}-icon" class="fas fa-chevron-up shopping-toggle-icon"></i>
                 </div>
-                <div class="shopping-list-items">
+                <div id="${uniqueId}" class="shopping-list-items">
                     ${itemsHtml}
                 </div>
             </div>
         `;
+    }
+
+    toggleShoppingList(id) {
+        const list = document.getElementById(id);
+        const icon = document.getElementById(`${id}-icon`);
+        if (list && icon) {
+            list.classList.toggle('collapsed');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
     }
 
     escapeHtml(text) {

@@ -902,13 +902,30 @@ input[type="checkbox"]:focus {
 .shopping-list-header {
     background: rgba(199, 170, 106, 0.1);
     padding: 8px 12px;
+    border-bottom: 1px dashed var(--post-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.shopping-list-header:hover {
+    background: rgba(199, 170, 106, 0.15);
+}
+
+.shopping-list-title {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-highlight);
-    border-bottom: 1px dashed var(--post-border);
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.shopping-toggle-icon {
+    font-size: 0.75rem;
+    color: var(--subtext);
 }
 
 .shopping-list-items {
@@ -916,16 +933,28 @@ input[type="checkbox"]:focus {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    opacity: 1;
+}
+
+.shopping-list-items.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding: 0 8px;
 }
 
 .shopping-list-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     padding: 6px 8px;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 4px;
     transition: background 0.2s ease;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
 }
 
 .shopping-list-item:hover {
