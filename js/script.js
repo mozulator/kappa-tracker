@@ -1787,7 +1787,7 @@ class QuestTracker {
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background: rgba(199, 170, 106, 0.1);">
-                                    <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Rank</th>
+                                    <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a; width: 60px;">Rank</th>
                                     <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a; width: 60px;">Verified</th>
                                     <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Player</th>
                                     <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">PMC Level</th>
@@ -1810,7 +1810,7 @@ class QuestTracker {
                                         <tr style="border-bottom: 1px solid #2a2a2a; transition: background 0.2s;">
                                             <td style="padding: 15px; color: ${rankColor}; font-weight: 700; font-size: 18px;">#${rank}</td>
                                             <td style="padding: 15px; text-align: center;">
-                                                ${user.verified ? '<i class="fas fa-circle-check" style="color: #2196F3; font-size: 20px;" title="Verified User"></i>' : ''}
+                                                ${user.verified ? '<i class="fas fa-circle-check" style="color: #2196F3; font-size: 20px;" title="User is streaming his Kappa Progress on Twitch."></i>' : ''}
                                             </td>
                                             <td style="padding: 15px;">
                                                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -1927,7 +1927,7 @@ class QuestTracker {
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: rgba(199, 170, 106, 0.1);">
-                            <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Rank</th>
+                            <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a; width: 60px;">Rank</th>
                             <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a; width: 60px;">Verified</th>
                             <th style="padding: 15px; text-align: left; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">Player</th>
                             <th style="padding: 15px; text-align: center; color: #c7aa6a; font-weight: 600; border-bottom: 2px solid #3a3a3a;">PMC Level</th>
@@ -1950,7 +1950,7 @@ class QuestTracker {
                                 <tr style="border-bottom: 1px solid #2a2a2a; transition: background 0.2s;">
                                     <td style="padding: 15px; color: ${rankColor}; font-weight: 700; font-size: 18px;">#${rank}</td>
                                     <td style="padding: 15px; text-align: center;">
-                                        ${user.verified ? '<i class="fas fa-circle-check" style="color: #2196F3; font-size: 20px;" title="Verified User"></i>' : ''}
+                                        ${user.verified ? '<i class="fas fa-circle-check" style="color: #2196F3; font-size: 20px;" title="User is streaming his Kappa Progress on Twitch."></i>' : ''}
                                     </td>
                                     <td style="padding: 15px;">
                                         <div style="display: flex; align-items: center; gap: 12px;">
