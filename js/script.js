@@ -2509,7 +2509,10 @@ class StatisticsManager {
             filteredActivities = activities.filter(a => a.username === selectedUser);
         }
 
-        logContainer.innerHTML = filteredActivities.map(activity => {
+        // Limit to 100 most recent activities for performance
+        const limitedActivities = filteredActivities.slice(0, 100);
+        
+        logContainer.innerHTML = limitedActivities.map(activity => {
             const date = new Date(activity.completedAt);
             const timeAgo = this.getTimeAgo(date);
             const isCurrentUser = activity.username === window.currentUser?.username;
@@ -2537,6 +2540,11 @@ class StatisticsManager {
                 </div>
             `;
         }).join('');
+        
+        // Show count if limited
+        if (filteredActivities.length > 100) {
+            console.log(`Showing 100 of ${filteredActivities.length} activities`);
+        }
     }
 
     getTimeAgo(date) {
