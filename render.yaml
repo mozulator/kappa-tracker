@@ -7,6 +7,7 @@ services:
     branch: main
     buildCommand: npm install && npx prisma generate
     startCommand: npx prisma migrate deploy && node server.js
+    # Force rebuild for verified field - 2025-10-14
     envVars:
       - key: NODE_ENV
         value: production
