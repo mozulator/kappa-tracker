@@ -583,15 +583,42 @@
                 
                 const icon = actionIcons[log.action] || '<i class="fas fa-cog"></i>';
                 
+                // Parse quest fix description (format: "QuestName|Change1|Change2|...")
+                let displayContent = log.description;
+                let changesHtml = '';
+                
+                if (log.action === 'fixed_quest' && log.description.includes('|')) {
+                    const parts = log.description.split('|');
+                    const questName = parts[0];
+                    const changes = parts.slice(1);
+                    
+                    displayContent = `<strong style="color: #c7aa6a;">Quest:</strong> ${questName}`;
+                    if (changes.length > 0) {
+                        changesHtml = `
+                            <div style="margin-top: 6px; padding-left: 28px; font-size: 12px; color: #aaa;">
+                                ${changes.map(change => `
+                                    <div style="margin: 2px 0; padding: 3px 8px; background: rgba(33, 150, 243, 0.1); border-left: 2px solid #2196F3; border-radius: 3px;">
+                                        <i class="fas fa-arrow-right" style="font-size: 10px; margin-right: 6px; color: #2196F3;"></i>${change}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+                }
+                
                 return `
-                    <div class="user-card" style="padding: 12px;">
+                    <div class="user-card" style="padding: 12px; border-left: 3px solid ${log.action === 'fixed_quest' ? '#2196F3' : log.action.includes('delete') ? '#f44336' : log.action.includes('admin') ? '#ffd700' : '#4CAF50'};">
                         <div class="user-info-section" style="flex: 1;">
                             <div class="name" style="font-size: 14px; display: flex; align-items: center; gap: 8px;">
                                 ${icon}
-                                <span>${log.description}</span>
+                                <span>${displayContent}</span>
                             </div>
-                            <div class="date" style="margin-top: 4px; font-size: 11px;">
-                                By: <span style="color: #c7aa6a;">${log.adminUsername}</span> • 
+                            ${changesHtml}
+                            <div class="date" style="margin-top: 6px; font-size: 11px; color: #666;">
+                                <i class="fas fa-user-shield" style="margin-right: 4px;"></i>
+                                <span style="color: #c7aa6a;">${log.adminUsername}</span>
+                                <span style="margin: 0 6px;">•</span>
+                                <i class="fas fa-clock" style="margin-right: 4px;"></i>
                                 ${new Date(log.createdAt).toLocaleString()}
                             </div>
                         </div>

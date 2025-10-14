@@ -1144,10 +1144,9 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
         const { questId } = req.params;
         const { trader, level, requiredForKappa, mapName, prerequisiteQuests, requiredItems, images, notes, shoppingList } = req.body;
 
-        // Validate quest exists
+        // Validate quest exists and get current data
         const quest = await prisma.quest.findUnique({
-            where: { id: questId },
-            select: { id: true, name: true }
+            where: { id: questId }
         });
 
         if (!quest) {
@@ -1156,67 +1155,95 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
 
         // Build update data
         const updateData = {};
+        const changes = []; // Track what changed
         
-        if (trader !== undefined) {
+        if (trader !== undefined && trader !== quest.trader) {
             updateData.trader = trader;
+            changes.push(`Trader: ${quest.trader} → ${trader}`);
         }
         
-        if (level !== undefined) {
+        if (level !== undefined && parseInt(level) !== quest.level) {
             updateData.level = parseInt(level);
+            changes.push(`Level: ${quest.level} → ${level}`);
         }
         
-        if (requiredForKappa !== undefined) {
+        if (requiredForKappa !== undefined && Boolean(requiredForKappa) !== quest.requiredForKappa) {
             updateData.requiredForKappa = Boolean(requiredForKappa);
+            changes.push(`Kappa: ${quest.requiredForKappa} → ${requiredForKappa}`);
         }
         
-        if (mapName !== undefined) {
+        if (mapName !== undefined && mapName !== quest.mapName) {
             updateData.mapName = mapName;
+            changes.push(`Map: ${quest.mapName || 'none'} → ${mapName || 'none'}`);
         }
         
-        if (prerequisiteQuests !== undefined) {
+        if (prerequisiteQuests !== undefined && prerequisiteQuests !== quest.prerequisiteQuests) {
             // Validate it's valid JSON
             try {
                 JSON.parse(prerequisiteQuests);
                 updateData.prerequisiteQuests = prerequisiteQuests;
+                changes.push('Prerequisites updated');
             } catch (e) {
                 return res.status(400).json({ error: 'Invalid prerequisiteQuests JSON' });
             }
         }
         
-        if (requiredItems !== undefined) {
+        if (requiredItems !== undefined && requiredItems !== quest.requiredItems) {
             // Validate it's valid JSON
             try {
                 JSON.parse(requiredItems);
                 updateData.requiredItems = requiredItems;
+                changes.push('Required items updated');
             } catch (e) {
                 return res.status(400).json({ error: 'Invalid requiredItems JSON' });
             }
         }
         
-        if (images !== undefined) {
+        if (images !== undefined && images !== quest.images) {
             // Validate it's valid JSON
             try {
                 JSON.parse(images);
                 updateData.images = images;
+                const oldImages = JSON.parse(quest.images || '[]');
+                const newImages = JSON.parse(images);
+                changes.push(`Images: ${oldImages.length} → ${newImages.length}`);
             } catch (e) {
                 return res.status(400).json({ error: 'Invalid images JSON' });
             }
         }
         
-        if (notes !== undefined) {
+        if (notes !== undefined && (notes || null) !== quest.notes) {
             // Allow null or empty string to clear notes, otherwise store as string
             updateData.notes = notes || null;
+            if (!quest.notes && notes) {
+                changes.push('Notes added');
+            } else if (quest.notes && !notes) {
+                changes.push('Notes removed');
+            } else {
+                changes.push('Notes updated');
+            }
             console.log('Notes received:', notes, '-> Storing as:', updateData.notes);
         }
         
-        if (shoppingList !== undefined) {
+        if (shoppingList !== undefined && shoppingList !== quest.shoppingList) {
             // Validate it's valid JSON
             try {
                 JSON.parse(shoppingList);
                 updateData.shoppingList = shoppingList;
+                const oldList = JSON.parse(quest.shoppingList || '[]');
+                const newList = JSON.parse(shoppingList);
+                changes.push(`Shopping list: ${oldList.length} → ${newList.length} items`);
             } catch (e) {
                 return res.status(400).json({ error: 'Invalid shoppingList JSON' });
             }
+        }
+
+        // Only proceed if there are actual changes
+        if (changes.length === 0) {
+            return res.json({
+                message: 'No changes detected',
+                quest: quest
+            });
         }
 
         console.log('Update data being sent to Prisma:', updateData);
@@ -1227,19 +1254,8 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
             data: updateData
         });
 
-        // Build description of changes
-        const changedFields = [];
-        if (trader !== undefined) changedFields.push(`trader: ${trader}`);
-        if (level !== undefined) changedFields.push(`level: ${level}`);
-        if (requiredForKappa !== undefined) changedFields.push(`requiredForKappa: ${requiredForKappa}`);
-        if (mapName !== undefined) changedFields.push(`map: ${mapName}`);
-        if (prerequisiteQuests !== undefined) changedFields.push(`prerequisites`);
-        if (requiredItems !== undefined) changedFields.push(`required items`);
-        if (images !== undefined) changedFields.push(`images`);
-        if (notes !== undefined) changedFields.push(`notes`);
-        if (shoppingList !== undefined) changedFields.push(`shopping list`);
-        
-        const description = `Fixed quest "${quest.name}"${changedFields.length > 0 ? ` - Changed: ${changedFields.join(', ')}` : ''}`;
+        // Build description with quest name and changes
+        const description = `${quest.name}|${changes.join('|')}`;
 
         // Log admin action
         await prisma.adminLog.create({
