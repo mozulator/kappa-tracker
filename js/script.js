@@ -143,7 +143,7 @@ class QuestTracker {
 
     async saveProgress() {
         try {
-            await fetch('/api/progress', {
+            const response = await fetch('/api/progress', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -151,6 +151,14 @@ class QuestTracker {
                 body: JSON.stringify(this.userProgress),
                 credentials: 'include'
             });
+            
+            // Get updated progress from server (includes auto-completed quests)
+            if (response.ok) {
+                const data = await response.json();
+                if (data.completedQuests) {
+                    this.userProgress.completedQuests = data.completedQuests;
+                }
+            }
         } catch (error) {
             console.error('Error saving progress:', error);
         }
@@ -834,6 +842,9 @@ class QuestTracker {
             
             // Find quests unlocked by completing this quest
             const unlocksHtml = this.renderUnlockedQuests(quest.id);
+            
+            // Find quests that will be auto-completed
+            const autoCompleteHtml = this.renderAutoCompleteQuests(quest.id);
 
             // Choose button and additional info based on view mode
             let buttonHtml, additionalInfo = '';
@@ -902,6 +913,7 @@ class QuestTracker {
                     ${shoppingListHtml}
                     ${itemsHtml}
                     ${unlocksHtml}
+                    ${autoCompleteHtml}
                     ${additionalInfo}
                     ${buttonHtml}
                 </div>
@@ -1524,6 +1536,38 @@ class QuestTracker {
                 <div class="unlocks-text">${questLinks.join(', ')}${moreCount}</div>
             </div>
         `;
+    }
+
+    renderAutoCompleteQuests(questId) {
+        // Find current quest to get its autoCompleteQuests
+        const currentQuest = this.quests.find(q => q.id === questId);
+        if (!currentQuest || !currentQuest.autoCompleteQuests) return '';
+        
+        try {
+            const autoCompleteIds = JSON.parse(currentQuest.autoCompleteQuests);
+            if (autoCompleteIds.length === 0) return '';
+            
+            // Get the actual quest objects
+            const autoCompleteQuests = autoCompleteIds
+                .map(id => this.quests.find(q => q.id === id))
+                .filter(q => q); // Remove any null/undefined
+            
+            if (autoCompleteQuests.length === 0) return '';
+            
+            const questLinks = autoCompleteQuests.slice(0, 2).map(quest => 
+                quest.wikiLink ? `<a href="${quest.wikiLink}" target="_blank" class="unlock-link">${quest.name}</a>` : quest.name
+            );
+            const moreCount = autoCompleteQuests.length > 2 ? ` (+${autoCompleteQuests.length - 2} more)` : '';
+            
+            return `
+                <div class="quest-autocomplete">
+                    <div class="quest-autocomplete-title"><i class="fas fa-magic"></i> Auto-completes:</div>
+                    <div class="autocomplete-text">${questLinks.join(', ')}${moreCount}</div>
+                </div>
+            `;
+        } catch (e) {
+            return '';
+        }
     }
 
     showResetDialog() {

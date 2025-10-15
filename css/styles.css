@@ -1035,7 +1035,6 @@ input[type="checkbox"]:focus {
     margin-bottom: 12px;
     padding-top: 8px;
     border-top: 1px solid var(--post-border);
-    margin-bottom: auto;
 }
 
 .quest-unlocks-title {
@@ -1065,6 +1064,32 @@ input[type="checkbox"]:focus {
 
 .unlock-link:hover {
     text-decoration: underline;
+}
+
+/* Quest Auto-Complete Section */
+.quest-autocomplete {
+    margin-top: 8px;
+    margin-bottom: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--post-border);
+}
+
+.quest-autocomplete-title {
+    font-size: 0.8rem;
+    color: #c7aa6a;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.autocomplete-text {
+    font-size: 0.8rem;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.3;
+    margin-bottom: 12px;
 }
 
 .quest-locked {
@@ -1149,6 +1174,7 @@ input[type="checkbox"]:focus {
     font-size: 0.9rem;
     font-weight: 700;
     width: 100%;
+    margin-top: auto;
     flex-shrink: 0;
 }
 
