@@ -1344,19 +1344,6 @@
                     }
                 });
 
-                // Quest search
-                const fixQuestSearch = document.getElementById('fix-quest-search');
-                if (fixQuestSearch) {
-                    fixQuestSearch.addEventListener('input', function() {
-                        const search = this.value.toLowerCase();
-                        const filtered = allQuestsForEdit.filter(q => 
-                            q.name.toLowerCase().includes(search) ||
-                            q.trader.toLowerCase().includes(search)
-                        );
-                        displayQuestsForFixing(filtered);
-                    });
-                }
-
                 // Dialog handlers
                 setupQuestEditDialog();
             }
@@ -1386,7 +1373,7 @@
 
                 // Custom card layout for fix quests
                 grid.innerHTML = quests.map(quest => `
-                    <div class="quest-card fix-quest-card" data-quest-id="${quest.id}" data-quest-name="${quest.name.toLowerCase()}" data-trader="${quest.trader.toLowerCase()}">
+                    <div class="fix-quest-card" data-quest-name="${quest.name.toLowerCase()}" data-trader="${quest.trader.toLowerCase()}" style="display: flex;">
                         <div class="fix-quest-title">${quest.name}</div>
                         <span class="level-badge">Lvl ${quest.level}</span>
                         <span class="trader-badge">${quest.trader}</span>
