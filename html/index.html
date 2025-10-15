@@ -1391,9 +1391,15 @@
                 const prereqSearch = document.getElementById('prereq-search-dialog');
                 const prereqDropdown = document.getElementById('prereq-dropdown-dialog');
                 
+                console.log('setupQuestEditDialog called');
+                console.log('prereqSearch element:', prereqSearch);
+                console.log('prereqDropdown element:', prereqDropdown);
+                
                 if (prereqSearch) {
+                    console.log('Adding input listener to prereqSearch');
                     prereqSearch.addEventListener('input', (e) => {
                         const searchTerm = e.target.value.toLowerCase().trim();
+                        console.log('Prereq search input:', searchTerm, 'Quest count:', allQuestsForEdit.length);
                         
                         if (searchTerm.length < 2) {
                             prereqDropdown.style.display = 'none';
@@ -1445,9 +1451,14 @@
                 const autocompleteSearch = document.getElementById('autocomplete-search-dialog');
                 const autocompleteDropdown = document.getElementById('autocomplete-dropdown-dialog');
                 
+                console.log('autocompleteSearch element:', autocompleteSearch);
+                console.log('autocompleteDropdown element:', autocompleteDropdown);
+                
                 if (autocompleteSearch) {
+                    console.log('Adding input listener to autocompleteSearch');
                     autocompleteSearch.addEventListener('input', (e) => {
                         const searchTerm = e.target.value.toLowerCase().trim();
+                        console.log('Autocomplete search input:', searchTerm, 'Quest count:', allQuestsForEdit.length);
                         
                         if (searchTerm.length < 2) {
                             autocompleteDropdown.style.display = 'none';
