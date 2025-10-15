@@ -629,6 +629,22 @@
                             </div>
                         </div>
 
+                        <!-- Auto Complete Quests -->
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                                <i class="fas fa-magic"></i> Auto Complete Quests When This Quest is Completed
+                            </h4>
+                            <label style="display: block; color: #888; margin-bottom: 5px; font-size: 12px;">Search and Add Quests to Auto-Complete</label>
+                            <div style="position: relative;">
+                                <input type="text" id="autocomplete-search-dialog" placeholder="Type to search quests..." style="width: 100%; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff;">
+                                <div id="autocomplete-dropdown-dialog" style="position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background: rgba(20, 20, 20, 0.98); border: 2px solid #c7aa6a; border-radius: 6px; margin-top: 5px; z-index: 2000; display: none;"></div>
+                            </div>
+                            <div id="selected-autocomplete-dialog" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+                                <!-- Selected auto-complete quests will appear here -->
+                            </div>
+                            <small style="color: #666; font-size: 11px; margin-top: 8px; display: block;">When users complete this quest, the selected quests will be automatically marked as completed. Uncompleting this quest will also uncomplete them.</small>
+                        </div>
+
                         <!-- Quest Images -->
                         <div style="margin-bottom: 25px;">
                             <h4 style="color: #c7aa6a; margin: 0 0 15px 0; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
@@ -1220,6 +1236,7 @@
             let allQuestsForEdit = [];
             let selectedQuestForEdit = null;
             let selectedPrereqsForEdit = new Set();
+            let selectedAutoCompleteForEdit = new Set();
             let isAdminUser = false;
             let tarkovItems = []; // All items from tarkov.dev
             let tarkovItemsLoaded = false;
@@ -1384,16 +1401,16 @@
 
             function setupQuestEditDialog() {
                 // Event listener is now attached in openQuestEditDialog() each time the dialog opens
-                // This function is kept for the prerequisite search setup only
+                // This function is kept for the prerequisite and auto-complete search setup only
 
                 // Prerequisite quest search
                 const prereqSearch = document.getElementById('prereq-search-dialog');
                 if (prereqSearch) {
                     prereqSearch.addEventListener('input', function() {
-                        const search = this.value.toLowerCase();
+                        const search = this.value.toLowerCase().trim();
                         const dropdown = document.getElementById('prereq-dropdown-dialog');
                         
-                        if (search.length < 2) {
+                        if (search.length < 1) {
                             dropdown.style.display = 'none';
                             return;
                         }
@@ -1420,6 +1437,57 @@
                         setTimeout(() => {
                             document.getElementById('prereq-dropdown-dialog').style.display = 'none';
                         }, 200);
+                    });
+
+                    prereqSearch.addEventListener('focus', function() {
+                        if (this.value.trim().length >= 1) {
+                            const event = new Event('input');
+                            this.dispatchEvent(event);
+                        }
+                    });
+                }
+
+                // Auto-complete quest search
+                const autocompleteSearch = document.getElementById('autocomplete-search-dialog');
+                if (autocompleteSearch) {
+                    autocompleteSearch.addEventListener('input', function() {
+                        const search = this.value.toLowerCase().trim();
+                        const dropdown = document.getElementById('autocomplete-dropdown-dialog');
+                        
+                        if (search.length < 1) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+
+                        const filtered = allQuestsForEdit.filter(q => 
+                            q.name.toLowerCase().includes(search) && 
+                            q.id !== selectedQuestForEdit.id &&
+                            !selectedAutoCompleteForEdit.has(q.id)
+                        );
+
+                        if (filtered.length === 0) {
+                            dropdown.innerHTML = '<div style="padding:10px;color:#888;">No quests found</div>';
+                        } else {
+                            dropdown.innerHTML = filtered.slice(0, 10).map(q => `
+                                <div onclick="addAutoCompleteDialog('${q.id}', '${q.name.replace(/'/g, "\\'")}', '${q.trader}')" style="padding:10px;cursor:pointer;color:#fff;border-bottom:1px solid #2a2a2a;">
+                                    ${q.name} <span style="color:#888;">(${q.trader})</span>
+                                </div>
+                            `).join('');
+                        }
+                        dropdown.style.display = 'block';
+                    });
+
+                    autocompleteSearch.addEventListener('blur', function() {
+                        setTimeout(() => {
+                            document.getElementById('autocomplete-dropdown-dialog').style.display = 'none';
+                        }, 200);
+                    });
+
+                    autocompleteSearch.addEventListener('focus', function() {
+                        if (this.value.trim().length >= 1) {
+                            const event = new Event('input');
+                            this.dispatchEvent(event);
+                        }
                     });
                 }
             }
@@ -1484,6 +1552,10 @@
                 // Load prerequisite quests
                 selectedPrereqsForEdit = new Set(JSON.parse(selectedQuestForEdit.prerequisiteQuests || '[]'));
                 updatePrereqsDisplayDialog();
+
+                // Load auto-complete quests
+                selectedAutoCompleteForEdit = new Set(JSON.parse(selectedQuestForEdit.autoCompleteQuests || '[]'));
+                updateAutoCompleteDisplayDialog();
 
                 // Load required items
                 const requiredItems = JSON.parse(selectedQuestForEdit.requiredItems || '[]');
@@ -2016,6 +2088,36 @@
                 }).join('');
             }
 
+            window.addAutoCompleteDialog = function(id, name, trader) {
+                selectedAutoCompleteForEdit.add(id);
+                updateAutoCompleteDisplayDialog();
+                document.getElementById('autocomplete-search-dialog').value = '';
+                document.getElementById('autocomplete-dropdown-dialog').style.display = 'none';
+            };
+
+            window.removeAutoCompleteDialog = function(id) {
+                selectedAutoCompleteForEdit.delete(id);
+                updateAutoCompleteDisplayDialog();
+            };
+
+            function updateAutoCompleteDisplayDialog() {
+                const container = document.getElementById('selected-autocomplete-dialog');
+                if (selectedAutoCompleteForEdit.size === 0) {
+                    container.innerHTML = '<p style="color:#888;">No auto-complete quests</p>';
+                    return;
+                }
+
+                container.innerHTML = Array.from(selectedAutoCompleteForEdit).map(id => {
+                    const quest = allQuestsForEdit.find(q => q.id === id);
+                    return quest ? `
+                        <div style="padding:8px 12px;background:rgba(199,170,106,0.2);border:1px solid #c7aa6a;border-radius:4px;color:#fff;display:flex;align-items:center;gap:8px;">
+                            ${quest.name}
+                            <i class="fas fa-times" onclick="removeAutoCompleteDialog('${id}')" style="cursor:pointer;color:#c83232;"></i>
+                        </div>
+                    ` : '';
+                }).join('');
+            }
+
             async function saveQuestEdit() {
                 console.log('saveQuestEdit called, selectedQuestForEdit:', selectedQuestForEdit);
                 if (!selectedQuestForEdit) {
@@ -2131,6 +2233,7 @@
                         requiredForKappa: document.getElementById('edit-kappa-required-dialog').checked,
                         mapName: document.getElementById('edit-map-dialog').value,
                         prerequisiteQuests: JSON.stringify(Array.from(selectedPrereqsForEdit)),
+                        autoCompleteQuests: JSON.stringify(Array.from(selectedAutoCompleteForEdit)),
                         requiredItems: JSON.stringify(finalRequiredItems),
                         images: JSON.stringify(imageUrls),
                         notes: notes || null,
