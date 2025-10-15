@@ -506,12 +506,25 @@
     <div id="quest-editor-dialog" class="dialog-overlay">
         <div class="dialog-content" style="max-width: 1400px; max-height: 90vh; overflow-y: auto; width: 95%;">
             <div class="dialog-header">
-                <h3><i class="fas fa-tools"></i> Edit Quest: <span id="editing-quest-name-dialog">Quest Name</span></h3>
+                <h3><i class="fas fa-tools"></i> Fix Quest</h3>
                 <button class="dialog-close-btn" onclick="document.getElementById('quest-editor-dialog').style.display='none'">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="dialog-body">
+                <!-- Quest Search -->
+                <div id="editor-quest-search-container" style="margin-bottom: 25px;">
+                    <label style="display: block; color: #c7aa6a; margin-bottom: 8px; font-weight: 600; font-size: 14px;">
+                        <i class="fas fa-search"></i> Search Quest to Edit:
+                    </label>
+                    <input type="text" id="editor-quest-search" placeholder="Type to search quests by name or trader..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.4); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px;">
+                    <div id="editor-quest-suggestions" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.95); border: 2px solid #c7aa6a; border-radius: 6px; margin-top: 5px; display: none;"></div>
+                    <div id="current-quest-indicator" style="margin-top: 10px; padding: 10px; background: rgba(199, 170, 106, 0.1); border: 1px solid #c7aa6a; border-radius: 6px; display: none;">
+                        <span style="color: #c7aa6a; font-weight: 600;">Editing:</span>
+                        <span id="current-quest-name-indicator" style="color: #fff;"></span>
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                     <!-- Left Column -->
                     <div>
@@ -1390,6 +1403,78 @@
                 // Event listener is now attached in openQuestEditDialog() each time the dialog opens
                 // This function is kept for the prerequisite and auto-complete search setup only
 
+                // Quest search in editor dialog
+                const editorQuestSearch = document.getElementById('editor-quest-search');
+                const editorQuestSuggestions = document.getElementById('editor-quest-suggestions');
+                
+                if (editorQuestSearch) {
+                    editorQuestSearch.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase().trim();
+                        
+                        if (searchTerm.length < 1) {
+                            editorQuestSuggestions.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Use allQuestsForEdit which is already loaded
+                        const matches = allQuestsForEdit
+                            .filter(q => 
+                                q.name.toLowerCase().includes(searchTerm) ||
+                                q.trader.toLowerCase().includes(searchTerm)
+                            )
+                            .slice(0, 15); // Show more results for admin
+                        
+                        if (matches.length === 0) {
+                            editorQuestSuggestions.innerHTML = '<div style="padding: 15px; color: #888; text-align: center;">No quests found</div>';
+                            editorQuestSuggestions.style.display = 'block';
+                            return;
+                        }
+                        
+                        editorQuestSuggestions.innerHTML = matches.map(quest => `
+                            <div class="editor-quest-suggestion-item" data-quest-id="${quest.id}" style="padding: 12px; cursor: pointer; border-bottom: 1px solid #2a2a2a; color: #fff; transition: background 0.2s;">
+                                <div style="font-weight: 600; color: #c7aa6a;">${quest.name}</div>
+                                <div style="font-size: 0.85rem; color: #888; margin-top: 4px;">
+                                    ${quest.trader} • Level ${quest.level} • ${quest.mapName || 'Any Location'}
+                                    ${quest.requiredForKappa ? ' • <span style="color: #c7aa6a;">Kappa</span>' : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        editorQuestSuggestions.style.display = 'block';
+                        
+                        // Add click handlers to suggestions
+                        editorQuestSuggestions.querySelectorAll('.editor-quest-suggestion-item').forEach(item => {
+                            item.addEventListener('mouseover', () => {
+                                item.style.background = 'rgba(199, 170, 106, 0.2)';
+                            });
+                            item.addEventListener('mouseout', () => {
+                                item.style.background = 'transparent';
+                            });
+                            item.addEventListener('click', () => {
+                                const questId = item.dataset.questId;
+                                editorQuestSearch.value = '';
+                                editorQuestSuggestions.style.display = 'none';
+                                // Load this quest into the editor
+                                openQuestEditDialog(questId);
+                            });
+                        });
+                    });
+                    
+                    // Hide suggestions when clicking outside
+                    editorQuestSearch.addEventListener('blur', () => {
+                        setTimeout(() => {
+                            editorQuestSuggestions.style.display = 'none';
+                        }, 200);
+                    });
+                    
+                    editorQuestSearch.addEventListener('focus', () => {
+                        if (editorQuestSearch.value.trim().length >= 1) {
+                            const event = new Event('input');
+                            editorQuestSearch.dispatchEvent(event);
+                        }
+                    });
+                }
+
                 // Prerequisite quest search
                 const prereqSearch = document.getElementById('prereq-search-dialog');
                 if (prereqSearch) {
@@ -1529,12 +1614,19 @@
                 }, 100);
                 
                 // Populate basic info
-                document.getElementById('editing-quest-name-dialog').textContent = selectedQuestForEdit.name;
                 document.getElementById('edit-name-dialog').value = selectedQuestForEdit.name;
                 document.getElementById('edit-trader-dialog').value = selectedQuestForEdit.trader;
                 document.getElementById('edit-level-dialog').value = selectedQuestForEdit.level;
                 document.getElementById('edit-kappa-required-dialog').checked = selectedQuestForEdit.requiredForKappa || false;
                 document.getElementById('edit-map-dialog').value = selectedQuestForEdit.mapName || 'Any Location';
+
+                // Update current quest indicator
+                const currentQuestIndicator = document.getElementById('current-quest-indicator');
+                const currentQuestNameIndicator = document.getElementById('current-quest-name-indicator');
+                if (currentQuestIndicator && currentQuestNameIndicator) {
+                    currentQuestNameIndicator.textContent = selectedQuestForEdit.name;
+                    currentQuestIndicator.style.display = 'block';
+                }
 
                 // Load prerequisite quests
                 selectedPrereqsForEdit = new Set(JSON.parse(selectedQuestForEdit.prerequisiteQuests || '[]'));
