@@ -1494,8 +1494,20 @@ app.get('/api/progress/:userId', async (req, res) => {
 });
 
 app.post('/api/progress', requireAuth, async (req, res) => {
+    const requestId = `${req.user.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const startTime = Date.now();
+    
     try {
         const { pmcLevel, prestige, completedQuests } = req.body;
+        
+        console.log(`[SAVE-START] ${requestId} - User: ${req.user.id} (${req.user.username})`);
+        console.log(`[SAVE-DATA] ${requestId} - PMC: ${pmcLevel}, Prestige: ${prestige}, Quests: ${completedQuests?.length || 0}`);
+        
+        // Validation
+        if (!Array.isArray(completedQuests)) {
+            console.log(`[SAVE-ERROR] ${requestId} - Invalid completedQuests: not an array`);
+            return res.status(400).json({ error: 'completedQuests must be an array', requestId });
+        }
 
         // Calculate stats
         const allQuests = await prisma.quest.findMany({
@@ -1503,6 +1515,12 @@ app.post('/api/progress', requireAuth, async (req, res) => {
         });
         const totalKappaQuests = allQuests.length;
         const kappaQuestIds = allQuests.map(q => q.id);
+        
+        // Validate quest IDs
+        const invalidQuestIds = completedQuests.filter(id => !kappaQuestIds.includes(id) && id);
+        if (invalidQuestIds.length > 0) {
+            console.log(`[SAVE-WARNING] ${requestId} - ${invalidQuestIds.length} invalid quest IDs found (non-Kappa quests)`);
+        }
         
         // Only count completed quests that are kappa-required
         const completedKappaQuests = completedQuests 
@@ -1526,6 +1544,13 @@ app.post('/api/progress', requireAuth, async (req, res) => {
             // Find newly completed quests
             const added = newCompleted.filter(id => !oldCompleted.includes(id));
             const removed = oldCompleted.filter(id => !newCompleted.includes(id));
+            
+            if (added.length > 0) {
+                console.log(`[SAVE-CHANGES] ${requestId} - Added ${added.length} quest(s): ${added.join(', ')}`);
+            }
+            if (removed.length > 0) {
+                console.log(`[SAVE-CHANGES] ${requestId} - Removed ${removed.length} quest(s): ${removed.join(', ')}`);
+            }
 
             // Handle auto-complete for newly completed quests
             for (const questId of added) {
@@ -1647,11 +1672,34 @@ app.post('/api/progress', requireAuth, async (req, res) => {
         }
 
         progress.completedQuests = JSON.parse(progress.completedQuests);
-        res.json(progress);
+        
+        const duration = Date.now() - startTime;
+        console.log(`[SAVE-SUCCESS] ${requestId} - Completed in ${duration}ms - Final quests: ${finalCompletedQuests.length}`);
+        
+        res.json({
+            ...progress,
+            requestId,
+            timestamp: Date.now()
+        });
     } catch (error) {
-        console.error('Error saving progress:', error);
-        res.status(500).json({ error: error.message });
+        const duration = Date.now() - startTime;
+        console.error(`[SAVE-ERROR] ${requestId} - Failed after ${duration}ms:`, error.message);
+        console.error(`[SAVE-ERROR] ${requestId} - Stack:`, error.stack);
+        res.status(500).json({ 
+            error: error.message,
+            requestId,
+            timestamp: Date.now()
+        });
     }
+});
+
+// Health check endpoint for deployment detection
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: Date.now(),
+        uptime: process.uptime()
+    });
 });
 
 app.post('/api/reset-progress', requireAuth, async (req, res) => {

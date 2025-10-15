@@ -11,6 +11,10 @@ class QuestTracker {
         this.currentView = 'dashboard'; // 'dashboard', 'finished', 'rankings', or 'profile'
         this.showFutureQuests = false; // Show all future quests mode
         this.isAdmin = false; // Will be set from auth check
+        this.isSaving = false; // Track if save is in progress
+        this.isServerHealthy = true; // Track server health
+        this.healthCheckInterval = null; // Health check timer
+        this.pendingCompleteQuestId = null; // Track pending quest completion
         
         // Load saved preferences
         this.loadPreferences();
@@ -56,6 +60,12 @@ class QuestTracker {
         this.setupEventListeners();
         this.restoreSavedView();
         this.updateUI();
+        
+        // Start server health monitoring
+        this.startHealthCheck();
+        
+        // Check for and retry any pending saves
+        await this.retryPendingSaves();
     }
     
     // Restore the saved view/tab
@@ -142,26 +152,91 @@ class QuestTracker {
     }
 
     async saveProgress() {
-        try {
-            const response = await fetch('/api/progress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(this.userProgress),
-                credentials: 'include'
-            });
+        // Prevent concurrent saves
+        if (this.isSaving) {
+            console.log('[CLIENT-SAVE] Save already in progress, skipping...');
+            return;
+        }
+        
+        // Check server health before attempting save
+        if (!this.isServerHealthy) {
+            console.warn('[CLIENT-SAVE] Server unhealthy, queuing save...');
+            this.queueFailedSave();
+            this.showNotification('Server is unavailable. Your progress will be saved when connection is restored.', 'error');
+            return;
+        }
+        
+        this.isSaving = true;
+        const maxRetries = 3;
+        let attempt = 0;
+        let lastError = null;
+        
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        
+        while (attempt < maxRetries) {
+            attempt++;
+            const saveId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             
-            // Get updated progress from server (includes auto-completed quests)
-            if (response.ok) {
+            try {
+                console.log(`[CLIENT-SAVE] Attempt ${attempt}/${maxRetries} - ID: ${saveId}`);
+                console.log(`[CLIENT-SAVE] ${saveId} - Saving ${this.userProgress.completedQuests.length} quests`);
+                
+                const response = await fetch('/api/progress', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.userProgress),
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Server error: ${errorData.error || response.statusText}`);
+                }
+                
+                // Get updated progress from server (includes auto-completed quests)
                 const data = await response.json();
+                
+                console.log(`[CLIENT-SAVE] ${saveId} - Success! Server request ID: ${data.requestId}`);
+                
                 if (data.completedQuests) {
+                    const questDiff = data.completedQuests.length - this.userProgress.completedQuests.length;
+                    if (questDiff > 0) {
+                        console.log(`[CLIENT-SAVE] ${saveId} - Auto-completed ${questDiff} additional quest(s)`);
+                    }
                     this.userProgress.completedQuests = data.completedQuests;
                 }
+                
+                // Clear any queued saves on success
+                localStorage.removeItem('pendingSave');
+                
+                // Show success notification (only on first attempt to avoid spam)
+                if (attempt === 1) {
+                    this.showNotification('Progress saved successfully!', 'success');
+                }
+                
+                this.isSaving = false;
+                return; // Success!
+                
+            } catch (error) {
+                lastError = error;
+                console.error(`[CLIENT-SAVE] ${saveId} - Attempt ${attempt} failed:`, error.message);
+                
+                if (attempt < maxRetries) {
+                    const backoffTime = Math.pow(2, attempt) * 1000; // Exponential backoff
+                    console.log(`[CLIENT-SAVE] ${saveId} - Retrying in ${backoffTime}ms...`);
+                    await delay(backoffTime);
+                } else {
+                    // All retries failed
+                    console.error(`[CLIENT-SAVE] ${saveId} - All ${maxRetries} attempts failed`);
+                    this.queueFailedSave();
+                    this.showNotification('Failed to save progress after multiple attempts. Your progress has been saved locally.', 'error');
+                }
             }
-        } catch (error) {
-            console.error('Error saving progress:', error);
         }
+        
+        this.isSaving = false;
     }
 
     refreshOBSOverlays() {
@@ -1739,6 +1814,113 @@ class QuestTracker {
                 }
             }, 300);
         }, 3000);
+    }
+
+    // Queue failed save to localStorage for later retry
+    queueFailedSave() {
+        try {
+            const saveData = {
+                userProgress: this.userProgress,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('pendingSave', JSON.stringify(saveData));
+            console.log('[CLIENT-SAVE] Queued save to localStorage');
+        } catch (error) {
+            console.error('[CLIENT-SAVE] Failed to queue save:', error);
+        }
+    }
+
+    // Check for and retry any pending saves
+    async retryPendingSaves() {
+        try {
+            const pendingSave = localStorage.getItem('pendingSave');
+            if (!pendingSave) return;
+            
+            const saveData = JSON.parse(pendingSave);
+            const age = Date.now() - saveData.timestamp;
+            
+            console.log(`[CLIENT-SAVE] Found pending save from ${Math.round(age/1000)}s ago`);
+            
+            // Restore the pending progress
+            this.userProgress = saveData.userProgress;
+            
+            // Try to save again
+            await this.saveProgress();
+            
+        } catch (error) {
+            console.error('[CLIENT-SAVE] Error retrying pending save:', error);
+        }
+    }
+
+    // Start health check monitoring
+    startHealthCheck() {
+        console.log('[HEALTH-CHECK] Starting server health monitoring...');
+        
+        // Check immediately
+        this.checkServerHealth();
+        
+        // Then check every 30 seconds
+        this.healthCheckInterval = setInterval(() => {
+            this.checkServerHealth();
+        }, 30000);
+    }
+
+    // Check server health
+    async checkServerHealth() {
+        try {
+            const response = await fetch('/api/health', {
+                method: 'GET',
+                credentials: 'include',
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
+            
+            if (response.ok) {
+                if (!this.isServerHealthy) {
+                    console.log('[HEALTH-CHECK] Server is back online!');
+                    this.isServerHealthy = true;
+                    this.hideServerWarning();
+                    // Retry any pending saves
+                    this.retryPendingSaves();
+                }
+            } else {
+                this.handleServerUnhealthy();
+            }
+        } catch (error) {
+            this.handleServerUnhealthy();
+        }
+    }
+
+    handleServerUnhealthy() {
+        if (this.isServerHealthy) {
+            console.warn('[HEALTH-CHECK] Server appears to be down or deploying');
+            this.isServerHealthy = false;
+            this.showServerWarning();
+        }
+    }
+
+    showServerWarning() {
+        // Check if warning already exists
+        if (document.getElementById('server-warning-banner')) return;
+        
+        const banner = document.createElement('div');
+        banner.id = 'server-warning-banner';
+        banner.innerHTML = `
+            <div style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 12px 20px; text-align: center; font-weight: 600; position: fixed; top: 0; left: 0; right: 0; z-index: 2000; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                <i class="fas fa-exclamation-triangle"></i> Server is temporarily unavailable. Your progress will be saved locally and synced when the connection is restored.
+            </div>
+        `;
+        document.body.insertBefore(banner, document.body.firstChild);
+        
+        // Adjust body padding to account for banner
+        document.body.style.paddingTop = '44px';
+    }
+
+    hideServerWarning() {
+        const banner = document.getElementById('server-warning-banner');
+        if (banner) {
+            banner.remove();
+            document.body.style.paddingTop = '0';
+        }
     }
 
     loadFixQuests() {
