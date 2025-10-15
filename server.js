@@ -1752,23 +1752,41 @@ app.get('/api/health', (req, res) => {
 
 app.post('/api/reset-progress', requireAuth, async (req, res) => {
     try {
-        const progress = await prisma.userProgress.update({
-            where: { userId: req.user.id },
-            data: {
-                pmcLevel: 1,
-                prestige: 0,
-                completedQuests: JSON.stringify([]),
-                completionRate: 0,
-                totalCompleted: 0,
-                lastQuestDate: null
-            }
+        // Use transaction to ensure both operations succeed or fail together
+        const result = await prisma.$transaction(async (tx) => {
+            // Delete all quest activities for this user
+            const deletedActivities = await tx.questActivity.deleteMany({
+                where: { userId: req.user.id }
+            });
+            
+            console.log(`[RESET] User ${req.user.username} - Deleted ${deletedActivities.count} quest activities`);
+            
+            // Reset user progress
+            const progress = await tx.userProgress.update({
+                where: { userId: req.user.id },
+                data: {
+                    pmcLevel: 1,
+                    prestige: 0,
+                    completedQuests: JSON.stringify([]),
+                    collectorItemsFound: JSON.stringify([]),
+                    completionRate: 0,
+                    totalCompleted: 0,
+                    lastQuestDate: null
+                }
+            });
+            
+            return { progress, deletedActivities: deletedActivities.count };
         });
+
+        console.log(`[RESET] User ${req.user.username} - Progress reset successfully`);
 
         res.json({
             message: 'Progress reset successfully',
-            progress
+            progress: result.progress,
+            activitiesDeleted: result.deletedActivities
         });
     } catch (error) {
+        console.error(`[RESET] Error resetting progress for user ${req.user.username}:`, error);
         res.status(500).json({ error: error.message });
     }
 });
