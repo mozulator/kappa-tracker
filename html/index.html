@@ -1387,93 +1387,111 @@
             }
 
             function setupQuestEditDialog() {
-                // Prerequisite quest search
+                // Prerequisite quest search - Using same pattern as Report Quest Error dialog
                 const prereqSearch = document.getElementById('prereq-search-dialog');
+                const prereqDropdown = document.getElementById('prereq-dropdown-dialog');
+                
                 if (prereqSearch) {
-                    prereqSearch.addEventListener('input', function() {
-                        const search = this.value.toLowerCase().trim();
-                        const dropdown = document.getElementById('prereq-dropdown-dialog');
+                    prereqSearch.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase().trim();
                         
-                        if (search.length < 1) {
-                            dropdown.style.display = 'none';
+                        if (searchTerm.length < 2) {
+                            prereqDropdown.style.display = 'none';
                             return;
                         }
-
-                        const filtered = allQuestsForEdit.filter(q => 
-                            (q.name.toLowerCase().includes(search) || q.trader.toLowerCase().includes(search)) && 
-                            q.id !== selectedQuestForEdit.id &&
-                            !selectedPrereqsForEdit.has(q.id)
-                        );
-
-                        if (filtered.length === 0) {
-                            dropdown.innerHTML = '<div style="padding:10px;color:#888;">No quests found</div>';
-                            dropdown.style.display = 'block';
-                        } else {
-                            dropdown.innerHTML = filtered.slice(0, 10).map(q => `
-                                <div onclick="addPrereqDialog('${q.id}', '${q.name.replace(/'/g, "\\'")}', '${q.trader}')" style="padding:10px;cursor:pointer;color:#fff;border-bottom:1px solid #2a2a2a;transition:background 0.2s;" onmouseover="this.style.background='rgba(199,170,106,0.2)'" onmouseout="this.style.background='transparent'">
-                                    ${q.name} <span style="color:#888;">(${q.trader})</span>
-                                </div>
-                            `).join('');
-                            dropdown.style.display = 'block';
+                        
+                        // Filter quests by name, excluding current quest and already selected
+                        const matches = allQuestsForEdit
+                            .filter(q => 
+                                q.name.toLowerCase().includes(searchTerm) && 
+                                q.id !== selectedQuestForEdit.id &&
+                                !selectedPrereqsForEdit.has(q.id)
+                            )
+                            .slice(0, 10); // Limit to 10 results
+                        
+                        if (matches.length === 0) {
+                            prereqDropdown.style.display = 'none';
+                            return;
                         }
-                    });
-
-                    prereqSearch.addEventListener('blur', function() {
-                        setTimeout(() => {
-                            document.getElementById('prereq-dropdown-dialog').style.display = 'none';
-                        }, 200);
-                    });
-
-                    prereqSearch.addEventListener('focus', function() {
-                        if (this.value.trim().length >= 1) {
-                            const event = new Event('input');
-                            this.dispatchEvent(event);
-                        }
+                        
+                        prereqDropdown.innerHTML = matches.map(quest => `
+                            <div class="prereq-suggestion-item" data-quest-id="${quest.id}" data-quest-name="${quest.name}" data-trader="${quest.trader}" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #2a2a2a; color: #fff; transition: background 0.2s;">
+                                <div style="font-weight: 600;">${quest.name}</div>
+                                <div style="font-size: 0.85rem; color: #888;">${quest.trader}</div>
+                            </div>
+                        `).join('');
+                        
+                        prereqDropdown.style.display = 'block';
+                        
+                        // Add click handlers to suggestions
+                        prereqDropdown.querySelectorAll('.prereq-suggestion-item').forEach(item => {
+                            item.addEventListener('mouseover', () => {
+                                item.style.background = 'rgba(199, 170, 106, 0.2)';
+                            });
+                            item.addEventListener('mouseout', () => {
+                                item.style.background = 'transparent';
+                            });
+                            item.addEventListener('click', () => {
+                                selectedPrereqsForEdit.add(item.dataset.questId);
+                                updatePrereqsDisplayDialog();
+                                prereqSearch.value = '';
+                                prereqDropdown.style.display = 'none';
+                            });
+                        });
                     });
                 }
 
-                // Auto-complete quest search
+                // Auto-complete quest search - Using same pattern as Report Quest Error dialog
                 const autocompleteSearch = document.getElementById('autocomplete-search-dialog');
+                const autocompleteDropdown = document.getElementById('autocomplete-dropdown-dialog');
+                
                 if (autocompleteSearch) {
-                    autocompleteSearch.addEventListener('input', function() {
-                        const search = this.value.toLowerCase().trim();
-                        const dropdown = document.getElementById('autocomplete-dropdown-dialog');
+                    autocompleteSearch.addEventListener('input', (e) => {
+                        const searchTerm = e.target.value.toLowerCase().trim();
                         
-                        if (search.length < 1) {
-                            dropdown.style.display = 'none';
+                        if (searchTerm.length < 2) {
+                            autocompleteDropdown.style.display = 'none';
                             return;
                         }
-
-                        const filtered = allQuestsForEdit.filter(q => 
-                            (q.name.toLowerCase().includes(search) || q.trader.toLowerCase().includes(search)) && 
-                            q.id !== selectedQuestForEdit.id &&
-                            !selectedAutoCompleteForEdit.has(q.id)
-                        );
-
-                        if (filtered.length === 0) {
-                            dropdown.innerHTML = '<div style="padding:10px;color:#888;">No quests found</div>';
-                            dropdown.style.display = 'block';
-                        } else {
-                            dropdown.innerHTML = filtered.slice(0, 10).map(q => `
-                                <div onclick="addAutoCompleteDialog('${q.id}', '${q.name.replace(/'/g, "\\'")}', '${q.trader}')" style="padding:10px;cursor:pointer;color:#fff;border-bottom:1px solid #2a2a2a;transition:background 0.2s;" onmouseover="this.style.background='rgba(199,170,106,0.2)'" onmouseout="this.style.background='transparent'">
-                                    ${q.name} <span style="color:#888;">(${q.trader})</span>
-                                </div>
-                            `).join('');
-                            dropdown.style.display = 'block';
+                        
+                        // Filter quests by name, excluding current quest and already selected
+                        const matches = allQuestsForEdit
+                            .filter(q => 
+                                q.name.toLowerCase().includes(searchTerm) && 
+                                q.id !== selectedQuestForEdit.id &&
+                                !selectedAutoCompleteForEdit.has(q.id)
+                            )
+                            .slice(0, 10); // Limit to 10 results
+                        
+                        if (matches.length === 0) {
+                            autocompleteDropdown.style.display = 'none';
+                            return;
                         }
-                    });
-
-                    autocompleteSearch.addEventListener('blur', function() {
-                        setTimeout(() => {
-                            document.getElementById('autocomplete-dropdown-dialog').style.display = 'none';
-                        }, 200);
-                    });
-
-                    autocompleteSearch.addEventListener('focus', function() {
-                        if (this.value.trim().length >= 1) {
-                            const event = new Event('input');
-                            this.dispatchEvent(event);
-                        }
+                        
+                        autocompleteDropdown.innerHTML = matches.map(quest => `
+                            <div class="autocomplete-suggestion-item" data-quest-id="${quest.id}" data-quest-name="${quest.name}" data-trader="${quest.trader}" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #2a2a2a; color: #fff; transition: background 0.2s;">
+                                <div style="font-weight: 600;">${quest.name}</div>
+                                <div style="font-size: 0.85rem; color: #888;">${quest.trader}</div>
+                            </div>
+                        `).join('');
+                        
+                        autocompleteDropdown.style.display = 'block';
+                        
+                        // Add click handlers to suggestions
+                        autocompleteDropdown.querySelectorAll('.autocomplete-suggestion-item').forEach(item => {
+                            item.addEventListener('mouseover', () => {
+                                item.style.background = 'rgba(199, 170, 106, 0.2)';
+                            });
+                            item.addEventListener('mouseout', () => {
+                                item.style.background = 'transparent';
+                            });
+                            item.addEventListener('click', () => {
+                                selectedAutoCompleteForEdit.add(item.dataset.questId);
+                                updateAutoCompleteDisplayDialog();
+                                autocompleteSearch.value = '';
+                                autocompleteDropdown.style.display = 'none';
+                            });
+                        });
                     });
                 }
             }
