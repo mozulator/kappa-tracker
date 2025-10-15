@@ -53,6 +53,7 @@ model Quest {
   level             Int
   objectives        String // JSON string of objectives
   prerequisiteQuests String? // JSON array of quest IDs
+  autoCompleteQuests String? // JSON array of quest IDs to auto-complete when this quest is completed
   traderLoyalty     Int      @default(1)
   requiredForKappa  Boolean  @default(false)
   wikiLink          String?

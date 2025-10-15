@@ -1224,7 +1224,7 @@ app.post('/api/refresh-quests', requireAuth, async (req, res) => {
 app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
     try {
         const { questId } = req.params;
-        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, requiredItems, images, notes, shoppingList } = req.body;
+        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, autoCompleteQuests, requiredItems, images, notes, shoppingList } = req.body;
 
         // Validate quest exists and get current data
         const quest = await prisma.quest.findUnique({
@@ -1267,6 +1267,17 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
                 changes.push('Prerequisites updated');
             } catch (e) {
                 return res.status(400).json({ error: 'Invalid prerequisiteQuests JSON' });
+            }
+        }
+        
+        if (autoCompleteQuests !== undefined && autoCompleteQuests !== quest.autoCompleteQuests) {
+            // Validate it's valid JSON
+            try {
+                JSON.parse(autoCompleteQuests);
+                updateData.autoCompleteQuests = autoCompleteQuests;
+                changes.push('Auto-complete quests updated');
+            } catch (e) {
+                return res.status(400).json({ error: 'Invalid autoCompleteQuests JSON' });
             }
         }
         
@@ -1504,6 +1515,9 @@ app.post('/api/progress', requireAuth, async (req, res) => {
             where: { userId: req.user.id }
         });
 
+        // Process auto-complete quests
+        let finalCompletedQuests = [...(completedQuests || [])];
+        
         // Track quest activities
         if (progress) {
             const oldCompleted = JSON.parse(progress.completedQuests || '[]');
@@ -1513,10 +1527,15 @@ app.post('/api/progress', requireAuth, async (req, res) => {
             const added = newCompleted.filter(id => !oldCompleted.includes(id));
             const removed = oldCompleted.filter(id => !newCompleted.includes(id));
 
-            // Create activity records
+            // Handle auto-complete for newly completed quests
             for (const questId of added) {
-                const quest = allQuests.find(q => q.id === questId);
+                const quest = await prisma.quest.findUnique({
+                    where: { id: questId },
+                    select: { id: true, name: true, autoCompleteQuests: true }
+                });
+                
                 if (quest) {
+                    // Log completion activity
                     await prisma.questActivity.create({
                         data: {
                             userId: req.user.id,
@@ -1525,12 +1544,41 @@ app.post('/api/progress', requireAuth, async (req, res) => {
                             action: 'completed'
                         }
                     });
+
+                    // Auto-complete linked quests
+                    if (quest.autoCompleteQuests) {
+                        const autoCompleteIds = JSON.parse(quest.autoCompleteQuests);
+                        for (const autoQuestId of autoCompleteIds) {
+                            if (!finalCompletedQuests.includes(autoQuestId)) {
+                                finalCompletedQuests.push(autoQuestId);
+                                
+                                // Log auto-completion
+                                const autoQuest = allQuests.find(q => q.id === autoQuestId);
+                                if (autoQuest) {
+                                    await prisma.questActivity.create({
+                                        data: {
+                                            userId: req.user.id,
+                                            questId: autoQuestId,
+                                            questName: autoQuest.name,
+                                            action: 'completed'
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
+            // Handle auto-uncomplete for removed quests
             for (const questId of removed) {
-                const quest = allQuests.find(q => q.id === questId);
+                const quest = await prisma.quest.findUnique({
+                    where: { id: questId },
+                    select: { id: true, name: true, autoCompleteQuests: true }
+                });
+                
                 if (quest) {
+                    // Log uncomplete activity
                     await prisma.questActivity.create({
                         data: {
                             userId: req.user.id,
@@ -1539,9 +1587,38 @@ app.post('/api/progress', requireAuth, async (req, res) => {
                             action: 'uncompleted'
                         }
                     });
+
+                    // Auto-uncomplete linked quests
+                    if (quest.autoCompleteQuests) {
+                        const autoCompleteIds = JSON.parse(quest.autoCompleteQuests);
+                        for (const autoQuestId of autoCompleteIds) {
+                            const index = finalCompletedQuests.indexOf(autoQuestId);
+                            if (index > -1) {
+                                finalCompletedQuests.splice(index, 1);
+                                
+                                // Log auto-uncomplete
+                                const autoQuest = allQuests.find(q => q.id === autoQuestId);
+                                if (autoQuest) {
+                                    await prisma.questActivity.create({
+                                        data: {
+                                            userId: req.user.id,
+                                            questId: autoQuestId,
+                                            questName: autoQuest.name,
+                                            action: 'uncompleted'
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        // Recalculate stats with auto-completed quests
+        const finalCompletedKappaQuests = finalCompletedQuests.filter(id => kappaQuestIds.includes(id));
+        const finalCompletedCount = finalCompletedKappaQuests.length;
+        const finalCompletionRate = totalKappaQuests > 0 ? (finalCompletedCount / totalKappaQuests) * 100 : 0;
 
         if (!progress) {
             progress = await prisma.userProgress.create({
@@ -1549,10 +1626,10 @@ app.post('/api/progress', requireAuth, async (req, res) => {
                     userId: req.user.id,
                     pmcLevel: pmcLevel || 1,
                     prestige: prestige || 0,
-                    completedQuests: JSON.stringify(completedQuests || []),
-                    completionRate,
-                    totalCompleted: completedCount,
-                    lastQuestDate: completedCount > 0 ? new Date() : null
+                    completedQuests: JSON.stringify(finalCompletedQuests),
+                    completionRate: finalCompletionRate,
+                    totalCompleted: finalCompletedCount,
+                    lastQuestDate: finalCompletedCount > 0 ? new Date() : null
                 }
             });
         } else {
@@ -1561,10 +1638,10 @@ app.post('/api/progress', requireAuth, async (req, res) => {
                 data: {
                     pmcLevel: pmcLevel !== undefined ? pmcLevel : progress.pmcLevel,
                     prestige: prestige !== undefined ? prestige : progress.prestige,
-                    completedQuests: JSON.stringify(completedQuests || []),
-                    completionRate,
-                    totalCompleted: completedCount,
-                    lastQuestDate: completedCount > 0 ? new Date() : progress.lastQuestDate
+                    completedQuests: JSON.stringify(finalCompletedQuests),
+                    completionRate: finalCompletionRate,
+                    totalCompleted: finalCompletedCount,
+                    lastQuestDate: finalCompletedCount > 0 ? new Date() : progress.lastQuestDate
                 }
             });
         }
