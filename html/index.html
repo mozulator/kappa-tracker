@@ -1386,7 +1386,7 @@
 
                 // Custom card layout for fix quests
                 grid.innerHTML = quests.map(quest => `
-                    <div class="quest-card fix-quest-card" data-quest-id="${quest.id}">
+                    <div class="quest-card fix-quest-card" data-quest-id="${quest.id}" data-quest-name="${quest.name.toLowerCase()}" data-trader="${quest.trader.toLowerCase()}">
                         <div class="fix-quest-title">${quest.name}</div>
                         <span class="level-badge">Lvl ${quest.level}</span>
                         <span class="trader-badge">${quest.trader}</span>
