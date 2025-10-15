@@ -942,6 +942,54 @@ app.delete('/api/admin/logs/clear', requireAdmin, async (req, res) => {
 });
 
 // ============================================================================
+// ADMIN CHAT
+// ============================================================================
+
+// Get admin chat messages (admin only)
+app.get('/api/admin/chat', requireAdmin, async (req, res) => {
+    try {
+        const messages = await prisma.adminChat.findMany({
+            orderBy: { timestamp: 'asc' },
+            take: 100 // Limit to most recent 100 messages
+        });
+        
+        res.json(messages);
+    } catch (error) {
+        console.error('Error fetching admin chat:', error);
+        res.status(500).json({ error: 'Failed to fetch chat messages' });
+    }
+});
+
+// Send admin chat message (admin only)
+app.post('/api/admin/chat', requireAdmin, async (req, res) => {
+    try {
+        const { message } = req.body;
+        
+        if (!message || message.trim().length === 0) {
+            return res.status(400).json({ error: 'Message cannot be empty' });
+        }
+        
+        if (message.length > 1000) {
+            return res.status(400).json({ error: 'Message too long (max 1000 characters)' });
+        }
+        
+        const newMessage = await prisma.adminChat.create({
+            data: {
+                userId: req.user.id,
+                username: req.user.username,
+                avatarUrl: req.user.avatarUrl,
+                message: message.trim()
+            }
+        });
+        
+        res.json(newMessage);
+    } catch (error) {
+        console.error('Error sending chat message:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// ============================================================================
 // USER PROFILE MANAGEMENT
 // ============================================================================
 

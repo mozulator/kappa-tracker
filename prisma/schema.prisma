@@ -151,3 +151,15 @@ model AdminLog {
   @@index([createdAt])
   @@map("admin_logs")
 }
+
+model AdminChat {
+  id        String   @id @default(cuid())
+  userId    String
+  username  String
+  avatarUrl String?
+  message   String
+  timestamp DateTime @default(now())
+  
+  @@index([timestamp])
+  @@map("admin_chats")
+}

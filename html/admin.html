@@ -64,7 +64,7 @@
         .dashboard-container {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 0.7fr 1.3fr 1fr 1fr;
             gap: 20px;
             padding: 20px;
             overflow: hidden;
@@ -306,6 +306,158 @@
             filter: blur(0px);
         }
 
+        /* Chat Styles */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 10px;
+            max-width: 80%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-message.own {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .chat-message.other {
+            align-self: flex-start;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #c7aa6a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-bubble {
+            background: rgba(199, 170, 106, 0.15);
+            border: 1px solid #c7aa6a;
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 100%;
+        }
+
+        .chat-message.own .chat-bubble {
+            background: rgba(199, 170, 106, 0.3);
+            border-color: #c7aa6a;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .chat-name {
+            font-weight: 600;
+            color: #c7aa6a;
+            font-size: 13px;
+        }
+
+        .chat-time {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .chat-text {
+            color: #fff;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-input-area {
+            border-top: 2px solid #3a3a3a;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            min-height: 40px;
+            max-height: 100px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #c7aa6a;
+        }
+
+        .chat-send-btn {
+            background: #c7aa6a;
+            border: none;
+            border-radius: 8px;
+            padding: 0 20px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            background: #d4b870;
+        }
+
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 1600px) {
             .dashboard-container {
                 grid-template-columns: 1fr 1fr;
@@ -421,6 +573,29 @@
                 <div class="loading">
                     <i class="fas fa-spinner fa-spin"></i>
                     <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Chat Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <i class="fas fa-comments"></i>
+                    Admin Chat
+                </h2>
+            </div>
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-input-wrapper">
+                        <textarea id="chat-input" class="chat-input" placeholder="Type your message..." rows="1"></textarea>
+                        <button id="chat-send-btn" class="chat-send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -692,33 +867,33 @@
                     </div>
                     <div class="action-buttons">
                         ${user.approved ? `
-                            <button class="btn btn-warning" onclick="toggleLeaderboard('${user.id}', '${user.username}', false)">
-                                <i class="fas fa-trophy"></i> Remove from Leaderboard
+                            <button class="btn btn-warning" onclick="toggleLeaderboard('${user.id}', '${user.username}', false)" title="Remove from Leaderboard">
+                                <i class="fas fa-trophy"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-approve" onclick="toggleLeaderboard('${user.id}', '${user.username}', true)">
-                                <i class="fas fa-trophy"></i> Add to Leaderboard
+                            <button class="btn btn-approve" onclick="toggleLeaderboard('${user.id}', '${user.username}', true)" title="Add to Leaderboard">
+                                <i class="fas fa-trophy"></i>
                             </button>
                         `}
                         ${user.verified ? `
-                            <button class="btn btn-warning" onclick="toggleVerified('${user.id}', '${user.username}', false)">
-                                <i class="fas fa-circle-check"></i> Remove Verification
+                            <button class="btn btn-warning" onclick="toggleVerified('${user.id}', '${user.username}', false)" title="Remove Verification">
+                                <i class="fas fa-circle-check"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-approve" onclick="toggleVerified('${user.id}', '${user.username}', true)" style="background: #2196F3; color: #fff;">
-                                <i class="fas fa-circle-check"></i> Verify User
+                            <button class="btn btn-approve" onclick="toggleVerified('${user.id}', '${user.username}', true)" style="background: #2196F3; color: #fff;" title="Verify User">
+                                <i class="fas fa-circle-check"></i>
                             </button>
                         `}
                         ${!user.isAdmin ? `
-                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)" style="background: #ffd700; color: #000;">
-                                <i class="fas fa-crown"></i> Make Admin
+                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)" style="background: #ffd700; color: #000;" title="Make Admin">
+                                <i class="fas fa-crown"></i>
                             </button>
-                            <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.username}')">
-                                <i class="fas fa-trash"></i> Delete
+                            <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.username}')" title="Delete User">
+                                <i class="fas fa-trash"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-warning" onclick="toggleAdmin('${user.id}', '${user.username}', false)">
-                                <i class="fas fa-crown"></i> Remove Admin
+                            <button class="btn btn-warning" onclick="toggleAdmin('${user.id}', '${user.username}', false)" title="Remove Admin">
+                                <i class="fas fa-crown"></i>
                             </button>
                         `}
                     </div>
@@ -1037,11 +1212,141 @@
             window.open('/', '_blank');
         }
 
-        // Load data on page load
-        loadData();
+        // ========================================================================
+        // ADMIN CHAT
+        // ========================================================================
 
-        // Reload every 30 seconds
-        setInterval(loadData, 30000);
+        let chatMessages = [];
+        let currentUser = null;
+
+        async function getCurrentUser() {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                if (response.ok) {
+                    currentUser = await response.json();
+                }
+            } catch (error) {
+                console.error('Error getting current user:', error);
+            }
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages');
+            if (!currentUser) return;
+            
+            container.innerHTML = chatMessages.map(msg => {
+                const isOwn = msg.userId === currentUser.id;
+                const initials = msg.username ? msg.username.substring(0, 2).toUpperCase() : 'AD';
+                const time = new Date(msg.timestamp).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                return `
+                    <div class="chat-message ${isOwn ? 'own' : 'other'}">
+                        <div class="chat-avatar">
+                            ${msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.username}">` : initials}
+                        </div>
+                        <div class="chat-bubble">
+                            <div class="chat-header-info">
+                                <span class="chat-name">${msg.username}</span>
+                                <span class="chat-time">${time}</span>
+                            </div>
+                            <div class="chat-text">${escapeHtml(msg.message)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message || !currentUser) return;
+            
+            try {
+                const response = await fetch('/api/admin/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ message })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send message');
+                
+                const newMessage = await response.json();
+                chatMessages.push(newMessage);
+                renderChatMessages();
+                
+                input.value = '';
+                input.style.height = '40px';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showNotification('Failed to send message', 'error');
+            }
+        }
+
+        async function loadChatMessages() {
+            try {
+                const response = await fetch('/api/admin/chat', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Failed to load messages');
+                
+                chatMessages = await response.json();
+                renderChatMessages();
+            } catch (error) {
+                console.error('Error loading chat:', error);
+            }
+        }
+
+        // Chat event listeners
+        document.getElementById('chat-send-btn').addEventListener('click', sendChatMessage);
+        
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        document.getElementById('chat-input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+
+        // ========================================================================
+        // INITIALIZATION
+        // ========================================================================
+
+        // Load data on page load
+        async function initializeAdmin() {
+            await getCurrentUser();
+            await loadData();
+            await loadChatMessages();
+            
+            // Reload data every 30 seconds
+            setInterval(loadData, 30000);
+            
+            // Reload chat every 5 seconds
+            setInterval(loadChatMessages, 5000);
+        }
+
+        initializeAdmin();
     </script>
 </body>
 </html>
