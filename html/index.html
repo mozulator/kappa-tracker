@@ -1507,6 +1507,9 @@
                 }
             }
 
+            // Call setup to attach event listeners
+            setupQuestEditDialog();
+
             window.openQuestFromAdminLog = async function(questName, changedFields) {
                 // Switch to Fix Quests tab
                 if (window.tracker) {
