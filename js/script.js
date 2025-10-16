@@ -3049,8 +3049,14 @@ let globalChatOpen = false;
 let globalChatMessages = [];
 let lastGlobalChatId = null;
 let globalChatPollInterval = null;
+let globalChatInitialized = false;
+let isSendingMessage = false;
 
 function initGlobalChat() {
+    // Prevent double initialization
+    if (globalChatInitialized) return;
+    globalChatInitialized = true;
+
     const chatButton = document.getElementById('global-chat-button');
     const chatBox = document.getElementById('global-chat-box');
     const closeChatBtn = document.getElementById('close-chat-btn');
@@ -3058,7 +3064,10 @@ function initGlobalChat() {
     const chatInput = document.getElementById('global-chat-input');
     const purgeChatBtn = document.getElementById('purge-chat-btn');
 
-    if (!chatButton || !chatBox) return;
+    if (!chatButton || !chatBox) {
+        globalChatInitialized = false; // Reset if elements not found
+        return;
+    }
 
     // Show purge button for admins
     if (window.currentUser && window.currentUser.isAdmin && purgeChatBtn) {
@@ -3226,6 +3235,9 @@ function displayGlobalChatMessages() {
 }
 
 async function sendGlobalMessage() {
+    // Prevent double sends
+    if (isSendingMessage) return;
+    
     const chatInput = document.getElementById('global-chat-input');
     const sendBtn = document.getElementById('global-chat-send-btn');
     
@@ -3234,7 +3246,8 @@ async function sendGlobalMessage() {
     const message = chatInput.value.trim();
     if (!message) return;
     
-    // Disable input while sending
+    // Mark as sending and disable input while sending
+    isSendingMessage = true;
     chatInput.disabled = true;
     sendBtn.disabled = true;
     
@@ -3259,6 +3272,7 @@ async function sendGlobalMessage() {
         console.error('Error sending message:', error);
         alert('Error sending message');
     } finally {
+        isSendingMessage = false;
         chatInput.disabled = false;
         sendBtn.disabled = false;
         chatInput.focus();
