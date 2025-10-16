@@ -2262,8 +2262,9 @@ input[type="checkbox"]:focus {
     position: fixed;
     bottom: 100px;
     right: 30px;
-    width: 380px;
-    height: 500px;
+    width: 600px;
+    height: calc(100vh - 160px);
+    max-height: calc(100vh - 160px);
     background: var(--post-bg);
     border: 2px solid var(--post-border);
     border-radius: 12px;
@@ -2424,7 +2425,8 @@ input[type="checkbox"]:focus {
 @media (max-width: 768px) {
     .global-chat-box {
         width: calc(100vw - 40px);
-        height: 70vh;
+        height: calc(100vh - 160px);
+        max-height: calc(100vh - 160px);
         right: 20px;
         bottom: 80px;
     }
