@@ -3079,10 +3079,38 @@ function replaceEmotes(text) {
     
     if (emotes.length === 0) return result;
     
+    // Check if message contains only emotes (and whitespace)
+    let emoteCount = 0;
+    let tempText = text.trim();
+    
     emotes.forEach(emote => {
-        const regex = new RegExp(`\\b${emote.name}\\b`, 'g'); // Case-sensitive for 7TV
-        result = result.replace(regex, `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: 28px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
+        const regex = new RegExp(`\\b${emote.name}\\b`, 'g');
+        const matches = tempText.match(regex);
+        if (matches) {
+            emoteCount += matches.length;
+            tempText = tempText.replace(regex, '').trim();
+        }
     });
+    
+    // If only emotes in message (no other text), make them bigger
+    const isOnlyEmotes = tempText.length === 0 && emoteCount > 0;
+    let emoteSize = '28px';
+    
+    if (isOnlyEmotes) {
+        if (emoteCount === 1) {
+            emoteSize = '56px'; // Single emote = 2x size
+        } else if (emoteCount === 2) {
+            emoteSize = '72px'; // Two emotes = even bigger
+        } else {
+            emoteSize = '42px'; // 3+ emotes = slightly bigger
+        }
+    }
+    
+    emotes.forEach(emote => {
+        const regex = new RegExp(`\\b${emote.name}\\b`, 'g');
+        result = result.replace(regex, `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: ${emoteSize}; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
+    });
+    
     return result;
 }
 
@@ -3507,7 +3535,13 @@ async function pinMessage(messageId) {
         
         if (response.ok) {
             const data = await response.json();
-            globalChatPinnedMessage = data.message;
+            // Update pinned message with full user data
+            const message = globalChatMessages.find(m => m.id === messageId);
+            if (message) {
+                globalChatPinnedMessage = message;
+            } else {
+                globalChatPinnedMessage = data.message;
+            }
             displayGlobalChatMessages();
         } else {
             alert('Failed to pin message');
@@ -3573,7 +3607,7 @@ async function deleteMessage(messageId) {
 if (window.currentUser) {
     // Check if DOM is already loaded (since script.js is loaded dynamically)
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
             initGlobalChat();
             startGlobalChatPolling();
         });

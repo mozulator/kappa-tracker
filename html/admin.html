@@ -725,13 +725,80 @@
         </div>
     </div>
 
+    <!-- Site Banner Settings (Full Width) -->
+    <div style="max-width: 1600px; margin: 20px auto;">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <i class="fas fa-bullhorn"></i>
+                    Site Banner Message
+                </h2>
+            </div>
+            <div class="panel-content" style="padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="banner-enabled" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="font-weight: 600; color: #fff;">Enable Banner</span>
+                    </label>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; color: #c7aa6a; font-weight: 600;">Banner Message</label>
+                    <textarea id="banner-message" placeholder="Enter banner message..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(199, 170, 106, 0.3); border-radius: 6px; color: #fff; font-size: 14px; font-family: inherit; min-height: 80px; resize: vertical;" maxlength="500"></textarea>
+                    <small style="color: #888;">This message will appear as a banner at the top of the main site when enabled.</small>
+                </div>
+                <button onclick="saveBannerSettings()" style="padding: 10px 20px; background: var(--text-highlight); color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                    <i class="fas fa-save"></i> Save Banner Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let adminLogs = [];
         let allUsers = [];
         let reports = [];
 
         async function loadData() {
-            await Promise.all([loadAdminLogs(), loadAllUsers(), loadReports()]);
+            await Promise.all([loadAdminLogs(), loadAllUsers(), loadReports(), loadBannerSettings()]);
+        }
+        
+        async function loadBannerSettings() {
+            try {
+                const response = await fetch('/api/site-banner', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('banner-enabled').checked = data.enabled || false;
+                    document.getElementById('banner-message').value = data.message || '';
+                }
+            } catch (error) {
+                console.error('Error loading banner settings:', error);
+            }
+        }
+        
+        async function saveBannerSettings() {
+            const enabled = document.getElementById('banner-enabled').checked;
+            const message = document.getElementById('banner-message').value.trim();
+            
+            try {
+                const response = await fetch('/api/site-banner', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ enabled, message })
+                });
+                
+                if (response.ok) {
+                    showNotification('Banner settings saved successfully!', 'success');
+                } else {
+                    showNotification('Failed to save banner settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving banner settings:', error);
+                showNotification('Error saving banner settings', 'error');
+            }
         }
 
         async function loadAdminLogs() {

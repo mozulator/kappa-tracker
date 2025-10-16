@@ -181,3 +181,13 @@ model GlobalChat {
   @@index([isPinned])
   @@map("global_chats")
 }
+
+model SiteSettings {
+  id                String   @id @default(cuid())
+  bannerEnabled     Boolean  @default(false)
+  bannerMessage     String?
+  bannerUpdatedAt   DateTime @updatedAt
+  bannerUpdatedBy   String?  // Admin username who last updated
+  
+  @@map("site_settings")
+}

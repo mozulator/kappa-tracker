@@ -1225,6 +1225,70 @@ app.delete('/api/global-chat/purge', requireAdmin, async (req, res) => {
     }
 });
 
+// Site Banner Settings
+app.get('/api/site-banner', async (req, res) => {
+    try {
+        let settings = await prisma.siteSettings.findUnique({
+            where: { id: 'default' }
+        });
+        
+        // Create default settings if they don't exist
+        if (!settings) {
+            settings = await prisma.siteSettings.create({
+                data: {
+                    id: 'default',
+                    bannerEnabled: false,
+                    bannerMessage: null
+                }
+            });
+        }
+        
+        res.json({
+            enabled: settings.bannerEnabled,
+            message: settings.bannerMessage
+        });
+    } catch (error) {
+        console.error('Error fetching site banner:', error);
+        res.json({ enabled: false, message: null });
+    }
+});
+
+app.post('/api/site-banner', requireAdmin, async (req, res) => {
+    try {
+        const { enabled, message } = req.body;
+        
+        const settings = await prisma.siteSettings.upsert({
+            where: { id: 'default' },
+            update: {
+                bannerEnabled: enabled,
+                bannerMessage: message || null,
+                bannerUpdatedBy: req.user.username
+            },
+            create: {
+                id: 'default',
+                bannerEnabled: enabled,
+                bannerMessage: message || null,
+                bannerUpdatedBy: req.user.username
+            }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'updated_site_banner',
+                description: `Banner ${enabled ? 'enabled' : 'disabled'}${message ? ': ' + message.substring(0, 50) : ''}`
+            }
+        });
+        
+        res.json({ success: true, settings });
+    } catch (error) {
+        console.error('Error updating site banner:', error);
+        res.status(500).json({ error: 'Failed to update site banner' });
+    }
+});
+
 // Get 7TV emotes from a starter pack
 let cachedEmotes = null;
 let emoteCacheTime = null;

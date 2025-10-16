@@ -70,6 +70,14 @@
     </script>
 </head>
 <body>
+    <!-- Site Banner (Admin Controlled) -->
+    <div id="site-banner" class="site-banner" style="display: none;">
+        <div class="site-banner-content">
+            <i class="fas fa-bullhorn"></i>
+            <span id="site-banner-message"></span>
+        </div>
+    </div>
+    
     <header class="main-header">
         <div class="header-left">
             <h1 class="title" id="main-title" style="margin: 0;">OBS KAPPA TRACKER</h1>
@@ -2776,5 +2784,26 @@
             </button>
         </div>
     </div>
+    
+    <script>
+        // Load site banner
+        async function loadSiteBanner() {
+            try {
+                const response = await fetch('/api/site-banner');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.enabled && data.message) {
+                        document.getElementById('site-banner-message').textContent = data.message;
+                        document.getElementById('site-banner').style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading site banner:', error);
+            }
+        }
+        
+        // Load banner on page load
+        loadSiteBanner();
+    </script>
 </body>
 </html>
