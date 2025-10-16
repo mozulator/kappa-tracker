@@ -340,22 +340,13 @@
 
         .chat-message {
             display: flex;
-            gap: 10px;
-            max-width: 80%;
-        }
-
-        .chat-message.own {
-            align-self: flex-start;
-        }
-
-        .chat-message.other {
-            align-self: flex-end;
-            flex-direction: row-reverse;
+            gap: 8px;
+            align-items: flex-start;
         }
 
         .chat-avatar {
-            width: 36px;
-            height: 36px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: #c7aa6a;
             display: flex;
@@ -364,7 +355,7 @@
             font-weight: bold;
             color: #000;
             flex-shrink: 0;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .chat-avatar img {
@@ -375,40 +366,35 @@
         }
 
         .chat-bubble {
-            background: rgba(199, 170, 106, 0.15);
-            border: 1px solid #c7aa6a;
-            padding: 10px 14px;
-            border-radius: 12px;
-            max-width: 100%;
-        }
-
-        .chat-message.other .chat-bubble {
-            background: rgba(199, 170, 106, 0.3);
-            border-color: #c7aa6a;
+            background: rgba(199, 170, 106, 0.1);
+            border: 1px solid #3a3a3a;
+            padding: 6px 10px;
+            border-radius: 8px;
+            flex: 1;
         }
 
         .chat-header-info {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
+            gap: 6px;
+            margin-bottom: 2px;
         }
 
         .chat-name {
             font-weight: 600;
             color: #c7aa6a;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .chat-time {
-            font-size: 11px;
-            color: #888;
+            font-size: 10px;
+            color: #666;
         }
 
         .chat-text {
-            color: #fff;
-            font-size: 14px;
-            line-height: 1.4;
+            color: #ddd;
+            font-size: 13px;
+            line-height: 1.3;
             word-wrap: break-word;
         }
 
@@ -1249,7 +1235,6 @@
             if (messagesToRender.length === 0) return;
             
             messagesToRender.forEach(msg => {
-                const isOwn = msg.userId === currentUser.id;
                 const initials = msg.username ? msg.username.substring(0, 2).toUpperCase() : 'AD';
                 const time = new Date(msg.timestamp).toLocaleTimeString('en-US', { 
                     hour: '2-digit', 
@@ -1257,7 +1242,7 @@
                 });
                 
                 const messageHtml = `
-                    <div class="chat-message ${isOwn ? 'own' : 'other'}" data-message-id="${msg.id}">
+                    <div class="chat-message" data-message-id="${msg.id}">
                         <div class="chat-avatar">
                             ${msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.username}">` : initials}
                         </div>

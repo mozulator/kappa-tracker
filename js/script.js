@@ -1995,18 +1995,27 @@ class QuestTracker {
             // Store rankings data for sorting
             this.rankingsData = data.rankings;
             
-            // Build rankings table HTML with toggle
+            // Build rankings table HTML with toggles
             container.innerHTML = `
                 <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         <h2 style="color: #c7aa6a; font-size: 28px; margin: 0;">
                             <i class="fas fa-trophy"></i> Global Rankings for 16.9 Patch
                         </h2>
-                        <label class="quest-mode-toggle" style="margin: 0;">
-                            <input type="checkbox" id="include-prestige-dashboard" class="quest-mode-checkbox" checked>
-                            <span class="quest-mode-slider"></span>
-                            <span class="quest-mode-label">Include Prestige</span>
-                        </label>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <label class="quest-mode-toggle" style="margin: 0;">
+                                <input type="checkbox" id="leaderboard-toggle-dashboard" class="quest-mode-checkbox">
+                                <span class="quest-mode-slider"></span>
+                                <span class="quest-mode-label" id="leaderboard-label-dashboard">
+                                    <i class="fas fa-skull-crossbones"></i> PVP
+                                </span>
+                            </label>
+                            <label class="quest-mode-toggle" style="margin: 0;">
+                                <input type="checkbox" id="include-prestige-dashboard" class="quest-mode-checkbox" checked>
+                                <span class="quest-mode-slider"></span>
+                                <span class="quest-mode-label">Sort by Prestige First</span>
+                            </label>
+                        </div>
                     </div>
                     <div id="rankings-table-wrapper">
                     <div style="background: rgba(30, 30, 30, 0.8); border: 2px solid #3a3a3a; border-radius: 12px; overflow: hidden;">
@@ -2091,14 +2100,22 @@ class QuestTracker {
                 </div>
             `;
             
-            // Render with default sorting (include prestige = true)
-            this.renderRankings(true);
+            // Render with default sorting (PVP, include prestige = true)
+            this.renderRankings(false, true);
             
-            // Setup toggle event listener
-            const toggle = document.getElementById('include-prestige-dashboard');
-            if (toggle) {
-                toggle.addEventListener('change', () => {
-                    this.renderRankings(toggle.checked);
+            // Setup toggle event listeners
+            const leaderboardToggle = document.getElementById('leaderboard-toggle-dashboard');
+            const prestigeToggle = document.getElementById('include-prestige-dashboard');
+            
+            if (leaderboardToggle) {
+                leaderboardToggle.addEventListener('change', () => {
+                    this.renderRankings(leaderboardToggle.checked, prestigeToggle.checked);
+                });
+            }
+            
+            if (prestigeToggle) {
+                prestigeToggle.addEventListener('change', () => {
+                    this.renderRankings(leaderboardToggle.checked, prestigeToggle.checked);
                 });
             }
         } catch (error) {
@@ -2107,20 +2124,48 @@ class QuestTracker {
         }
     }
     
-    renderRankings(includePrestige) {
+    renderRankings(isPVE, includePrestige) {
         if (!this.rankingsData) return;
         
-        // Sort rankings based on toggle
-        const sorted = [...this.rankingsData].sort((a, b) => {
-            const isPVE_A = a.progress.prestige === -1;
-            const isPVE_B = b.progress.prestige === -1;
-            
-            // PVE always below prestige players
-            if (isPVE_A && !isPVE_B) return 1;
-            if (!isPVE_A && isPVE_B) return -1;
-            
-            if (includePrestige) {
-                // Prestige > Completion % > Level
+        // Update label
+        const label = document.getElementById('leaderboard-label-dashboard');
+        if (label) {
+            if (isPVE) {
+                label.innerHTML = '<i class="fas fa-shield-alt"></i> PVE';
+            } else {
+                label.innerHTML = '<i class="fas fa-skull-crossbones"></i> PVP';
+            }
+        }
+        
+        // Filter rankings based on leaderboard type
+        const filtered = this.rankingsData.filter(user => {
+            if (isPVE) {
+                // PVE leaderboard: only users with prestige -1
+                return user.progress.prestige === -1;
+            } else {
+                // PVP leaderboard: users with prestige >= 0 (0, 1, 2, 3, 4)
+                return user.progress.prestige !== -1;
+            }
+        });
+        
+        // Check if there are any users in this leaderboard
+        if (filtered.length === 0) {
+            const wrapper = document.getElementById('rankings-table-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = `
+                    <div style="padding: 60px; text-align: center; color: #888;">
+                        <i class="fas fa-trophy" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
+                        <p>No ${isPVE ? 'PVE' : 'PVP'} players yet. Be the first!</p>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
+        // Sort rankings based on toggle and leaderboard type
+        const sorted = [...filtered].sort((a, b) => {
+            if (!isPVE && includePrestige) {
+                // PVP with Prestige First: Sort by Prestige > Completion % > Level
                 const prestigeA = a.progress.prestige || 0;
                 const prestigeB = b.progress.prestige || 0;
                 if (prestigeB !== prestigeA) return prestigeB - prestigeA;
@@ -2131,7 +2176,7 @@ class QuestTracker {
                 
                 return b.progress.pmcLevel - a.progress.pmcLevel;
             } else {
-                // Completion % > Prestige > Level
+                // Default (both PVP and PVE): Sort by Completion % > Prestige > Level
                 const completionA = a.progress.completionRate;
                 const completionB = b.progress.completionRate;
                 if (completionB !== completionA) return completionB - completionA;
