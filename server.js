@@ -1272,7 +1272,7 @@ app.post('/api/refresh-quests', requireAuth, async (req, res) => {
 app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
     try {
         const { questId } = req.params;
-        const { trader, level, requiredForKappa, mapName, prerequisiteQuests, autoCompleteQuests, requiredItems, images, notes, shoppingList } = req.body;
+        const { trader, level, unlockAfterHours, requiredForKappa, mapName, prerequisiteQuests, autoCompleteQuests, requiredItems, images, notes, shoppingList } = req.body;
 
         // Validate quest exists and get current data
         const quest = await prisma.quest.findUnique({
@@ -1295,6 +1295,11 @@ app.put('/api/admin/quests/:questId', requireAdmin, async (req, res) => {
         if (level !== undefined && parseInt(level) !== quest.level) {
             updateData.level = parseInt(level);
             changes.push(`Level: ${quest.level} → ${level}`);
+        }
+        
+        if (unlockAfterHours !== undefined && parseInt(unlockAfterHours) !== quest.unlockAfterHours) {
+            updateData.unlockAfterHours = parseInt(unlockAfterHours);
+            changes.push(`Unlock after: ${quest.unlockAfterHours}h → ${unlockAfterHours}h`);
         }
         
         if (requiredForKappa !== undefined && Boolean(requiredForKappa) !== quest.requiredForKappa) {

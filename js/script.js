@@ -969,10 +969,14 @@ class QuestTracker {
                 hasImages = false;
             }
             
+            const unlockHoursHtml = quest.unlockAfterHours > 0 
+                ? `<div class="quest-unlock-timer" title="Unlocks ${quest.unlockAfterHours} hours after prerequisites">+${quest.unlockAfterHours}h</div>` 
+                : '';
+
             return `
                 <div class="quest-card ${questCardClass}" data-quest-id="${quest.id}">
                     <div class="quest-header">
-                        <div class="quest-name">${quest.name}</div>
+                        <div class="quest-name">${quest.name}${unlockHoursHtml}</div>
                         <div class="quest-actions">
                             ${hasImages ? `<button class="quest-images-btn" onclick="window.tracker.showQuestImages('${quest.id}')" title="View Images">
                                 <i class="fas fa-image"></i>

@@ -790,6 +790,22 @@ input[type="checkbox"]:focus {
     color: var(--text-highlight);
     flex: 1;
     line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quest-unlock-timer {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: rgba(255, 193, 7, 0.2);
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #ffc107;
+    white-space: nowrap;
 }
 
 .quest-actions {

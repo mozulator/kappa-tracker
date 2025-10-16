@@ -62,6 +62,7 @@ model Quest {
   images            String   @default("[]") // JSON array of image URLs
   notes             String?  // Additional notes or tips for the quest
   shoppingList      String   @default("[]") // JSON array of items to buy for Gunsmith quests
+  unlockAfterHours  Int      @default(0) // Hours to wait after prerequisites before quest unlocks
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
