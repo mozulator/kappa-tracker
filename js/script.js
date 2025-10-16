@@ -2307,9 +2307,9 @@ class QuestTracker {
                                             `}
                                             <div>
                                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                                    <a href="/public-profile?user=${user.username}" style="color: ${user.profileColor || '#c7aa6a'}; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
-                                                    ${displayName}
-                                                </a>
+                                                    <a href="${user.twitchUrl || `/public-profile?user=${user.username}`}" target="_blank" style="color: ${user.profileColor || '#c7aa6a'}; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
+                                                        ${displayName}
+                                                    </a>
                                                     ${(this.twitchLiveUsers && user.twitchName && this.twitchLiveUsers[user.twitchName.toLowerCase()]) ? `
                                                         <span style="background: #e91916; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; animation: pulse 2s infinite;">
                                                             <span style="width: 6px; height: 6px; background: #fff; border-radius: 50%; display: inline-block;"></span>
@@ -2318,13 +2318,8 @@ class QuestTracker {
                                                     ` : ''}
                                                 </div>
                                                 <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
-                                                    ${user.twitchUrl ? `
-                                                        <a href="${user.twitchUrl}" target="_blank" style="color: #888; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
-                                                            <i class="fab fa-twitch"></i> Twitch
-                                                        </a>
-                                                    ` : ''}
                                                     ${user.tarkovDevId ? `
-                                                        <a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank" style="color: #c7aa6a; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank" style="color: #888; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
                                                             <i class="fas fa-gamepad"></i> Tarkov.dev
                                                         </a>
                                                     ` : ''}
