@@ -130,8 +130,7 @@
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid #3a3a3a;
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 12px;
+            padding: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -180,10 +179,13 @@
         }
 
         .action-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            display: flex;
             gap: 8px;
             width: 100%;
+        }
+        
+        .action-buttons .btn {
+            flex: 1;
         }
 
         .btn {
@@ -661,6 +663,18 @@
                         <div class="label">Admins</div>
                     </div>
                 </div>
+                
+                <!-- User Filters -->
+                <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                    <input type="text" id="user-search" placeholder="🔍 Search users..." style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px;">
+                    <select id="user-sort" style="padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px; min-width: 180px;">
+                        <option value="date">Sort: Newest First</option>
+                        <option value="date-old">Sort: Oldest First</option>
+                        <option value="alphabetical">Sort: A-Z</option>
+                        <option value="roles">Sort: By Roles</option>
+                    </select>
+                </div>
+                
                 <div id="all-users-list">
                     <div class="loading">
                         <i class="fas fa-spinner fa-spin"></i>
@@ -872,10 +886,47 @@
         function displayAllUsers() {
             const container = document.getElementById('all-users-list');
             const countEl = document.getElementById('users-count');
+            const searchInput = document.getElementById('user-search');
+            const sortSelect = document.getElementById('user-sort');
             
-            countEl.textContent = allUsers.length;
+            // Filter users by search
+            let filteredUsers = [...allUsers];
+            if (searchInput && searchInput.value.trim()) {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                filteredUsers = filteredUsers.filter(user => {
+                    const displayName = (user.displayName || user.username).toLowerCase();
+                    const username = user.username.toLowerCase();
+                    const email = user.email.toLowerCase();
+                    return displayName.includes(searchTerm) || username.includes(searchTerm) || email.includes(searchTerm);
+                });
+            }
+            
+            // Sort users
+            if (sortSelect) {
+                const sortValue = sortSelect.value;
+                filteredUsers.sort((a, b) => {
+                    switch(sortValue) {
+                        case 'date': // Newest first
+                            return new Date(b.createdAt) - new Date(a.createdAt);
+                        case 'date-old': // Oldest first
+                            return new Date(a.createdAt) - new Date(b.createdAt);
+                        case 'alphabetical': // A-Z
+                            const nameA = (a.displayName || a.username).toLowerCase();
+                            const nameB = (b.displayName || b.username).toLowerCase();
+                            return nameA.localeCompare(nameB);
+                        case 'roles': // Admins > Leaderboard > Others
+                            if (a.isAdmin !== b.isAdmin) return b.isAdmin ? 1 : -1;
+                            if (a.approved !== b.approved) return b.approved ? 1 : -1;
+                            return 0;
+                        default:
+                            return 0;
+                    }
+                });
+            }
+            
+            countEl.textContent = filteredUsers.length;
 
-            if (allUsers.length === 0) {
+            if (filteredUsers.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-users-slash"></i>
@@ -885,7 +936,7 @@
                 return;
             }
 
-            container.innerHTML = allUsers.map(user => `
+            container.innerHTML = filteredUsers.map(user => `
                 <div class="user-card" id="user-${user.id}">
                     <div class="user-info-section">
                         <div class="name">
@@ -1399,6 +1450,22 @@
             await getCurrentUser();
             await loadData();
             await loadChatMessages();
+            
+            // Setup user filter event listeners
+            const userSearch = document.getElementById('user-search');
+            const userSort = document.getElementById('user-sort');
+            
+            if (userSearch) {
+                userSearch.addEventListener('input', () => {
+                    displayAllUsers();
+                });
+            }
+            
+            if (userSort) {
+                userSort.addEventListener('change', () => {
+                    displayAllUsers();
+                });
+            }
             
             // Reload data every 30 seconds
             setInterval(loadData, 30000);
