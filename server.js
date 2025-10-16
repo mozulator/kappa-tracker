@@ -353,7 +353,8 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
                 tarkovDevId: true,
                 avatarUrl: true,
                 isAdmin: true,
-                createdAt: true
+                createdAt: true,
+                profileColor: true
             }
         });
         
@@ -1179,7 +1180,7 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
             return res.status(403).json({ error: 'Cannot update another user\'s profile' });
         }
 
-        const { displayName, bio, twitchUrl, twitchUsername, discordTag, tarkovDevId, avatarUrl, isPublic } = req.body;
+        const { displayName, bio, twitchUrl, twitchUsername, discordTag, tarkovDevId, avatarUrl, isPublic, profileColor } = req.body;
 
         // Build update data object
         let updateData = {
@@ -1187,7 +1188,8 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
                 ...(bio !== undefined && { bio }),
                 ...(discordTag !== undefined && { discordTag }),
             ...(tarkovDevId !== undefined && { tarkovDevId }),
-                ...(isPublic !== undefined && { isPublic })
+                ...(isPublic !== undefined && { isPublic }),
+                ...(profileColor !== undefined && { profileColor })
         };
 
         // Handle Twitch username update (auto-fetch avatar)
@@ -1229,7 +1231,8 @@ app.put('/api/users/:username', requireAuth, async (req, res) => {
                 discordTag: true,
                 tarkovDevId: true,
                 avatarUrl: true,
-                isPublic: true
+                isPublic: true,
+                profileColor: true
             }
         });
 
@@ -2031,7 +2034,8 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
                     id: true,
                     username: true,
                     displayName: true,
-                    avatarUrl: true
+                    avatarUrl: true,
+                    profileColor: true
                 }
             });
 
@@ -2094,6 +2098,7 @@ app.get('/api/statistics', requireAuth, async (req, res) => {
                     username: user.username,
                     displayName: user.displayName,
                     avatarUrl: user.avatarUrl,
+                    profileColor: user.profileColor,
                     progressData,
                     activities: activitiesWithDetails
                 };
@@ -2734,14 +2739,6 @@ app.get('/login', (req, res) => {
 
 app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'html', 'register.html'));
-});
-
-app.get('/rankings', (req, res) => {
-    res.sendFile(path.join(__dirname, 'html', 'rankings.html'));
-});
-
-app.get('/rankings.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'html', 'rankings.html'));
 });
 
 app.get('/profile', requireAuth, (req, res) => {

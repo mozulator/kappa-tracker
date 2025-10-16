@@ -31,6 +31,7 @@ model User {
   discordTag    String?
   tarkovDevId   String?
   avatarUrl     String?
+  profileColor  String?  @default("#c7aa6a") // User's profile color for username and statistics
   
   // Account status
   approved      Boolean  @default(false)

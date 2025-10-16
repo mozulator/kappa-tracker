@@ -242,6 +242,15 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="profileColor">Profile Color</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="color" id="profileColor" name="profileColor" value="#c7aa6a" style="width: 80px; height: 40px; cursor: pointer; border-radius: 4px; border: 2px solid rgba(199, 170, 106, 0.3);">
+                        <input type="text" id="profileColorHex" value="#c7aa6a" maxlength="7" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(199, 170, 106, 0.3); border-radius: 4px; color: #fff; font-family: monospace;">
+                    </div>
+                    <small>Your username color (used in statistics and rankings)</small>
+                </div>
+
+                <div class="form-group">
                     <label for="bio">Bio</label>
                     <textarea id="bio" name="bio" maxlength="200"></textarea>
                     <small>Tell others about yourself (max 200 characters)</small>
@@ -302,6 +311,8 @@
 
                 // Fill form
                 document.getElementById('displayName').value = user.displayName || '';
+                document.getElementById('profileColor').value = user.profileColor || '#c7aa6a';
+                document.getElementById('profileColorHex').value = user.profileColor || '#c7aa6a';
                 document.getElementById('bio').value = user.bio || '';
                 document.getElementById('twitchUrl').value = user.twitchUrl || '';
                 document.getElementById('discordTag').value = user.discordTag || '';
@@ -322,6 +333,7 @@
 
             const formData = {
                 displayName: document.getElementById('displayName').value,
+                profileColor: document.getElementById('profileColor').value,
                 bio: document.getElementById('bio').value,
                 twitchUrl: document.getElementById('twitchUrl').value,
                 discordTag: document.getElementById('discordTag').value,
@@ -377,7 +389,27 @@
             }, 5000);
         }
 
-        document.addEventListener('DOMContentLoaded', loadProfile);
+        // Sync color picker and hex input
+        document.addEventListener('DOMContentLoaded', () => {
+            const colorPicker = document.getElementById('profileColor');
+            const colorHexInput = document.getElementById('profileColorHex');
+            
+            // Update hex input when color picker changes
+            colorPicker.addEventListener('input', (e) => {
+                colorHexInput.value = e.target.value.toUpperCase();
+            });
+            
+            // Update color picker when hex input changes
+            colorHexInput.addEventListener('input', (e) => {
+                const hex = e.target.value;
+                // Validate hex color
+                if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                    colorPicker.value = hex;
+                }
+            });
+            
+            loadProfile();
+        });
     </script>
 </body>
 </html>

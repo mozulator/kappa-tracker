@@ -113,7 +113,7 @@
                     </div>
                 </div>
                 <a href="#" class="nav-link" id="how-to-use-tab">
-                    <i class="fas fa-question-circle"></i> How to Use
+                    How to Use
                 </a>
             </nav>
         </div>
@@ -368,6 +368,7 @@
                         <div class="section-header">
                             <h2><i class="fas fa-chart-line"></i> Quest Progress Over Time</h2>
                         </div>
+                        <div id="user-legend" class="user-legend"></div>
                         <div class="chart-container">
                             <canvas id="questProgressChart"></canvas>
                         </div>
@@ -395,7 +396,7 @@
             <!-- How to Use Section -->
             <section class="how-to-use" id="how-to-use" style="display: none;">
                 <div style="max-width: 1200px; margin: 0 auto;">
-                    <h2 style="color: var(--text-highlight); font-size: 2.5rem; margin-bottom: 30px; text-align: center;">
+                    <h2 style="color: var(--text-highlight); font-size: 1.8rem; margin-bottom: 20px; text-align: center;">
                         <i class="fas fa-question-circle"></i> How to Use Kappa Tracker
                     </h2>
                     
@@ -405,7 +406,7 @@
                         <p>Welcome to Kappa Tracker! Track your Escape From Tarkov quest progress towards the Kappa Container.</p>
                         <ol>
                             <li>Create an account and log in</li>
-                            <li>Set your PMC level and prestige (if applicable)</li>
+                            <li>Set your PMC level and prestige (select "PVE" if you play PVE mode)</li>
                             <li>Check off quests as you complete them</li>
                             <li>View your progress and compare with other players</li>
                         </ol>
@@ -414,11 +415,10 @@
                     <!-- Dashboard -->
                     <div class="help-section">
                         <h3><i class="fas fa-home"></i> Dashboard</h3>
-                        <p><strong>Your main quest tracking hub.</strong> All quests are organized by map locations.</p>
+                        <p><strong>Your main quest tracking hub.</strong> All quests are organized by map locations or Trader.</p>
                         <ul>
                             <li><strong>Quest Cards:</strong> Click a quest card to mark it as complete/incomplete</li>
-                            <li><strong>Map Tabs:</strong> Filter quests by map location</li>
-                            <li><strong>Quest Modes:</strong> Toggle between "Kappa Quests" and "All Quests"</li>
+                            <li><strong>Map Tabs:</strong> Filter quests by map location or trader</li>
                             <li><strong>Future Quests:</strong> Toggle to show quests you haven't unlocked yet</li>
                             <li><strong>Prerequisites:</strong> See which quests unlock other quests</li>
                         </ul>
@@ -442,7 +442,6 @@
                         <ul>
                             <li><strong>PVP/PVE Toggle:</strong> Switch between PVP and PVE leaderboards</li>
                             <li><strong>Sort Options:</strong> Sort by prestige or completion percentage</li>
-                            <li>Click on any player to view their public profile</li>
                         </ul>
                     </div>
 
@@ -501,10 +500,8 @@
                         <ul>
                             <li><strong>PMC Level & Prestige:</strong> Keep your character info up to date</li>
                             <li><strong>Display Name:</strong> How your name appears on the leaderboard</li>
-                            <li><strong>Twitch Integration:</strong> Link your Twitch channel</li>
+                            <li><strong>Twitch Integration:</strong> Link your Twitch account to fetch your profile avatar image</li>
                             <li><strong>Tarkov.dev ID:</strong> Link your Tarkov.dev profile</li>
-                            <li><strong>Bio:</strong> Add a personal message to your profile</li>
-                            <li><strong>Public Profile:</strong> Control if others can view your progress</li>
                         </ul>
                     </div>
 
@@ -519,11 +516,11 @@
                         </ul>
                     </div>
 
-                    <div class="help-footer" style="text-align: center; margin-top: 40px; padding: 20px; background: rgba(199, 170, 106, 0.1); border-radius: 8px;">
-                        <p style="color: var(--text-highlight); font-size: 1.1rem; margin-bottom: 10px;">
+                    <div class="help-footer" style="text-align: center; margin-top: 20px; padding: 15px; background: rgba(199, 170, 106, 0.08); border-radius: 6px;">
+                        <p style="color: var(--text-highlight); font-size: 0.95rem; margin-bottom: 6px;">
                             <i class="fas fa-heart"></i> Made by <a href="https://twitch.tv/mozula" target="_blank" style="color: var(--text-highlight); text-decoration: underline;">twitch.tv/mozula</a> for free
                         </p>
-                        <p style="color: var(--subtext); font-size: 0.9rem;">
+                        <p style="color: var(--subtext); font-size: 0.85rem;">
                             Feel free to drop a follow! Need help? Found a bug? Use the Feedback menu!
                         </p>
                     </div>

@@ -1730,6 +1730,11 @@ input[type="checkbox"]:focus {
 }
 
 /* Statistics Page Styles */
+.statistics {
+    overflow-y: hidden;
+    height: 100%;
+}
+
 .statistics-container {
     display: grid;
     grid-template-columns: 1.5fr 0.5fr;
@@ -2064,6 +2069,36 @@ input[type="checkbox"]:focus {
     border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
+.user-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    margin-bottom: 15px;
+    min-height: 20px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.legend-name {
+    font-weight: 500;
+}
+
 @media (max-width: 1200px) {
     .statistics-container {
         grid-template-columns: 1fr;
@@ -2077,56 +2112,56 @@ input[type="checkbox"]:focus {
 
 /* How to Use Section */
 .how-to-use {
-    padding: 40px 20px;
+    padding: 30px 20px;
     overflow-y: auto;
     height: 100%;
 }
 
 .help-section {
-    background: var(--post-bg);
-    border: 2px solid var(--post-border);
-    border-radius: 12px;
-    padding: 30px;
-    margin-bottom: 30px;
+    background: rgba(17, 18, 19, 0.6);
+    border: 1px solid rgba(199, 170, 106, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
 .help-section h3 {
     color: var(--text-highlight);
-    font-size: 1.8rem;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.help-section h4 {
-    color: var(--text-highlight);
     font-size: 1.4rem;
-    margin-top: 20px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+.help-section h4 {
+    color: var(--text-highlight);
+    font-size: 1.1rem;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .help-section p {
     color: var(--subtext);
-    font-size: 1rem;
-    line-height: 1.8;
-    margin-bottom: 15px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
 }
 
 .help-section ul,
 .help-section ol {
     color: var(--subtext);
-    font-size: 1rem;
-    line-height: 1.8;
-    margin-left: 25px;
-    margin-bottom: 15px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-left: 20px;
+    margin-bottom: 12px;
 }
 
 .help-section li {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .help-section strong {
@@ -2134,37 +2169,37 @@ input[type="checkbox"]:focus {
 }
 
 .help-section code {
-    background: rgba(199, 170, 106, 0.1);
-    border: 1px solid var(--post-border);
-    padding: 2px 8px;
-    border-radius: 4px;
+    background: rgba(199, 170, 106, 0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
     color: var(--text-highlight);
     font-family: 'Courier New', monospace;
     font-size: 0.9em;
 }
 
 .help-subsection {
-    background: rgba(0, 0, 0, 0.3);
-    border-left: 3px solid var(--post-border);
-    padding: 20px;
-    margin: 20px 0;
-    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 2px solid rgba(199, 170, 106, 0.4);
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 4px;
 }
 
 .help-note {
-    background: rgba(199, 170, 106, 0.1);
-    border: 2px solid var(--post-border);
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-top: 20px;
+    background: rgba(199, 170, 106, 0.08);
+    border: 1px solid rgba(199, 170, 106, 0.3);
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-top: 15px;
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
+    font-size: 0.95rem;
 }
 
 .help-note i {
     color: var(--text-highlight);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-top: 2px;
 }
 
@@ -2174,14 +2209,14 @@ input[type="checkbox"]:focus {
 
 @media (max-width: 768px) {
     .help-section {
-        padding: 20px;
+        padding: 15px;
     }
     
     .help-section h3 {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
     
     .help-section h4 {
-        font-size: 1.2rem;
+        font-size: 1rem;
     }
 }

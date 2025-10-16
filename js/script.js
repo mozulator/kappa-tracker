@@ -2587,7 +2587,8 @@ class StatisticsManager {
             // Assign colors to users BEFORE initializing chart
             this.allUsers = data.users;
             data.users.forEach((user, index) => {
-                const color = this.colors[index % this.colors.length];
+                // Use user's profile color if available, otherwise use default colors
+                const color = user.profileColor || this.colors[index % this.colors.length];
                 this.userColors[user.username] = color;
             });
             console.log('User colors assigned:', this.userColors);
@@ -2610,6 +2611,7 @@ class StatisticsManager {
             // Populate user selector
             this.populateUserSelector(data.users);
             this.updateUserFilter(data.users);
+            this.updateLegend();
             
             // Flatten all activities from all users
             const allActivities = data.users.flatMap(u => u.activities || []);
@@ -2812,10 +2814,38 @@ class StatisticsManager {
                 }
                 // Save selections to localStorage
                 this.saveSelections();
+                // Update legend
+                this.updateLegend();
                 // Reload chart with updated selection
                 this.loadData(true);
             });
         });
+    }
+
+    updateLegend() {
+        const legendContainer = document.getElementById('user-legend');
+        if (!legendContainer) return;
+
+        if (this.selectedUsers.size === 0) {
+            legendContainer.innerHTML = '<div style="color: var(--subtext); font-size: 0.85rem; text-align: center;">No users selected. Select users from the dropdown above to compare their progress.</div>';
+            return;
+        }
+
+        const legendItems = Array.from(this.selectedUsers).map(username => {
+            const color = this.userColors[username] || '#888';
+            const user = this.allUsers.find(u => u.username === username);
+            const displayName = user ? (user.displayName || user.username) : username;
+            const isCurrentUser = username === window.currentUser?.username;
+            
+            return `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: ${color};"></div>
+                    <span class="legend-name">${displayName}${isCurrentUser ? ' (You)' : ''}</span>
+                </div>
+            `;
+        }).join('');
+
+        legendContainer.innerHTML = legendItems;
     }
 
     renderActivityLog(activities, compareMode = false) {
