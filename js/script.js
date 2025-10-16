@@ -3079,36 +3079,37 @@ function replaceEmotes(text) {
     
     if (emotes.length === 0) return result;
     
-    // Check if message contains only emotes (and whitespace)
-    let emoteCount = 0;
-    let tempText = text.trim();
+    // Check if message contains only repeated instances of the same emote
+    const trimmedText = text.trim();
+    const words = trimmedText.split(/\s+/);
     
-    emotes.forEach(emote => {
-        const regex = new RegExp(`\\b${emote.name}\\b`, 'g');
-        const matches = tempText.match(regex);
-        if (matches) {
-            emoteCount += matches.length;
-            tempText = tempText.replace(regex, '').trim();
-        }
-    });
-    
-    // If only emotes in message (no other text), make them bigger
-    const isOnlyEmotes = tempText.length === 0 && emoteCount > 0;
-    let emoteSize = '28px';
-    
-    if (isOnlyEmotes) {
-        if (emoteCount === 1) {
-            emoteSize = '56px'; // Single emote = 2x size
-        } else if (emoteCount === 2) {
-            emoteSize = '72px'; // Two emotes = even bigger
-        } else {
-            emoteSize = '42px'; // 3+ emotes = slightly bigger
+    // Check if all words are the same emote
+    if (words.length > 0 && words.length <= 3) {
+        const firstWord = words[0];
+        const isEmote = emotes.some(e => e.name === firstWord);
+        const allSame = words.every(w => w === firstWord);
+        
+        if (isEmote && allSame) {
+            // User typed the same emote multiple times - size it based on count
+            const emote = emotes.find(e => e.name === firstWord);
+            let emoteSize = '28px';
+            
+            if (words.length === 1) {
+                emoteSize = '56px'; // 1x = medium
+            } else if (words.length === 2) {
+                emoteSize = '84px'; // 2x = big
+            } else if (words.length === 3) {
+                emoteSize = '112px'; // 3x = BIGGEST
+            }
+            
+            return `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: ${emoteSize}; vertical-align: middle; display: inline-block; margin: 0 2px;">`;
         }
     }
     
+    // Default: replace all emotes with normal size
     emotes.forEach(emote => {
         const regex = new RegExp(`\\b${emote.name}\\b`, 'g');
-        result = result.replace(regex, `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: ${emoteSize}; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
+        result = result.replace(regex, `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: 28px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
     });
     
     return result;
