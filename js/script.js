@@ -3040,3 +3040,256 @@ let questTracker;
 document.addEventListener('DOMContentLoaded', () => {
     questTracker = new QuestTracker();
 });
+
+// ============================================================================
+// GLOBAL CHAT FUNCTIONALITY
+// ============================================================================
+
+let globalChatOpen = false;
+let globalChatMessages = [];
+let lastGlobalChatId = null;
+let globalChatPollInterval = null;
+
+function initGlobalChat() {
+    const chatButton = document.getElementById('global-chat-button');
+    const chatBox = document.getElementById('global-chat-box');
+    const closeChatBtn = document.getElementById('close-chat-btn');
+    const sendBtn = document.getElementById('global-chat-send-btn');
+    const chatInput = document.getElementById('global-chat-input');
+    const purgeChatBtn = document.getElementById('purge-chat-btn');
+
+    if (!chatButton || !chatBox) return;
+
+    // Show purge button for admins
+    if (window.currentUser && window.currentUser.isAdmin && purgeChatBtn) {
+        purgeChatBtn.style.display = 'block';
+    }
+
+    // Toggle chat box
+    chatButton.addEventListener('click', () => {
+        globalChatOpen = !globalChatOpen;
+        chatBox.style.display = globalChatOpen ? 'flex' : 'none';
+        
+        if (globalChatOpen) {
+            loadGlobalChat();
+            // Hide unread badge when opening
+            const badge = document.getElementById('chat-unread-badge');
+            if (badge) badge.style.display = 'none';
+            // Focus input
+            if (chatInput) chatInput.focus();
+        }
+    });
+
+    // Close chat
+    if (closeChatBtn) {
+        closeChatBtn.addEventListener('click', () => {
+            globalChatOpen = false;
+            chatBox.style.display = 'none';
+        });
+    }
+
+    // Send message on button click
+    if (sendBtn) {
+        sendBtn.addEventListener('click', sendGlobalMessage);
+    }
+
+    // Send message on Enter (but Shift+Enter for new line)
+    if (chatInput) {
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendGlobalMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    }
+
+    // Purge chat (admin only)
+    if (purgeChatBtn) {
+        purgeChatBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to purge all global chat messages? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/global-chat/purge', {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    globalChatMessages = [];
+                    lastGlobalChatId = null;
+                    displayGlobalChatMessages();
+                    alert('Chat purged successfully');
+                } else {
+                    alert('Failed to purge chat');
+                }
+            } catch (error) {
+                console.error('Error purging chat:', error);
+                alert('Error purging chat');
+            }
+        });
+    }
+
+    // Initial load
+    loadGlobalChat();
+}
+
+async function loadGlobalChat() {
+    try {
+        const url = lastGlobalChatId 
+            ? `/api/global-chat?after=${lastGlobalChatId}`
+            : '/api/global-chat';
+        
+        const response = await fetch(url, { credentials: 'include' });
+        
+        if (!response.ok) {
+            console.error('Failed to load global chat');
+            return;
+        }
+        
+        const data = await response.json();
+        const newMessages = data.messages || [];
+        
+        if (newMessages.length > 0) {
+            if (lastGlobalChatId) {
+                // Append new messages
+                globalChatMessages.push(...newMessages);
+                
+                // Show unread badge if chat is closed
+                if (!globalChatOpen) {
+                    const badge = document.getElementById('chat-unread-badge');
+                    if (badge) {
+                        badge.textContent = newMessages.length;
+                        badge.style.display = 'flex';
+                    }
+                }
+            } else {
+                // Initial load
+                globalChatMessages = newMessages;
+            }
+            
+            lastGlobalChatId = newMessages[newMessages.length - 1].id;
+            displayGlobalChatMessages();
+        }
+    } catch (error) {
+        console.error('Error loading global chat:', error);
+    }
+}
+
+function displayGlobalChatMessages() {
+    const messagesContainer = document.getElementById('global-chat-messages');
+    if (!messagesContainer) return;
+
+    if (globalChatMessages.length === 0) {
+        messagesContainer.innerHTML = `
+            <div style="text-align: center; color: var(--subtext); padding: 20px;">
+                <i class="fas fa-comments" style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;"></i>
+                <p>No messages yet. Start the conversation!</p>
+            </div>
+        `;
+        return;
+    }
+
+    const shouldScrollToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
+
+    messagesContainer.innerHTML = globalChatMessages.map(msg => {
+        const timestamp = new Date(msg.timestamp);
+        const timeString = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const displayName = msg.displayName || msg.username;
+        const color = msg.profileColor || '#c7aa6a';
+        const avatarUrl = msg.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) + '&background=1a1a1a&color=c7aa6a';
+
+        return `
+            <div class="global-chat-message">
+                <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar">
+                <div class="global-chat-bubble">
+                    <div class="global-chat-header-info">
+                        <span class="global-chat-name" style="color: ${color};">${escapeHtml(displayName)}</span>
+                        <span class="global-chat-time">${timeString}</span>
+                    </div>
+                    <div class="global-chat-text">${escapeHtml(msg.message)}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (shouldScrollToBottom) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+}
+
+async function sendGlobalMessage() {
+    const chatInput = document.getElementById('global-chat-input');
+    const sendBtn = document.getElementById('global-chat-send-btn');
+    
+    if (!chatInput || !sendBtn) return;
+    
+    const message = chatInput.value.trim();
+    if (!message) return;
+    
+    // Disable input while sending
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/global-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ message })
+        });
+        
+        if (response.ok) {
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            // Reload messages immediately
+            await loadGlobalChat();
+        } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to send message');
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Error sending message');
+    } finally {
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+        chatInput.focus();
+    }
+}
+
+function startGlobalChatPolling() {
+    if (globalChatPollInterval) return;
+    
+    globalChatPollInterval = setInterval(() => {
+        loadGlobalChat();
+    }, 3000); // Poll every 3 seconds
+}
+
+function stopGlobalChatPolling() {
+    if (globalChatPollInterval) {
+        clearInterval(globalChatPollInterval);
+        globalChatPollInterval = null;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Initialize chat when user is logged in
+if (window.currentUser) {
+    document.addEventListener('DOMContentLoaded', () => {
+        initGlobalChat();
+        startGlobalChatPolling();
+    });
+}
