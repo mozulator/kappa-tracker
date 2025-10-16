@@ -2099,12 +2099,12 @@ class QuestTracker {
                                                         <div style="color: #888; font-size: 14px;">@${user.username}</div>
                                                         <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
                                                             ${user.twitchUrl ? `
-                                                                <a href="${user.twitchUrl}" target="_blank" style="color: #6441a5; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                                <a href="${user.twitchUrl}" target="_blank" style="color: #888; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
                                                                     <i class="fab fa-twitch"></i> Twitch
                                                                 </a>
                                                             ` : ''}
                                                             ${user.tarkovDevId ? `
-                                                                <a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank" style="color: #c7aa6a; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                                <a href="https://tarkov.dev/player/${user.tarkovDevId}" target="_blank" style="color: #888; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
                                                                     <i class="fas fa-gamepad"></i> Tarkov.dev
                                                                 </a>
                                                             ` : ''}
@@ -3086,6 +3086,13 @@ function initGlobalChat() {
             if (badge) badge.style.display = 'none';
             // Focus input
             if (chatInput) chatInput.focus();
+            // Scroll to bottom
+            setTimeout(() => {
+                const messagesContainer = document.getElementById('global-chat-messages');
+                if (messagesContainer) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }, 100);
         }
     });
 

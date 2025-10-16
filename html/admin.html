@@ -1361,11 +1361,8 @@
                 lastRenderedMessageId = msg.id;
             });
             
-            // Auto-scroll to bottom only if user is near bottom
-            const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-            if (isNearBottom) {
-                container.scrollTop = container.scrollHeight;
-            }
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
         }
 
         function escapeHtml(text) {
