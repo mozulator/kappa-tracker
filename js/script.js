@@ -2336,6 +2336,37 @@ class QuestTracker {
                         
                         <div style="border-top: 1px solid #3a3a3a; padding-top: 20px; margin-bottom: 20px;">
                             <h4 style="color: #c7aa6a; font-size: 16px; margin-bottom: 15px;">
+                                <i class="fas fa-palette"></i> Profile Color
+                            </h4>
+                            <div style="color: #888; font-size: 14px; margin-bottom: 10px;">Choose a color for your username in statistics and rankings</div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input 
+                                    type="color" 
+                                    id="profile-color-picker" 
+                                    value="${user.profileColor || '#c7aa6a'}"
+                                    style="width: 80px; height: 40px; cursor: pointer; border-radius: 6px; border: 2px solid #3a3a3a; background: transparent;"
+                                />
+                                <input 
+                                    type="text" 
+                                    id="profile-color-hex" 
+                                    value="${user.profileColor || '#c7aa6a'}" 
+                                    maxlength="7"
+                                    placeholder="#c7aa6a"
+                                    style="flex: 1; padding: 10px 15px; background: rgba(20, 20, 20, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px; font-family: monospace;"
+                                />
+                                <button 
+                                    id="save-profile-color-btn" 
+                                    style="padding: 10px 20px; background: #c7aa6a; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px; transition: background 0.2s;"
+                                    onmouseover="this.style.background='#d4ba7f'"
+                                    onmouseout="this.style.background='#c7aa6a'"
+                                >
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="border-top: 1px solid #3a3a3a; padding-top: 20px; margin-bottom: 20px;">
+                            <h4 style="color: #c7aa6a; font-size: 16px; margin-bottom: 15px;">
                                 <i class="fab fa-twitch"></i> Twitch Integration
                             </h4>
                             <div style="display: flex; gap: 10px; align-items: center;">
@@ -2396,6 +2427,53 @@ class QuestTracker {
                     </div>
                 </div>
             `;
+            
+            // Sync profile color picker and hex input
+            const colorPicker = document.getElementById('profile-color-picker');
+            const colorHex = document.getElementById('profile-color-hex');
+            if (colorPicker && colorHex) {
+                colorPicker.addEventListener('input', (e) => {
+                    colorHex.value = e.target.value.toUpperCase();
+                });
+                colorHex.addEventListener('input', (e) => {
+                    const hex = e.target.value;
+                    if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                        colorPicker.value = hex;
+                    }
+                });
+            }
+            
+            // Add event listener for profile color save button
+            const saveProfileColorBtn = document.getElementById('save-profile-color-btn');
+            if (saveProfileColorBtn) {
+                saveProfileColorBtn.addEventListener('click', async () => {
+                    const profileColor = document.getElementById('profile-color-picker').value;
+                    
+                    try {
+                        saveProfileColorBtn.disabled = true;
+                        saveProfileColorBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                        
+                        const response = await fetch(`/api/users/${user.username}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ profileColor })
+                        });
+                        
+                        if (response.ok) {
+                            this.showNotification('Profile color saved successfully!', 'success');
+                            setTimeout(() => this.loadProfile(), 500);
+                        } else {
+                            throw new Error('Failed to save');
+                        }
+                    } catch (error) {
+                        console.error('Error saving profile color:', error);
+                        this.showNotification('Failed to save profile color', 'error');
+                        saveProfileColorBtn.disabled = false;
+                        saveProfileColorBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+                    }
+                });
+            }
             
             // Add event listener for save button
             const saveTwitchBtn = document.getElementById('save-twitch-btn');

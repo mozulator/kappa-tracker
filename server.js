@@ -189,7 +189,7 @@ async function fetchTwitchAvatar(twitchUsername) {
 
 app.post('/api/auth/register', authLimiter, async (req, res) => {
     try {
-        const { email, username, password, displayName, tarkovDevId, twitchUsername } = req.body;
+        const { email, username, password, displayName, tarkovDevId, twitchUsername, profileColor } = req.body;
 
         // Validation
         if (!email || !username || !password) {
@@ -260,6 +260,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                 twitchUrl,
                 twitchName,
                 avatarUrl,
+                profileColor: profileColor || '#c7aa6a',
                 approved: isFirstUser, // First user (admin) auto-approved for leaderboard
                 isAdmin: isFirstUser,  // First user is admin
                 progress: {
