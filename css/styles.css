@@ -1739,8 +1739,8 @@ input[type="checkbox"]:focus {
     display: grid;
     grid-template-columns: 1.5fr 0.5fr;
     gap: 25px;
-    height: calc(100vh - 200px);
-    max-height: calc(100vh - 200px);
+    height: calc(100vh - 230px);
+    max-height: calc(100vh - 230px);
 }
 
 .statistics-section {
@@ -2420,6 +2420,33 @@ input[type="checkbox"]:focus {
 #global-chat-send-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(199, 170, 106, 0.4);
+}
+
+/* Pinned message */
+.pinned-message {
+    margin-bottom: 10px;
+    border: 1px solid rgba(199, 170, 106, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Admin action buttons */
+.pin-btn, .delete-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 4px 6px;
+    font-size: 11px;
+    transition: color 0.2s;
+}
+
+.pin-btn:hover {
+    color: var(--text-highlight);
+}
+
+.delete-btn:hover {
+    color: #f44336;
 }
 
 @media (max-width: 768px) {

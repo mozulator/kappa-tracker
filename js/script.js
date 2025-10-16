@@ -989,7 +989,7 @@ class QuestTracker {
             const unlockHoursHtml = quest.unlockAfterHours > 0 
                 ? `<div class="quest-unlock-timer" title="Unlocks ${quest.unlockAfterHours} hours after prerequisites">+${quest.unlockAfterHours}h</div>` 
                 : '';
-
+            
             return `
                 <div class="quest-card ${questCardClass}" data-quest-id="${quest.id}">
                     <div class="quest-header">
@@ -1080,15 +1080,15 @@ class QuestTracker {
                 return questStats.total > 0 && (questStats.available > 0 || this.viewMode === 'finished');
             })
             .map(mapName => {
-                const questStats = this.getQuestStatsForMap(mapName);
-                const isActive = (mapName === this.currentMap) ? 'active' : '';
-                
-                return `
-                    <button class="map-tab ${isActive}" onclick="window.tracker.switchMap('${mapName}')">
-                        ${mapName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
-                    </button>
-                `;
-            }).join('');
+            const questStats = this.getQuestStatsForMap(mapName);
+            const isActive = (mapName === this.currentMap) ? 'active' : '';
+            
+            return `
+                <button class="map-tab ${isActive}" onclick="window.tracker.switchMap('${mapName}')">
+                    ${mapName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
+                </button>
+            `;
+        }).join('');
         
         if (mapTabsContainer) mapTabsContainer.innerHTML = tabsHtml;
         if (mapTabsFinishedContainer) mapTabsFinishedContainer.innerHTML = tabsHtml;
@@ -1148,15 +1148,15 @@ class QuestTracker {
                 return questStats.total > 0 && (questStats.available > 0 || this.viewMode === 'finished');
             })
             .map(traderName => {
-                const questStats = this.getQuestStatsForTrader(traderName);
-                const isActive = (traderName === this.currentTrader) ? 'active' : '';
-                
-                return `
-                    <button class="map-tab ${isActive}" onclick="window.tracker.switchTrader('${traderName}')">
-                        ${traderName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
-                    </button>
-                `;
-            }).join('');
+            const questStats = this.getQuestStatsForTrader(traderName);
+            const isActive = (traderName === this.currentTrader) ? 'active' : '';
+            
+            return `
+                <button class="map-tab ${isActive}" onclick="window.tracker.switchTrader('${traderName}')">
+                    ${traderName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
+                </button>
+            `;
+        }).join('');
         
         if (mapTabsContainer) mapTabsContainer.innerHTML = tabsHtml;
         if (mapTabsFinishedContainer) mapTabsFinishedContainer.innerHTML = tabsHtml;
@@ -2043,11 +2043,11 @@ class QuestTracker {
                                     <i class="fas fa-skull-crossbones"></i> PVP
                                 </span>
                             </label>
-                            <label class="quest-mode-toggle" style="margin: 0;">
-                                <input type="checkbox" id="include-prestige-dashboard" class="quest-mode-checkbox" checked>
-                                <span class="quest-mode-slider"></span>
+                        <label class="quest-mode-toggle" style="margin: 0;">
+                            <input type="checkbox" id="include-prestige-dashboard" class="quest-mode-checkbox" checked>
+                            <span class="quest-mode-slider"></span>
                                 <span class="quest-mode-label">Sort by Prestige First</span>
-                            </label>
+                        </label>
                         </div>
                     </div>
                     <div id="rankings-table-wrapper">
@@ -3047,10 +3047,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let globalChatOpen = false;
 let globalChatMessages = [];
+let globalChatPinnedMessage = null;
 let lastGlobalChatId = null;
+let oldestChatTimestamp = null;
 let globalChatPollInterval = null;
 let globalChatInitialized = false;
 let isSendingMessage = false;
+let isLoadingMore = false;
+let hasMoreMessages = true;
+
+// Emote list (from imgs/emotes folder)
+const emotes = ['LO', 'LOL', 'Sadge', 'Smile', 'Susge'];
+
+// Helper function to replace emote text with images
+function replaceEmotes(text) {
+    let result = escapeHtml(text);
+    emotes.forEach(emote => {
+        const regex = new RegExp(`\\b${emote}\\b`, 'gi');
+        result = result.replace(regex, `<img src="/imgs/emotes/${emote}.avif" alt="${emote}" style="height: 24px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
+    });
+    return result;
+}
 
 function initGlobalChat() {
     // Prevent double initialization
@@ -3140,7 +3157,9 @@ function initGlobalChat() {
 
                 if (response.ok) {
                     globalChatMessages = [];
+                    globalChatPinnedMessage = null;
                     lastGlobalChatId = null;
+                    oldestChatTimestamp = null;
                     displayGlobalChatMessages();
                     alert('Chat purged successfully');
                 } else {
@@ -3152,6 +3171,17 @@ function initGlobalChat() {
             }
         });
     }
+    
+    // Add scroll listener for "load more" functionality
+    const messagesContainer = document.getElementById('global-chat-messages');
+    if (messagesContainer) {
+        messagesContainer.addEventListener('scroll', async () => {
+            // Check if scrolled to top
+            if (messagesContainer.scrollTop < 100 && hasMoreMessages && !isLoadingMore) {
+                await loadMoreMessages();
+            }
+        });
+    }
 
     // Initial load
     loadGlobalChat();
@@ -3160,8 +3190,8 @@ function initGlobalChat() {
 async function loadGlobalChat() {
     try {
         const url = lastGlobalChatId 
-            ? `/api/global-chat?after=${lastGlobalChatId}`
-            : '/api/global-chat';
+            ? `/api/global-chat?after=${lastGlobalChatId}&limit=50`
+            : '/api/global-chat?limit=50';
         
         const response = await fetch(url, { credentials: 'include' });
         
@@ -3172,30 +3202,83 @@ async function loadGlobalChat() {
         
         const data = await response.json();
         const newMessages = data.messages || [];
+        globalChatPinnedMessage = data.pinnedMessage || null;
+        hasMoreMessages = data.hasMore || false;
         
         if (newMessages.length > 0) {
             if (lastGlobalChatId) {
-                // Append new messages
-                globalChatMessages.push(...newMessages);
+                // Polling for new messages - prevent duplicates
+                const existingIds = new Set(globalChatMessages.map(m => m.id));
+                const uniqueNewMessages = newMessages.filter(m => !existingIds.has(m.id));
                 
-                // Show unread badge if chat is closed
-                if (!globalChatOpen) {
-                    const badge = document.getElementById('chat-unread-badge');
-                    if (badge) {
-                        badge.textContent = newMessages.length;
-                        badge.style.display = 'flex';
+                if (uniqueNewMessages.length > 0) {
+                    globalChatMessages.push(...uniqueNewMessages);
+                    
+                    // Show unread badge if chat is closed
+                    if (!globalChatOpen) {
+                        const badge = document.getElementById('chat-unread-badge');
+                        if (badge) {
+                            badge.textContent = uniqueNewMessages.length;
+                            badge.style.display = 'flex';
+                        }
                     }
+                    
+                    lastGlobalChatId = globalChatMessages[globalChatMessages.length - 1].id;
+                    displayGlobalChatMessages();
                 }
             } else {
                 // Initial load
                 globalChatMessages = newMessages;
+                if (newMessages.length > 0) {
+                    lastGlobalChatId = newMessages[newMessages.length - 1].id;
+                    oldestChatTimestamp = newMessages[0].timestamp;
+                }
+                displayGlobalChatMessages();
             }
-            
-            lastGlobalChatId = newMessages[newMessages.length - 1].id;
-            displayGlobalChatMessages();
         }
     } catch (error) {
         console.error('Error loading global chat:', error);
+    }
+}
+
+async function loadMoreMessages() {
+    if (isLoadingMore || !hasMoreMessages || !oldestChatTimestamp) return;
+    
+    isLoadingMore = true;
+    const messagesContainer = document.getElementById('global-chat-messages');
+    const oldScrollHeight = messagesContainer.scrollHeight;
+    
+    try {
+        const response = await fetch(`/api/global-chat?before=${oldestChatTimestamp}&limit=50`, {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            console.error('Failed to load more messages');
+            return;
+        }
+        
+        const data = await response.json();
+        const olderMessages = data.messages || [];
+        hasMoreMessages = data.hasMore || false;
+        
+        if (olderMessages.length > 0) {
+            // Prepend older messages
+            globalChatMessages = [...olderMessages, ...globalChatMessages];
+            oldestChatTimestamp = olderMessages[0].timestamp;
+            
+            displayGlobalChatMessages();
+            
+            // Maintain scroll position
+            setTimeout(() => {
+                const newScrollHeight = messagesContainer.scrollHeight;
+                messagesContainer.scrollTop = newScrollHeight - oldScrollHeight;
+            }, 50);
+        }
+    } catch (error) {
+        console.error('Error loading more messages:', error);
+    } finally {
+        isLoadingMore = false;
     }
 }
 
@@ -3203,42 +3286,121 @@ function displayGlobalChatMessages() {
     const messagesContainer = document.getElementById('global-chat-messages');
     if (!messagesContainer) return;
 
+    let html = '';
+    
+    // Show pinned message if exists
+    if (globalChatPinnedMessage) {
+        html += renderPinnedMessage(globalChatPinnedMessage);
+    }
+    
+    // Show "Load More" indicator at top if there are more messages
+    if (hasMoreMessages && globalChatMessages.length > 0) {
+        html += `
+            <div style="text-align: center; padding: 10px; color: #888; font-size: 12px;">
+                <i class="fas fa-chevron-up"></i> Scroll to top to load more
+            </div>
+        `;
+    }
+
     if (globalChatMessages.length === 0) {
-        messagesContainer.innerHTML = `
+        html += `
             <div style="text-align: center; color: var(--subtext); padding: 20px;">
                 <i class="fas fa-comments" style="font-size: 2rem; opacity: 0.3; margin-bottom: 10px;"></i>
                 <p>No messages yet. Start the conversation!</p>
             </div>
         `;
-        return;
+    } else {
+        html += globalChatMessages.map(msg => renderMessage(msg)).join('');
     }
 
     const shouldScrollToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
-
-    messagesContainer.innerHTML = globalChatMessages.map(msg => {
-        const timestamp = new Date(msg.timestamp);
-        const timeString = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        const displayName = msg.displayName || msg.username;
-        const color = msg.profileColor || '#c7aa6a';
-        const avatarUrl = msg.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) + '&background=1a1a1a&color=c7aa6a';
-
-        return `
-            <div class="global-chat-message">
-                <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar">
-                <div class="global-chat-bubble">
-                    <div class="global-chat-header-info">
-                        <span class="global-chat-name" style="color: ${color};">${escapeHtml(displayName)}</span>
-                        <span class="global-chat-time">${timeString}</span>
-                    </div>
-                    <div class="global-chat-text">${escapeHtml(msg.message)}</div>
-                </div>
-            </div>
-        `;
-    }).join('');
+    messagesContainer.innerHTML = html;
 
     if (shouldScrollToBottom) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
+}
+
+function renderPinnedMessage(msg) {
+    const timestamp = new Date(msg.timestamp);
+    const timeString = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const displayName = msg.displayName || msg.username;
+    const color = msg.profileColor || '#c7aa6a';
+    const avatarUrl = msg.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) + '&background=1a1a1a&color=c7aa6a';
+    const isAdmin = window.currentUser && window.currentUser.isAdmin;
+    
+    return `
+        <div class="pinned-message" data-message-id="${msg.id}">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(199, 170, 106, 0.1); border-bottom: 1px solid var(--post-border);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-thumbtack" style="color: #c7aa6a;"></i>
+                    <span style="color: #c7aa6a; font-size: 12px; font-weight: 600;">PINNED MESSAGE</span>
+                </div>
+                ${isAdmin ? `<button onclick="unpinMessage('${msg.id}')" class="pin-btn" title="Unpin"><i class="fas fa-times"></i></button>` : ''}
+            </div>
+            <div class="global-chat-message" style="background: rgba(199, 170, 106, 0.05);">
+                <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar">
+                <div class="global-chat-bubble">
+                    <div class="global-chat-header-info">
+                        <span class="global-chat-name" style="color: ${color};">
+                            ${escapeHtml(displayName)}
+                            ${getUserBadges(msg)}
+                        </span>
+                        <span class="global-chat-time">${timeString}</span>
+                    </div>
+                    <div class="global-chat-text">${replaceEmotes(msg.message)}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderMessage(msg) {
+    const timestamp = new Date(msg.timestamp);
+    const timeString = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const displayName = msg.displayName || msg.username;
+    const color = msg.profileColor || '#c7aa6a';
+    const avatarUrl = msg.avatarUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(displayName) + '&background=1a1a1a&color=c7aa6a';
+    const isAdmin = window.currentUser && window.currentUser.isAdmin;
+    
+    return `
+        <div class="global-chat-message" data-message-id="${msg.id}">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar">
+            <div class="global-chat-bubble">
+                <div class="global-chat-header-info">
+                    <span class="global-chat-name" style="color: ${color};">
+                        ${escapeHtml(displayName)}
+                        ${getUserBadges(msg)}
+                    </span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="global-chat-time">${timeString}</span>
+                        ${isAdmin ? `
+                            <button onclick="pinMessage('${msg.id}')" class="pin-btn" title="Pin message">
+                                <i class="fas fa-thumbtack"></i>
+                            </button>
+                            <button onclick="deleteMessage('${msg.id}')" class="delete-btn" title="Delete message">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="global-chat-text">${replaceEmotes(msg.message)}</div>
+            </div>
+        </div>
+    `;
+}
+
+function getUserBadges(msg) {
+    let badges = '';
+    
+    if (msg.isAdmin) {
+        badges += '<i class="fas fa-shield-alt" style="color: #ffd700; font-size: 12px; margin-left: 4px;" title="Admin"></i>';
+    }
+    if (msg.verified) {
+        badges += '<i class="fas fa-check-circle" style="color: #4CAF50; font-size: 12px; margin-left: 4px;" title="Verified"></i>';
+    }
+    
+    return badges;
 }
 
 async function sendGlobalMessage() {
@@ -3305,6 +3467,80 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Admin actions
+async function pinMessage(messageId) {
+    if (!window.currentUser || !window.currentUser.isAdmin) return;
+    
+    try {
+        const response = await fetch(`/api/global-chat/${messageId}/pin`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            globalChatPinnedMessage = data.message;
+            displayGlobalChatMessages();
+        } else {
+            alert('Failed to pin message');
+        }
+    } catch (error) {
+        console.error('Error pinning message:', error);
+        alert('Error pinning message');
+    }
+}
+
+async function unpinMessage(messageId) {
+    if (!window.currentUser || !window.currentUser.isAdmin) return;
+    
+    try {
+        const response = await fetch(`/api/global-chat/${messageId}/unpin`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            globalChatPinnedMessage = null;
+            displayGlobalChatMessages();
+        } else {
+            alert('Failed to unpin message');
+        }
+    } catch (error) {
+        console.error('Error unpinning message:', error);
+        alert('Error unpinning message');
+    }
+}
+
+async function deleteMessage(messageId) {
+    if (!window.currentUser || !window.currentUser.isAdmin) return;
+    
+    if (!confirm('Are you sure you want to delete this message?')) return;
+    
+    try {
+        const response = await fetch(`/api/global-chat/${messageId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            // Remove message from local array
+            globalChatMessages = globalChatMessages.filter(m => m.id !== messageId);
+            
+            // Also remove if it was the pinned message
+            if (globalChatPinnedMessage && globalChatPinnedMessage.id === messageId) {
+                globalChatPinnedMessage = null;
+            }
+            
+            displayGlobalChatMessages();
+        } else {
+            alert('Failed to delete message');
+        }
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        alert('Error deleting message');
+    }
 }
 
 // Initialize chat when user is logged in

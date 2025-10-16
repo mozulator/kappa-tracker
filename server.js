@@ -998,23 +998,67 @@ app.post('/api/admin/chat', requireAdmin, async (req, res) => {
 // Get global chat messages (authenticated users only)
 app.get('/api/global-chat', requireAuth, async (req, res) => {
     try {
-        const { after } = req.query;
+        const { after, before, limit = '50' } = req.query;
+        const take = Math.min(parseInt(limit), 100); // Max 100 messages
         
         let whereClause = {};
+        let orderBy = { timestamp: 'desc' };
+        
         if (after) {
-            // Get messages after a specific ID (for polling)
+            // Get messages after a specific ID (for polling new messages)
             whereClause = {
                 id: { gt: after }
+            };
+            orderBy = { timestamp: 'asc' };
+        } else if (before) {
+            // Get messages before a specific timestamp (for loading older messages)
+            whereClause = {
+                timestamp: { lt: new Date(before) }
             };
         }
         
         const messages = await prisma.globalChat.findMany({
             where: whereClause,
-            orderBy: { timestamp: 'asc' },
-            take: after ? 50 : 100 // Return last 100 messages initially, or 50 new ones when polling
+            orderBy,
+            take
         });
         
-        res.json({ messages });
+        // Get pinned message separately
+        const pinnedMessage = await prisma.globalChat.findFirst({
+            where: { isPinned: true },
+            orderBy: { timestamp: 'desc' }
+        });
+        
+        // Enrich messages with user flags
+        const userIds = [...new Set([...messages.map(m => m.userId), pinnedMessage?.userId].filter(Boolean))];
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, isAdmin: true, verified: true }
+        });
+        const userMap = new Map(users.map(u => [u.id, u]));
+        
+        const enrichedMessages = messages.map(msg => ({
+            ...msg,
+            isAdmin: userMap.get(msg.userId)?.isAdmin || false,
+            verified: userMap.get(msg.userId)?.verified || false
+        }));
+        
+        const enrichedPinnedMessage = pinnedMessage ? {
+            ...pinnedMessage,
+            isAdmin: userMap.get(pinnedMessage.userId)?.isAdmin || false,
+            verified: userMap.get(pinnedMessage.userId)?.verified || false
+        } : null;
+        
+        // Reverse if needed to show chronological order
+        if (!after) {
+            enrichedMessages.reverse();
+        }
+        
+        res.json({ 
+            messages: enrichedMessages,
+            pinnedMessage: enrichedPinnedMessage,
+            hasMore: messages.length === take
+        });
     } catch (error) {
         console.error('Error fetching global chat:', error);
         res.status(500).json({ error: 'Failed to fetch chat messages' });
@@ -1034,14 +1078,16 @@ app.post('/api/global-chat', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Message too long (max 500 characters)' });
         }
         
-        // Get user's display name and profile color
+        // Get user's display name, profile color, and flags
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
             select: {
                 username: true,
                 displayName: true,
                 avatarUrl: true,
-                profileColor: true
+                profileColor: true,
+                isAdmin: true,
+                verified: true
             }
         });
         
@@ -1056,10 +1102,104 @@ app.post('/api/global-chat', requireAuth, async (req, res) => {
             }
         });
         
-        res.json(newMessage);
+        // Add user flags to response
+        const messageWithFlags = {
+            ...newMessage,
+            isAdmin: user.isAdmin,
+            verified: user.verified
+        };
+        
+        res.json(messageWithFlags);
     } catch (error) {
         console.error('Error sending chat message:', error);
         res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// Pin a message (admin only)
+app.post('/api/global-chat/:messageId/pin', requireAdmin, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        // Unpin any currently pinned message
+        await prisma.globalChat.updateMany({
+            where: { isPinned: true },
+            data: { isPinned: false }
+        });
+        
+        // Pin the new message
+        const message = await prisma.globalChat.update({
+            where: { id: messageId },
+            data: { isPinned: true }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'pinned_message',
+                description: `Pinned message: "${message.message.substring(0, 50)}"`
+            }
+        });
+        
+        res.json({ success: true, message });
+    } catch (error) {
+        console.error('Error pinning message:', error);
+        res.status(500).json({ error: 'Failed to pin message' });
+    }
+});
+
+// Unpin a message (admin only)
+app.post('/api/global-chat/:messageId/unpin', requireAdmin, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        const message = await prisma.globalChat.update({
+            where: { id: messageId },
+            data: { isPinned: false }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'unpinned_message',
+                description: `Unpinned message`
+            }
+        });
+        
+        res.json({ success: true, message });
+    } catch (error) {
+        console.error('Error unpinning message:', error);
+        res.status(500).json({ error: 'Failed to unpin message' });
+    }
+});
+
+// Delete a message (admin only)
+app.delete('/api/global-chat/:messageId', requireAdmin, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        const message = await prisma.globalChat.delete({
+            where: { id: messageId }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'deleted_chat_message',
+                description: `Deleted message from ${message.username}`
+            }
+        });
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).json({ error: 'Failed to delete message' });
     }
 });
 

@@ -175,7 +175,9 @@ model GlobalChat {
   profileColor String?
   message      String
   timestamp    DateTime @default(now())
+  isPinned     Boolean  @default(false)
   
   @@index([timestamp])
+  @@index([isPinned])
   @@map("global_chats")
 }
