@@ -64,7 +64,7 @@
         .dashboard-container {
             flex: 1;
             display: grid;
-            grid-template-columns: 0.7fr 1.3fr 1fr 1fr;
+            grid-template-columns: 400px 400px 1fr 400px;
             gap: 20px;
             padding: 20px;
             overflow: hidden;
@@ -173,10 +173,16 @@
             margin-top: 4px;
         }
 
+        #all-users-list {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
         .action-buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
-            justify-content: flex-end;
             width: 100%;
         }
 
@@ -188,36 +194,57 @@
             font-size: 13px;
             font-weight: 600;
             transition: all 0.2s;
-            display: inline-flex;
+            display: flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
+            background: rgba(199, 170, 106, 0.1);
+            border: 1px solid #c7aa6a;
+            color: #c7aa6a;
+        }
+
+        .btn:hover {
+            background: rgba(199, 170, 106, 0.2);
         }
 
         .btn-approve {
-            background: #4CAF50;
-            color: #fff;
+            background: rgba(199, 170, 106, 0.1);
+            border: 1px solid #c7aa6a;
+            color: #c7aa6a;
         }
 
         .btn-approve:hover {
-            background: #45a049;
+            background: rgba(199, 170, 106, 0.2);
+        }
+
+        .btn-approve.verified {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196F3;
+            color: #2196F3;
+        }
+
+        .btn-approve.verified:hover {
+            background: rgba(33, 150, 243, 0.3);
         }
 
         .btn-delete {
-            background: #f44336;
-            color: #fff;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            color: #f44336;
         }
 
         .btn-delete:hover {
-            background: #da190b;
+            background: rgba(244, 67, 54, 0.3);
         }
 
         .btn-warning {
-            background: #ff9800;
-            color: #fff;
+            background: rgba(199, 170, 106, 0.1);
+            border: 1px solid #c7aa6a;
+            color: #c7aa6a;
         }
 
         .btn-warning:hover {
-            background: #e68900;
+            background: rgba(199, 170, 106, 0.2);
         }
 
         .btn:disabled {
@@ -547,26 +574,6 @@
     </div>
 
     <div class="dashboard-container">
-        <!-- Admin Log Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2>
-                    <i class="fas fa-history"></i>
-                    Admin Log
-                    <span class="badge" id="log-count">0</span>
-                </h2>
-                <button onclick="clearAdminLogs()" class="btn-danger" style="padding: 8px 16px; font-size: 12px; border-radius: 6px; cursor: pointer; background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid #dc3545; transition: all 0.3s;">
-                    <i class="fas fa-trash"></i> Clear All
-                </button>
-            </div>
-            <div class="panel-content" id="admin-log-list">
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading...</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Admin Chat Panel -->
         <div class="panel">
             <div class="panel-header">
@@ -586,6 +593,26 @@
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Log Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>
+                    <i class="fas fa-history"></i>
+                    Admin Log
+                    <span class="badge" id="log-count">0</span>
+                </h2>
+                <button onclick="clearAdminLogs()" class="btn-danger" style="padding: 8px 16px; font-size: 12px; border-radius: 6px; cursor: pointer; background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid #dc3545; transition: all 0.3s;">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+            <div class="panel-content" id="admin-log-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading...</p>
                 </div>
             </div>
         </div>
@@ -857,7 +884,7 @@
                     </div>
                     <div class="action-buttons">
                         ${user.approved ? `
-                            <button class="btn btn-warning" onclick="toggleLeaderboard('${user.id}', '${user.username}', false)" title="Remove from Leaderboard">
+                            <button class="btn btn-approve" onclick="toggleLeaderboard('${user.id}', '${user.username}', false)" title="Remove from Leaderboard">
                                 <i class="fas fa-trophy"></i>
                             </button>
                         ` : `
@@ -866,23 +893,23 @@
                             </button>
                         `}
                         ${user.verified ? `
-                            <button class="btn btn-warning" onclick="toggleVerified('${user.id}', '${user.username}', false)" title="Remove Verification">
+                            <button class="btn btn-approve verified" onclick="toggleVerified('${user.id}', '${user.username}', false)" title="Remove Verification">
                                 <i class="fas fa-circle-check"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-approve" onclick="toggleVerified('${user.id}', '${user.username}', true)" style="background: #2196F3; color: #fff;" title="Verify User">
+                            <button class="btn btn-approve" onclick="toggleVerified('${user.id}', '${user.username}', true)" title="Verify User">
                                 <i class="fas fa-circle-check"></i>
                             </button>
                         `}
                         ${!user.isAdmin ? `
-                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)" style="background: #ffd700; color: #000;" title="Make Admin">
+                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)" title="Make Admin">
                                 <i class="fas fa-crown"></i>
                             </button>
                             <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.username}')" title="Delete User">
                                 <i class="fas fa-trash"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-warning" onclick="toggleAdmin('${user.id}', '${user.username}', false)" title="Remove Admin">
+                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', false)" title="Remove Admin">
                                 <i class="fas fa-crown"></i>
                             </button>
                         `}
