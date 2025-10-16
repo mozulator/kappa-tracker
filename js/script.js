@@ -805,7 +805,7 @@ class QuestTracker {
         } else if (view === 'rankings') {
             if (rankings) rankings.style.display = 'block';
         } else if (view === 'profile') {
-            if (profile) profile.display = 'block';
+            if (profile) profile.style.display = 'block';
         } else if (view === 'collector-items') {
             if (collectorItems) collectorItems.style.display = 'block';
         } else if (view === 'statistics') {
