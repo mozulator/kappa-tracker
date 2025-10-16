@@ -1751,14 +1751,7 @@ input[type="checkbox"]:focus {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
-
-.statistics-graph-section {
-    min-height: 500px;
-}
-
-.statistics-log-section {
-    max-height: calc(100vh - 180px);
+    min-height: 0; /* Important for flex children */
 }
 
 .section-header {
@@ -1786,11 +1779,13 @@ input[type="checkbox"]:focus {
 .chart-container {
     flex: 1;
     position: relative;
-    min-height: 400px;
+    min-height: 0; /* Allow shrinking to fit container */
+    overflow-y: auto; /* Allow scrolling if needed */
 }
 
 .activity-log {
     flex: 1;
+    min-height: 0; /* Allow shrinking to fit container */
     overflow-y: auto;
     padding-right: 10px;
 }

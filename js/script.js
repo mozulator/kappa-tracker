@@ -2633,7 +2633,6 @@ class StatisticsManager {
     }
 
     setupEventListeners() {
-        const userFilter = document.getElementById('user-filter');
         const userSelectorContainer = document.getElementById('user-selector-container');
         const userSelectorBtn = document.getElementById('user-selector-btn');
         const userSelectorMenu = document.getElementById('user-selector-menu');
@@ -2649,14 +2648,6 @@ class StatisticsManager {
             document.addEventListener('click', (e) => {
                 if (!userSelectorContainer?.contains(e.target)) {
                     userSelectorMenu.classList.remove('show');
-                }
-            });
-        }
-
-        if (userFilter) {
-            userFilter.addEventListener('change', () => {
-                if (this.activityData) {
-                    this.renderActivityLog(this.activityData, true);
                 }
             });
         }
@@ -2699,7 +2690,6 @@ class StatisticsManager {
             
             // Populate user selector
             this.populateUserSelector(data.users);
-            this.updateUserFilter(data.users);
             this.updateLegend();
             
             // Flatten all activities from all users
@@ -2951,13 +2941,10 @@ class StatisticsManager {
             return;
         }
 
-        const filterSelect = document.getElementById('user-filter');
-        const selectedUser = filterSelect ? filterSelect.value : 'all';
-
-        // Filter activities
+        // Filter activities based on selected users from the graph
         let filteredActivities = activities;
-        if (compareMode && selectedUser !== 'all') {
-            filteredActivities = activities.filter(a => a.username === selectedUser);
+        if (compareMode && this.selectedUsers.size > 0) {
+            filteredActivities = activities.filter(a => this.selectedUsers.has(a.username));
         }
 
         // Limit to 100 most recent activities for performance
@@ -3046,26 +3033,6 @@ class StatisticsManager {
         return aggregated;
     }
 
-    updateUserFilter(users) {
-        const filterSelect = document.getElementById('user-filter');
-        if (!filterSelect) return;
-        
-        const currentValue = filterSelect.value;
-        
-        filterSelect.innerHTML = '<option value="all">All Users</option>';
-        
-        users.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.username;
-            option.textContent = user.displayName || user.username;
-            if (user.username === window.currentUser?.username) {
-                option.textContent += ' (You)';
-            }
-            filterSelect.appendChild(option);
-        });
-        
-        filterSelect.value = currentValue;
-    }
 }
 
 // Initialize the quest tracker when the page loads
