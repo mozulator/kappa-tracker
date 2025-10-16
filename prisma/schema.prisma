@@ -165,3 +165,17 @@ model AdminChat {
   @@index([timestamp])
   @@map("admin_chats")
 }
+
+model GlobalChat {
+  id           String   @id @default(cuid())
+  userId       String
+  username     String
+  displayName  String?
+  avatarUrl    String?
+  profileColor String?
+  message      String
+  timestamp    DateTime @default(now())
+  
+  @@index([timestamp])
+  @@map("global_chats")
+}

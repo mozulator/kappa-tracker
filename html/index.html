@@ -2730,5 +2730,238 @@
         window.currentUserId = null;
 
     </script>
+
+    <!-- Global Chat UI -->
+    <div id="global-chat-button" class="global-chat-btn">
+        <i class="fas fa-comments"></i>
+        <span id="chat-unread-badge" class="chat-unread-badge" style="display: none;"></span>
+    </div>
+
+    <div id="global-chat-box" class="global-chat-box" style="display: none;">
+        <div class="global-chat-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-comments"></i>
+                <span>Global Chat</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button id="purge-chat-btn" class="purge-chat-btn" style="display: none;" title="Purge Chat (Admin Only)">
+                    <i class="fas fa-broom"></i>
+                </button>
+                <button id="close-chat-btn" class="close-chat-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="global-chat-messages" id="global-chat-messages">
+            <!-- Messages will be loaded here -->
+        </div>
+        <div class="global-chat-input-area">
+            <textarea id="global-chat-input" placeholder="Type your message..." rows="1" maxlength="500"></textarea>
+            <button id="global-chat-send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global Chat Functionality
+        let globalChatOpen = false;
+        let globalChatMessages = [];
+        let lastGlobalChatId = null;
+        let globalChatPollInterval = null;
+
+        // Initialize global chat
+        function initGlobalChat() {
+            const chatButton = document.getElementById('global-chat-button');
+            const chatBox = document.getElementById('global-chat-box');
+            const closeChatBtn = document.getElementById('close-chat-btn');
+            const chatInput = document.getElementById('global-chat-input');
+            const sendBtn = document.getElementById('global-chat-send-btn');
+            const purgeChatBtn = document.getElementById('purge-chat-btn');
+
+            // Show purge button for admins
+            if (window.currentUser && window.currentUser.isAdmin) {
+                purgeChatBtn.style.display = 'block';
+            }
+
+            // Toggle chat box
+            chatButton.addEventListener('click', () => {
+                globalChatOpen = !globalChatOpen;
+                chatBox.style.display = globalChatOpen ? 'flex' : 'none';
+                if (globalChatOpen) {
+                    loadGlobalChat();
+                    startGlobalChatPolling();
+                    // Clear unread badge
+                    document.getElementById('chat-unread-badge').style.display = 'none';
+                } else {
+                    stopGlobalChatPolling();
+                }
+            });
+
+            // Close chat
+            closeChatBtn.addEventListener('click', () => {
+                globalChatOpen = false;
+                chatBox.style.display = 'none';
+                stopGlobalChatPolling();
+            });
+
+            // Send message
+            sendBtn.addEventListener('click', () => sendGlobalMessage());
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendGlobalMessage();
+                }
+            });
+
+            // Purge chat (admin only)
+            purgeChatBtn.addEventListener('click', async () => {
+                if (!confirm('Are you sure you want to purge all chat messages?')) return;
+                
+                try {
+                    const response = await fetch('/api/global-chat/purge', {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        globalChatMessages = [];
+                        displayGlobalChatMessages();
+                    }
+                } catch (error) {
+                    console.error('Error purging chat:', error);
+                }
+            });
+
+            // Auto-expand textarea
+            chatInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+        }
+
+        async function loadGlobalChat() {
+            try {
+                const response = await fetch('/api/global-chat', { credentials: 'include' });
+                if (response.ok) {
+                    const data = await response.json();
+                    globalChatMessages = data.messages || [];
+                    if (globalChatMessages.length > 0) {
+                        lastGlobalChatId = globalChatMessages[globalChatMessages.length - 1].id;
+                    }
+                    displayGlobalChatMessages();
+                }
+            } catch (error) {
+                console.error('Error loading global chat:', error);
+            }
+        }
+
+        function displayGlobalChatMessages() {
+            const container = document.getElementById('global-chat-messages');
+            if (globalChatMessages.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No messages yet. Be the first to say hello!</div>';
+                return;
+            }
+
+            container.innerHTML = globalChatMessages.map(msg => {
+                const displayName = msg.displayName || msg.username;
+                const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const profileColor = msg.profileColor || '#c7aa6a';
+                
+                return `
+                    <div class="global-chat-message">
+                        <div class="global-chat-avatar" style="background: ${profileColor};">
+                            ${msg.avatarUrl ? 
+                                `<img src="${msg.avatarUrl}" alt="${displayName}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none'">` : 
+                                displayName.charAt(0).toUpperCase()
+                            }
+                        </div>
+                        <div class="global-chat-bubble">
+                            <div class="global-chat-header-info">
+                                <span class="global-chat-name" style="color: ${profileColor};">${displayName}</span>
+                                <span class="global-chat-time">${timeStr}</span>
+                            </div>
+                            <div class="global-chat-text">${escapeHtml(msg.message)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendGlobalMessage() {
+            const input = document.getElementById('global-chat-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            try {
+                const response = await fetch('/api/global-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ message })
+                });
+
+                if (response.ok) {
+                    input.value = '';
+                    input.style.height = 'auto';
+                    await loadGlobalChat();
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+
+        function startGlobalChatPolling() {
+            if (globalChatPollInterval) return;
+            globalChatPollInterval = setInterval(async () => {
+                try {
+                    const url = lastGlobalChatId ? 
+                        `/api/global-chat?after=${lastGlobalChatId}` : 
+                        '/api/global-chat';
+                    const response = await fetch(url, { credentials: 'include' });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.messages && data.messages.length > 0) {
+                            globalChatMessages.push(...data.messages);
+                            lastGlobalChatId = globalChatMessages[globalChatMessages.length - 1].id;
+                            displayGlobalChatMessages();
+                            
+                            // Show unread badge if chat is closed
+                            if (!globalChatOpen) {
+                                const badge = document.getElementById('chat-unread-badge');
+                                badge.style.display = 'flex';
+                                badge.textContent = data.messages.length;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error polling chat:', error);
+                }
+            }, 3000); // Poll every 3 seconds
+        }
+
+        function stopGlobalChatPolling() {
+            if (globalChatPollInterval) {
+                clearInterval(globalChatPollInterval);
+                globalChatPollInterval = null;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize chat when user is logged in
+        if (window.currentUser) {
+            initGlobalChat();
+            // Start polling for new messages even when chat is closed
+            startGlobalChatPolling();
+        }
+    </script>
 </body>
 </html>

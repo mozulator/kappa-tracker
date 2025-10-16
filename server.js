@@ -992,6 +992,100 @@ app.post('/api/admin/chat', requireAdmin, async (req, res) => {
 });
 
 // ============================================================================
+// GLOBAL CHAT
+// ============================================================================
+
+// Get global chat messages (authenticated users only)
+app.get('/api/global-chat', requireAuth, async (req, res) => {
+    try {
+        const { after } = req.query;
+        
+        let whereClause = {};
+        if (after) {
+            // Get messages after a specific ID (for polling)
+            whereClause = {
+                id: { gt: after }
+            };
+        }
+        
+        const messages = await prisma.globalChat.findMany({
+            where: whereClause,
+            orderBy: { timestamp: 'asc' },
+            take: after ? 50 : 100 // Return last 100 messages initially, or 50 new ones when polling
+        });
+        
+        res.json({ messages });
+    } catch (error) {
+        console.error('Error fetching global chat:', error);
+        res.status(500).json({ error: 'Failed to fetch chat messages' });
+    }
+});
+
+// Send global chat message (authenticated users only)
+app.post('/api/global-chat', requireAuth, async (req, res) => {
+    try {
+        const { message } = req.body;
+        
+        if (!message || message.trim().length === 0) {
+            return res.status(400).json({ error: 'Message cannot be empty' });
+        }
+        
+        if (message.length > 500) {
+            return res.status(400).json({ error: 'Message too long (max 500 characters)' });
+        }
+        
+        // Get user's display name and profile color
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: {
+                username: true,
+                displayName: true,
+                avatarUrl: true,
+                profileColor: true
+            }
+        });
+        
+        const newMessage = await prisma.globalChat.create({
+            data: {
+                userId: req.user.id,
+                username: user.username,
+                displayName: user.displayName,
+                avatarUrl: user.avatarUrl,
+                profileColor: user.profileColor,
+                message: message.trim()
+            }
+        });
+        
+        res.json(newMessage);
+    } catch (error) {
+        console.error('Error sending chat message:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// Purge global chat (admin only)
+app.delete('/api/global-chat/purge', requireAdmin, async (req, res) => {
+    try {
+        await prisma.globalChat.deleteMany({});
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'purged_global_chat',
+                description: 'Purged all global chat messages'
+            }
+        });
+        
+        res.json({ success: true, message: 'Chat purged successfully' });
+    } catch (error) {
+        console.error('Error purging chat:', error);
+        res.status(500).json({ error: 'Failed to purge chat' });
+    }
+});
+
+// ============================================================================
 // USER PROFILE MANAGEMENT
 // ============================================================================
 

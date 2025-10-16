@@ -1073,16 +1073,22 @@ class QuestTracker {
         const mapTabsContainer = document.getElementById('map-tabs');
         const mapTabsFinishedContainer = document.getElementById('map-tabs-finished');
         
-        const tabsHtml = this.maps.map(mapName => {
-            const questStats = this.getQuestStatsForMap(mapName);
-            const isActive = (mapName === this.currentMap) ? 'active' : '';
-            
-            return `
-                <button class="map-tab ${isActive}" onclick="window.tracker.switchMap('${mapName}')">
-                    ${mapName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
-                </button>
-            `;
-        }).join('');
+        const tabsHtml = this.maps
+            .filter(mapName => {
+                const questStats = this.getQuestStatsForMap(mapName);
+                // Hide tabs with no quests or where all Kappa quests are completed
+                return questStats.total > 0 && (questStats.available > 0 || this.viewMode === 'finished');
+            })
+            .map(mapName => {
+                const questStats = this.getQuestStatsForMap(mapName);
+                const isActive = (mapName === this.currentMap) ? 'active' : '';
+                
+                return `
+                    <button class="map-tab ${isActive}" onclick="window.tracker.switchMap('${mapName}')">
+                        ${mapName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
+                    </button>
+                `;
+            }).join('');
         
         if (mapTabsContainer) mapTabsContainer.innerHTML = tabsHtml;
         if (mapTabsFinishedContainer) mapTabsFinishedContainer.innerHTML = tabsHtml;
@@ -1135,16 +1141,22 @@ class QuestTracker {
         const mapTabsContainer = document.getElementById('map-tabs');
         const mapTabsFinishedContainer = document.getElementById('map-tabs-finished');
         
-        const tabsHtml = this.traders.map(traderName => {
-            const questStats = this.getQuestStatsForTrader(traderName);
-            const isActive = (traderName === this.currentTrader) ? 'active' : '';
-            
-            return `
-                <button class="map-tab ${isActive}" onclick="window.tracker.switchTrader('${traderName}')">
-                    ${traderName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
-                </button>
-            `;
-        }).join('');
+        const tabsHtml = this.traders
+            .filter(traderName => {
+                const questStats = this.getQuestStatsForTrader(traderName);
+                // Hide tabs with no quests or where all Kappa quests are completed
+                return questStats.total > 0 && (questStats.available > 0 || this.viewMode === 'finished');
+            })
+            .map(traderName => {
+                const questStats = this.getQuestStatsForTrader(traderName);
+                const isActive = (traderName === this.currentTrader) ? 'active' : '';
+                
+                return `
+                    <button class="map-tab ${isActive}" onclick="window.tracker.switchTrader('${traderName}')">
+                        ${traderName} (<strong>${questStats.available}</strong>) ${questStats.completed}/${questStats.total}
+                    </button>
+                `;
+            }).join('');
         
         if (mapTabsContainer) mapTabsContainer.innerHTML = tabsHtml;
         if (mapTabsFinishedContainer) mapTabsFinishedContainer.innerHTML = tabsHtml;
