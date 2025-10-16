@@ -2257,10 +2257,9 @@ class QuestTracker {
                                                 </div>
                                             `}
                                             <div>
-                                                <a href="/public-profile?user=${user.username}" style="color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
+                                                <a href="/public-profile?user=${user.username}" style="color: ${user.profileColor || '#c7aa6a'}; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
                                                     ${displayName}
                                                 </a>
-                                                <div style="color: #888; font-size: 14px;">@${user.username}</div>
                                                 <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
                                                     ${user.twitchUrl ? `
                                                         <a href="${user.twitchUrl}" target="_blank" style="color: #6441a5; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">

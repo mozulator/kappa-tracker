@@ -1822,6 +1822,7 @@ app.get('/api/rankings', apiLimiter, async (req, res) => {
                 tarkovDevId: true,
                 avatarUrl: true,
                 verified: true,
+                profileColor: true,
                 progress: {
                     select: {
                         pmcLevel: true,
@@ -2937,10 +2938,16 @@ function start() {
         // Initialize quests in the background (non-blocking)
         console.log('Initializing quest data in background...');
         if (typeof initializeQuests === 'function') {
-            initializeQuests().catch(error => {
-                console.error('Failed to initialize quests:', error);
-                console.log('Server will continue running, quests can be initialized later via API');
-            });
+            initializeQuests()
+                .then(() => {
+                    console.log('\n🚀 ═══════════════════════════════════════════════════');
+                    console.log('✅ SERVER READY - All systems operational!');
+                    console.log('═══════════════════════════════════════════════════\n');
+                })
+                .catch(error => {
+                    console.error('Failed to initialize quests:', error);
+                    console.log('Server will continue running, quests can be initialized later via API');
+                });
         }
         
     } catch (error) {

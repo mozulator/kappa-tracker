@@ -145,6 +145,14 @@
             background: rgba(0, 0, 0, 0.6);
         }
 
+        .log-item {
+            margin-bottom: 12px;
+        }
+
+        .log-item:last-child {
+            margin-bottom: 0;
+        }
+
         .user-info-section {
             flex: 1;
         }
@@ -862,7 +870,7 @@
                 }
                 
                 return `
-                    <div class="user-card" style="padding: 12px; border-left: 3px solid ${log.action === 'fixed_quest' ? '#2196F3' : log.action.includes('delete') ? '#f44336' : log.action.includes('admin') ? '#ffd700' : '#4CAF50'};">
+                    <div class="user-card log-item" style="padding: 12px; border-left: 3px solid ${log.action === 'fixed_quest' ? '#2196F3' : log.action.includes('delete') ? '#f44336' : log.action.includes('admin') ? '#ffd700' : '#4CAF50'};">
                         <div class="user-info-section" style="flex: 1;">
                             <div class="name" style="font-size: 14px; display: flex; align-items: center; gap: 8px;">
                                 ${icon}
