@@ -966,6 +966,12 @@ app.get('/api/admin/chat', requireAdmin, async (req, res) => {
             take: after ? 50 : 100 // Initial load 100, polling 50
         });
         
+        // Get pinned message separately (only one pinned message allowed)
+        const pinnedMessage = await prisma.adminChat.findFirst({
+            where: { isPinned: true },
+            orderBy: { timestamp: 'desc' }
+        });
+        
         // Get total count for purge detection
         const totalCount = await prisma.adminChat.count();
         
@@ -979,6 +985,7 @@ app.get('/api/admin/chat', requireAdmin, async (req, res) => {
         
         res.json({ 
             messages,
+            pinnedMessage,
             totalCount,
             allRecentIds
         });
@@ -1071,6 +1078,47 @@ app.delete('/api/admin/chat/purge/all', requireAdmin, async (req, res) => {
     }
 });
 
+// Pin admin chat message (admin only)
+app.post('/api/admin/chat/:messageId/pin', requireAdmin, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        // Unpin any currently pinned message
+        await prisma.adminChat.updateMany({
+            where: { isPinned: true },
+            data: { isPinned: false }
+        });
+        
+        // Pin the selected message
+        const pinnedMessage = await prisma.adminChat.update({
+            where: { id: messageId },
+            data: { isPinned: true }
+        });
+        
+        res.json({ success: true, message: 'Message pinned successfully', pinnedMessage });
+    } catch (error) {
+        console.error('Error pinning admin chat message:', error);
+        res.status(500).json({ error: 'Failed to pin message' });
+    }
+});
+
+// Unpin admin chat message (admin only)
+app.post('/api/admin/chat/:messageId/unpin', requireAdmin, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        await prisma.adminChat.update({
+            where: { id: messageId },
+            data: { isPinned: false }
+        });
+        
+        res.json({ success: true, message: 'Message unpinned successfully' });
+    } catch (error) {
+        console.error('Error unpinning admin chat message:', error);
+        res.status(500).json({ error: 'Failed to unpin message' });
+    }
+});
+
 // ============================================================================
 // GLOBAL CHAT
 // ============================================================================
@@ -1103,7 +1151,7 @@ app.get('/api/global-chat', requireAuth, async (req, res) => {
             take
         });
         
-        // Get pinned message separately
+        // Get pinned message separately (only one pinned message allowed)
         const pinnedMessage = await prisma.globalChat.findFirst({
             where: { isPinned: true },
             orderBy: { timestamp: 'desc' }

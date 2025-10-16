@@ -161,8 +161,10 @@ model AdminChat {
   avatarUrl String?
   message   String
   timestamp DateTime @default(now())
+  isPinned  Boolean  @default(false)
   
   @@index([timestamp])
+  @@index([isPinned])
   @@map("admin_chats")
 }
 

@@ -983,9 +983,21 @@
         let reports = [];
         let lastAdminChatId = null;
         let adminChatTotalCount = 0;
+        let adminChatPinnedMessage = null;
+        let adminChatEmotes = [];
 
         async function loadData() {
-            await Promise.all([loadAdminLogs(), loadAllUsers(), loadReports(), loadBannerSettings()]);
+            await Promise.all([loadAdminLogs(), loadAllUsers(), loadReports(), loadBannerSettings(), load7TVEmotesForAdminChat()]);
+        }
+        
+        async function load7TVEmotesForAdminChat() {
+            try {
+                const response = await fetch('/api/7tv-emotes');
+                const data = await response.json();
+                adminChatEmotes = data.emotes || [];
+            } catch (error) {
+                console.error('Error loading 7TV emotes for admin chat:', error);
+            }
         }
         
         async function loadBannerSettings() {
@@ -1631,12 +1643,49 @@
             container.innerHTML = '';
             lastRenderedMessageId = null;
             
+            // Render pinned message if exists
+            if (adminChatPinnedMessage) {
+                const initials = adminChatPinnedMessage.username ? adminChatPinnedMessage.username.substring(0, 2).toUpperCase() : 'AD';
+                const time = new Date(adminChatPinnedMessage.timestamp).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                const pinnedHtml = `
+                    <div class="pinned-message" style="background: rgba(199, 170, 106, 0.15); border: 2px solid rgba(199, 170, 106, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-thumbtack" style="color: #c7aa6a;"></i>
+                            <span style="color: #c7aa6a; font-weight: 600; font-size: 12px; text-transform: uppercase;">Pinned Message</span>
+                            <button onclick="unpinAdminChatMessage('${adminChatPinnedMessage.id}')" class="pin-btn" title="Unpin message" style="margin-left: auto; padding: 4px 8px; font-size: 11px; background: rgba(199, 170, 106, 0.2); border: 1px solid #c7aa6a; color: #c7aa6a; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-times"></i> Unpin
+                            </button>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="chat-avatar" style="width: 32px; height: 32px;">
+                                ${adminChatPinnedMessage.avatarUrl ? `<img src="${adminChatPinnedMessage.avatarUrl}" alt="${adminChatPinnedMessage.username}">` : initials}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span style="color: #c7aa6a; font-weight: 600; font-size: 13px;">${adminChatPinnedMessage.username}</span>
+                                    <span style="color: #666; font-size: 11px;">${time}</span>
+                                </div>
+                                <div style="color: #ddd; font-size: 13px; line-height: 1.4;">${replaceAdminChatEmotes(adminChatPinnedMessage.message)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.insertAdjacentHTML('beforeend', pinnedHtml);
+            }
+            
             chatMessages.forEach(msg => {
                 const initials = msg.username ? msg.username.substring(0, 2).toUpperCase() : 'AD';
                 const time = new Date(msg.timestamp).toLocaleTimeString('en-US', { 
                     hour: '2-digit', 
                     minute: '2-digit' 
                 });
+                
+                const isPinned = adminChatPinnedMessage && adminChatPinnedMessage.id === msg.id;
                 
                 const messageHtml = `
                     <div class="chat-message" data-message-id="${msg.id}">
@@ -1647,11 +1696,16 @@
                             <div class="chat-header-info">
                                 <span class="chat-name">${msg.username}</span>
                                 <span class="chat-time">${time}</span>
-                                <button onclick="deleteAdminChatMessage('${msg.id}')" class="delete-btn" title="Delete message" style="margin-left: auto; padding: 4px 8px; font-size: 11px;">
+                                ${!isPinned ? `
+                                    <button onclick="pinAdminChatMessage('${msg.id}')" class="pin-btn" title="Pin message" style="margin-left: auto; padding: 4px 8px; font-size: 11px;">
+                                        <i class="fas fa-thumbtack"></i>
+                                    </button>
+                                ` : ''}
+                                <button onclick="deleteAdminChatMessage('${msg.id}')" class="delete-btn" title="Delete message" style="padding: 4px 8px; font-size: 11px;">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
-                            <div class="chat-text">${escapeHtml(msg.message)}</div>
+                            <div class="chat-text">${replaceAdminChatEmotes(msg.message)}</div>
                         </div>
                     </div>
                 `;
@@ -1668,6 +1722,21 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+        
+        function replaceAdminChatEmotes(text) {
+            let result = escapeHtml(text);
+            
+            if (adminChatEmotes.length === 0) return result;
+            
+            // Default: replace all emotes with normal size (use 1x resolution)
+            adminChatEmotes.forEach(emote => {
+                const regex = new RegExp(`\\b${emote.name}\\b`, 'g');
+                const emoteUrl = emote.url1x || emote.url;
+                result = result.replace(regex, `<img src="${emoteUrl}" alt="${emote.name}" title="${emote.name}" style="height: 24px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
+            });
+            
+            return result;
         }
 
         async function sendChatMessage() {
@@ -1719,6 +1788,7 @@
                 const data = await response.json();
                 const newMessages = data.messages || [];
                 const totalCount = data.totalCount || 0;
+                adminChatPinnedMessage = data.pinnedMessage || null;
                 
                 // Check if chat was purged (total count is 0 but we have messages locally)
                 if (totalCount === 0 && chatMessages.length > 0) {
@@ -1726,6 +1796,7 @@
                     chatMessages = [];
                     lastAdminChatId = null;
                     adminChatTotalCount = 0;
+                    adminChatPinnedMessage = null;
                     renderChatMessages();
                     return;
                 }
@@ -1806,6 +1877,7 @@
                     chatMessages = [];
                     lastAdminChatId = null;
                     adminChatTotalCount = 0;
+                    adminChatPinnedMessage = null;
                     renderChatMessages();
                     showNotification('Admin chat purged successfully', 'success');
                 } else {
@@ -1815,6 +1887,50 @@
             } catch (error) {
                 console.error('Error purging admin chat:', error);
                 showNotification('Error purging admin chat', 'error');
+            }
+        }
+        
+        async function pinAdminChatMessage(messageId) {
+            try {
+                const response = await fetch(`/api/admin/chat/${messageId}/pin`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    // Update pinned message immediately from local array
+                    const message = chatMessages.find(m => m.id === messageId);
+                    if (message) {
+                        adminChatPinnedMessage = message;
+                        renderChatMessages();
+                        showNotification('Message pinned successfully', 'success');
+                    }
+                } else {
+                    showNotification('Failed to pin message', 'error');
+                }
+            } catch (error) {
+                console.error('Error pinning message:', error);
+                showNotification('Error pinning message', 'error');
+            }
+        }
+        
+        async function unpinAdminChatMessage(messageId) {
+            try {
+                const response = await fetch(`/api/admin/chat/${messageId}/unpin`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    adminChatPinnedMessage = null;
+                    renderChatMessages();
+                    showNotification('Message unpinned successfully', 'success');
+                } else {
+                    showNotification('Failed to unpin message', 'error');
+                }
+            } catch (error) {
+                console.error('Error unpinning message:', error);
+                showNotification('Error unpinning message', 'error');
             }
         }
 

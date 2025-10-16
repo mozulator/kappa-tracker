@@ -2172,6 +2172,11 @@ class QuestTracker {
         
         // Filter rankings based on leaderboard type
         const filtered = this.rankingsData.filter(user => {
+            // Exclude users with 0% progression
+            if (user.progress.completionRate === 0) {
+                return false;
+            }
+            
             if (isPVE) {
                 // PVE leaderboard: only users with prestige -1
                 return user.progress.prestige === -1;
@@ -3195,30 +3200,44 @@ function initGlobalChat() {
 
     // Purge chat (admin only)
     if (purgeChatBtn) {
-        purgeChatBtn.addEventListener('click', async () => {
+        purgeChatBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
             if (!confirm('Are you sure you want to purge all global chat messages? This cannot be undone.')) {
                 return;
             }
 
             try {
+                console.log('Attempting to purge global chat...');
                 const response = await fetch('/api/global-chat/purge', {
                     method: 'DELETE',
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
+                console.log('Purge response status:', response.status);
+                
                 if (response.ok) {
+                    const data = await response.json();
+                    console.log('Purge successful:', data);
                     globalChatMessages = [];
                     globalChatPinnedMessage = null;
                     lastGlobalChatId = null;
                     oldestChatTimestamp = null;
+                    hasMoreMessages = false;
                     displayGlobalChatMessages();
-                    alert('Chat purged successfully');
+                    alert(`Chat purged successfully! ${data.count} messages deleted.`);
                 } else {
-                    alert('Failed to purge chat');
+                    const errorData = await response.json();
+                    console.error('Purge failed:', errorData);
+                    alert('Failed to purge chat: ' + (errorData.details || errorData.error || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error purging chat:', error);
-                alert('Error purging chat');
+                alert('Error purging chat: ' + error.message);
             }
         });
     }
