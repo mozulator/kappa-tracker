@@ -402,6 +402,11 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Fire Google Ads conversion event
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'conversion', {'send_to': 'AW-17658019543/lRSlCMmjpK4bENf9_-NB'});
+                    }
+                    
                     // Users now have immediate access - they're auto-logged in
                     if (data.leaderboardPending) {
                         showSuccess('Account created successfully! Note: Admin approval needed for leaderboard access. Redirecting...');
