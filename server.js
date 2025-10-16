@@ -1225,6 +1225,49 @@ app.delete('/api/global-chat/purge', requireAdmin, async (req, res) => {
     }
 });
 
+// Get 7TV emotes from a starter pack
+let cachedEmotes = null;
+let emoteCacheTime = null;
+const EMOTE_CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+
+app.get('/api/7tv-emotes', async (req, res) => {
+    try {
+        // Use cache if available and fresh
+        if (cachedEmotes && emoteCacheTime && (Date.now() - emoteCacheTime < EMOTE_CACHE_DURATION)) {
+            return res.json({ emotes: cachedEmotes });
+        }
+        
+        // Replace this with your actual 7TV emote set ID
+        // You can get this from your 7TV starter pack URL
+        const EMOTE_SET_ID = '01HYGAZ1CWGNE0EY1K5KD5Q06Q'; // Replace with your starter pack ID
+        
+        const response = await fetch(`https://7tv.io/v3/emote-sets/${EMOTE_SET_ID}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch emotes from 7TV');
+        }
+        
+        const data = await response.json();
+        
+        // Extract emote names and URLs
+        const emotes = data.emotes.map(emote => ({
+            name: emote.name,
+            id: emote.id,
+            url: `https://cdn.7tv.app/emote/${emote.id}/1x.webp` // 1x size for chat
+        }));
+        
+        // Cache the emotes
+        cachedEmotes = emotes;
+        emoteCacheTime = Date.now();
+        
+        res.json({ emotes });
+    } catch (error) {
+        console.error('Error fetching 7TV emotes:', error);
+        // Return empty array on error so chat still works
+        res.json({ emotes: [] });
+    }
+});
+
 // ============================================================================
 // USER PROFILE MANAGEMENT
 // ============================================================================

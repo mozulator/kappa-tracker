@@ -3056,15 +3056,32 @@ let isSendingMessage = false;
 let isLoadingMore = false;
 let hasMoreMessages = true;
 
-// Emote list (from imgs/emotes folder)
-const emotes = ['LO', 'LOL', 'Sadge', 'Smile', 'Susge'];
+// 7TV Emotes (fetched from API)
+let emotes = [];
+
+// Fetch emotes from 7TV on init
+async function load7TVEmotes() {
+    try {
+        const response = await fetch('/api/7tv-emotes');
+        if (response.ok) {
+            const data = await response.json();
+            emotes = data.emotes || [];
+            console.log(`Loaded ${emotes.length} emotes from 7TV`);
+        }
+    } catch (error) {
+        console.error('Error loading 7TV emotes:', error);
+    }
+}
 
 // Helper function to replace emote text with images
 function replaceEmotes(text) {
     let result = escapeHtml(text);
+    
+    if (emotes.length === 0) return result;
+    
     emotes.forEach(emote => {
-        const regex = new RegExp(`\\b${emote}\\b`, 'gi');
-        result = result.replace(regex, `<img src="/imgs/emotes/${emote}.avif" alt="${emote}" style="height: 24px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
+        const regex = new RegExp(`\\b${emote.name}\\b`, 'g'); // Case-sensitive for 7TV
+        result = result.replace(regex, `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: 28px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
     });
     return result;
 }
@@ -3183,6 +3200,9 @@ function initGlobalChat() {
         });
     }
 
+    // Load 7TV emotes
+    load7TVEmotes();
+    
     // Initial load
     loadGlobalChat();
 }
