@@ -1471,32 +1471,26 @@ app.post('/api/twitch/check-live', async (req, res) => {
         // Fetch live status for uncached users
         if (usersToCheck.length > 0) {
             try {
-                // Use Twitch's public API by checking if their channel page returns live status
-                // We'll check the meta tags or JSON data on their channel page
+                // Use Twitch's CDN preview thumbnail to check live status
+                // If the thumbnail exists, the user is live. If 404, they're offline.
+                // Source: https://static-cdn.jtvnw.net/previews-ttv/live_user_USERNAME-440x248.jpg
                 const checkPromises = usersToCheck.map(async (username) => {
                     try {
-                        const response = await fetch(`https://www.twitch.tv/${username}`, {
+                        const thumbnailUrl = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${username}-440x248.jpg`;
+                        const response = await fetch(thumbnailUrl, {
+                            method: 'HEAD', // Use HEAD to only check if resource exists without downloading it
                             headers: {
                                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                             }
                         });
                         
-                        if (!response.ok) {
-                            twitchLiveCache.set(username, { isLive: false, timestamp: now });
-                            return { username, isLive: false };
-                        }
-                        
-                        const html = await response.text();
-                        
-                        // Check for live indicators in the HTML
-                        // Look for isLiveBroadcast in JSON-LD or meta tags
-                        const isLive = html.includes('"isLiveBroadcast":true') || 
-                                      html.includes('content="live"') ||
-                                      html.includes('LIVE') && html.includes('stream-title');
+                        // If thumbnail exists (200 OK), user is live
+                        const isLive = response.ok && response.status === 200;
                         
                         twitchLiveCache.set(username, { isLive, timestamp: now });
                         return { username, isLive };
                     } catch (error) {
+                        // On error, assume offline
                         console.error(`Error checking ${username}:`, error.message);
                         twitchLiveCache.set(username, { isLive: false, timestamp: now });
                         return { username, isLive: false };
