@@ -138,7 +138,7 @@
             transition: all 0.2s;
             flex-direction: column;
             align-items: flex-start;
-            gap: 32px;
+            gap: 12px;
         }
 
         .user-card:hover {
@@ -215,6 +215,26 @@
 
         .btn-approve:hover {
             background: rgba(199, 170, 106, 0.2);
+        }
+
+        .btn-approve.add-action {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .btn-approve.add-action:hover {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-approve.remove-action {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            color: #f44336;
+        }
+
+        .btn-approve.remove-action:hover {
+            background: rgba(244, 67, 54, 0.3);
         }
 
         .btn-approve.verified {
@@ -874,9 +894,6 @@
                             ${user.verified ? '<i class="fas fa-circle-check" style="color: #2196F3; margin-left: 8px;" title="Verified User"></i>' : ''}
                             ${!user.approved ? '<i class="fas fa-ban" style="color: #ff9800; margin-left: 8px;" title="Not on Leaderboard"></i>' : '<i class="fas fa-trophy" style="color: #4CAF50; margin-left: 8px;" title="On Leaderboard"></i>'}
                         </div>
-                        <div class="details">
-                            <span class="username">@${user.username}</span> • <span class="user-email" style="filter: blur(4px); cursor: pointer;" onmouseover="this.style.filter='blur(0px)'" onmouseout="this.style.filter='blur(4px)'" title="Hover to reveal">${user.email}</span>
-                        </div>
                         <div class="date">
                             Joined: ${new Date(user.createdAt).toLocaleDateString()} • 
                             Quests: ${user.progress?.totalCompleted || 0}
@@ -884,32 +901,32 @@
                     </div>
                     <div class="action-buttons">
                         ${user.approved ? `
-                            <button class="btn btn-approve" onclick="toggleLeaderboard('${user.id}', '${user.username}', false)" title="Remove from Leaderboard">
+                            <button class="btn btn-approve remove-action" onclick="toggleLeaderboard('${user.id}', '${user.username}', false)" title="Remove from Leaderboard">
                                 <i class="fas fa-trophy"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-approve" onclick="toggleLeaderboard('${user.id}', '${user.username}', true)" title="Add to Leaderboard">
+                            <button class="btn btn-approve add-action" onclick="toggleLeaderboard('${user.id}', '${user.username}', true)" title="Add to Leaderboard">
                                 <i class="fas fa-trophy"></i>
                             </button>
                         `}
                         ${user.verified ? `
-                            <button class="btn btn-approve verified" onclick="toggleVerified('${user.id}', '${user.username}', false)" title="Remove Verification">
+                            <button class="btn btn-approve remove-action" onclick="toggleVerified('${user.id}', '${user.username}', false)" title="Remove Verification">
                                 <i class="fas fa-circle-check"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-approve" onclick="toggleVerified('${user.id}', '${user.username}', true)" title="Verify User">
+                            <button class="btn btn-approve add-action" onclick="toggleVerified('${user.id}', '${user.username}', true)" title="Verify User">
                                 <i class="fas fa-circle-check"></i>
                             </button>
                         `}
                         ${!user.isAdmin ? `
-                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', true)" title="Make Admin">
+                            <button class="btn btn-approve add-action" onclick="toggleAdmin('${user.id}', '${user.username}', true)" title="Make Admin">
                                 <i class="fas fa-crown"></i>
                             </button>
                             <button class="btn btn-delete" onclick="deleteUser('${user.id}', '${user.username}')" title="Delete User">
                                 <i class="fas fa-trash"></i>
                             </button>
                         ` : `
-                            <button class="btn btn-approve" onclick="toggleAdmin('${user.id}', '${user.username}', false)" title="Remove Admin">
+                            <button class="btn btn-approve remove-action" onclick="toggleAdmin('${user.id}', '${user.username}', false)" title="Remove Admin">
                                 <i class="fas fa-crown"></i>
                             </button>
                         `}
