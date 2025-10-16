@@ -3288,8 +3288,15 @@ function escapeHtml(text) {
 
 // Initialize chat when user is logged in
 if (window.currentUser) {
-    document.addEventListener('DOMContentLoaded', () => {
+    // Check if DOM is already loaded (since script.js is loaded dynamically)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            initGlobalChat();
+            startGlobalChatPolling();
+        });
+    } else {
+        // DOM is already loaded, init immediately
         initGlobalChat();
         startGlobalChatPolling();
-    });
+    }
 }
