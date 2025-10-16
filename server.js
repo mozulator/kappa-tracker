@@ -950,12 +950,38 @@ app.delete('/api/admin/logs/clear', requireAdmin, async (req, res) => {
 // Get admin chat messages (admin only)
 app.get('/api/admin/chat', requireAdmin, async (req, res) => {
     try {
+        const { after } = req.query;
+        
+        let whereClause = {};
+        if (after) {
+            // Get messages after a specific ID (for polling new messages)
+            whereClause = {
+                id: { gt: after }
+            };
+        }
+        
         const messages = await prisma.adminChat.findMany({
+            where: whereClause,
             orderBy: { timestamp: 'asc' },
-            take: 100 // Limit to most recent 100 messages
+            take: after ? 50 : 100 // Initial load 100, polling 50
         });
         
-        res.json(messages);
+        // Get total count for purge detection
+        const totalCount = await prisma.adminChat.count();
+        
+        // Get recent message IDs for deletion detection (last 200 messages)
+        const recentMessages = await prisma.adminChat.findMany({
+            select: { id: true },
+            orderBy: { timestamp: 'desc' },
+            take: 200
+        });
+        const allRecentIds = recentMessages.map(m => m.id);
+        
+        res.json({ 
+            messages,
+            totalCount,
+            allRecentIds
+        });
     } catch (error) {
         console.error('Error fetching admin chat:', error);
         res.status(500).json({ error: 'Failed to fetch chat messages' });
@@ -988,6 +1014,60 @@ app.post('/api/admin/chat', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error sending chat message:', error);
         res.status(500).json({ error: 'Failed to send message' });
+    }
+});
+
+// Delete specific admin chat message (admin only)
+app.delete('/api/admin/chat/:messageId', requireAdmin, async (req, res) => {
+    try {
+        const { messageId } = req.params;
+        
+        await prisma.adminChat.delete({
+            where: { id: messageId }
+        });
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'deleted_admin_chat_message',
+                description: `Deleted admin chat message (ID: ${messageId})`,
+                targetUserId: null,
+                targetUsername: null
+            }
+        });
+        
+        res.json({ success: true, message: 'Message deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting admin chat message:', error);
+        res.status(500).json({ error: 'Failed to delete message' });
+    }
+});
+
+// Purge all admin chat messages (admin only)
+app.delete('/api/admin/chat/purge/all', requireAdmin, async (req, res) => {
+    try {
+        const result = await prisma.adminChat.deleteMany({});
+        console.log(`Purged ${result.count} admin chat messages`);
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'purged_admin_chat',
+                description: `Purged all admin chat messages (${result.count} messages deleted)`,
+                targetUserId: null,
+                targetUsername: null
+            }
+        });
+        
+        res.json({ success: true, message: 'Admin chat purged successfully', count: result.count });
+    } catch (error) {
+        console.error('Error purging admin chat:', error);
+        console.error('Error details:', error.message);
+        res.status(500).json({ error: 'Failed to purge admin chat', details: error.message });
     }
 });
 
@@ -1219,7 +1299,8 @@ app.delete('/api/global-chat/:messageId', requireAdmin, async (req, res) => {
 // Purge global chat (admin only)
 app.delete('/api/global-chat/purge', requireAdmin, async (req, res) => {
     try {
-        await prisma.globalChat.deleteMany({});
+        const result = await prisma.globalChat.deleteMany({});
+        console.log(`Purged ${result.count} global chat messages`);
         
         // Log admin action
         await prisma.adminLog.create({
@@ -1227,14 +1308,17 @@ app.delete('/api/global-chat/purge', requireAdmin, async (req, res) => {
                 adminId: req.user.id,
                 adminUsername: req.user.username,
                 action: 'purged_global_chat',
-                description: 'Purged all global chat messages'
+                description: `Purged all global chat messages (${result.count} messages deleted)`,
+                targetUserId: null,
+                targetUsername: null
             }
         });
         
-        res.json({ success: true, message: 'Chat purged successfully' });
+        res.json({ success: true, message: 'Chat purged successfully', count: result.count });
     } catch (error) {
-        console.error('Error purging chat:', error);
-        res.status(500).json({ error: 'Failed to purge chat' });
+        console.error('Error purging global chat:', error);
+        console.error('Error details:', error.message);
+        res.status(500).json({ error: 'Failed to purge chat', details: error.message });
     }
 });
 
