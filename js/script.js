@@ -5,6 +5,7 @@ class QuestTracker {
         this.currentMap = 'Any Location';
         this.currentTrader = 'Prapor';
         this.maps = [];
+        this.twitchLiveUsers = {};
         this.traders = [];
         this.sortBy = 'map'; // 'map' or 'trader'
         this.viewMode = 'available'; // 'available' or 'finished'
@@ -2133,6 +2134,9 @@ class QuestTracker {
                 </div>
             `;
             
+            // Check Twitch live status
+            await this.checkTwitchLiveStatus();
+            
             // Render with default sorting (PVP, include prestige = true)
             this.renderRankings(false, true);
             
@@ -2157,6 +2161,34 @@ class QuestTracker {
         }
     }
     
+    async checkTwitchLiveStatus() {
+        if (!this.rankingsData || this.rankingsData.length === 0) return;
+        
+        // Get all Twitch usernames
+        const twitchNames = this.rankingsData
+            .filter(user => user.twitchName)
+            .map(user => user.twitchName);
+        
+        if (twitchNames.length === 0) return;
+        
+        try {
+            const response = await fetch('/api/twitch/check-live', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ twitchNames })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.twitchLiveUsers = data.liveUsers || {};
+            }
+        } catch (error) {
+            console.error('Error checking Twitch live status:', error);
+            this.twitchLiveUsers = {};
+        }
+    }
+
     renderRankings(isPVE, includePrestige) {
         if (!this.rankingsData) return;
         
@@ -2274,12 +2306,20 @@ class QuestTracker {
                                                 </div>
                                             `}
                                             <div>
-                                                <a href="/public-profile?user=${user.username}" style="color: ${user.profileColor || '#c7aa6a'}; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <a href="/public-profile?user=${user.username}" style="color: ${user.profileColor || '#c7aa6a'}; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;">
                                                     ${displayName}
                                                 </a>
+                                                    ${(this.twitchLiveUsers && user.twitchName && this.twitchLiveUsers[user.twitchName.toLowerCase()]) ? `
+                                                        <span style="background: #e91916; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; animation: pulse 2s infinite;">
+                                                            <span style="width: 6px; height: 6px; background: #fff; border-radius: 50%; display: inline-block;"></span>
+                                                            LIVE
+                                                        </span>
+                                                    ` : ''}
+                                                </div>
                                                 <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
                                                     ${user.twitchUrl ? `
-                                                        <a href="${user.twitchUrl}" target="_blank" style="color: #6441a5; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <a href="${user.twitchUrl}" target="_blank" style="color: #888; text-decoration: none; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
                                                             <i class="fab fa-twitch"></i> Twitch
                                                         </a>
                                                     ` : ''}

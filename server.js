@@ -1318,6 +1318,32 @@ app.post('/api/global-chat/:messageId/unpin', requireAdmin, async (req, res) => 
     }
 });
 
+// Purge global chat (admin only) - MUST come before /:messageId route
+app.delete('/api/global-chat/purge', requireAdmin, async (req, res) => {
+    try {
+        const result = await prisma.globalChat.deleteMany({});
+        console.log(`Purged ${result.count} global chat messages`);
+        
+        // Log admin action
+        await prisma.adminLog.create({
+            data: {
+                adminId: req.user.id,
+                adminUsername: req.user.username,
+                action: 'purged_global_chat',
+                description: `Purged all global chat messages (${result.count} messages deleted)`,
+                targetUserId: null,
+                targetUsername: null
+            }
+        });
+        
+        res.json({ success: true, message: 'Chat purged successfully', count: result.count });
+    } catch (error) {
+        console.error('Error purging global chat:', error);
+        console.error('Error details:', error.message);
+        res.status(500).json({ error: 'Failed to purge chat', details: error.message });
+    }
+});
+
 // Delete a message (admin only)
 app.delete('/api/global-chat/:messageId', requireAdmin, async (req, res) => {
     try {
@@ -1341,32 +1367,6 @@ app.delete('/api/global-chat/:messageId', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error deleting message:', error);
         res.status(500).json({ error: 'Failed to delete message' });
-    }
-});
-
-// Purge global chat (admin only)
-app.delete('/api/global-chat/purge', requireAdmin, async (req, res) => {
-    try {
-        const result = await prisma.globalChat.deleteMany({});
-        console.log(`Purged ${result.count} global chat messages`);
-        
-        // Log admin action
-        await prisma.adminLog.create({
-            data: {
-                adminId: req.user.id,
-                adminUsername: req.user.username,
-                action: 'purged_global_chat',
-                description: `Purged all global chat messages (${result.count} messages deleted)`,
-                targetUserId: null,
-                targetUsername: null
-            }
-        });
-        
-        res.json({ success: true, message: 'Chat purged successfully', count: result.count });
-    } catch (error) {
-        console.error('Error purging global chat:', error);
-        console.error('Error details:', error.message);
-        res.status(500).json({ error: 'Failed to purge chat', details: error.message });
     }
 });
 
@@ -1438,6 +1438,86 @@ app.post('/api/site-banner', requireAdmin, async (req, res) => {
 let cachedEmotes = null;
 let emoteCacheTime = null;
 const EMOTE_CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+
+// Twitch live status cache
+const twitchLiveCache = new Map();
+const TWITCH_LIVE_CACHE_DURATION = 1000 * 60 * 2; // 2 minutes
+
+// Check if Twitch users are live
+app.post('/api/twitch/check-live', async (req, res) => {
+    try {
+        const { twitchNames } = req.body;
+        
+        if (!twitchNames || !Array.isArray(twitchNames)) {
+            return res.json({ liveUsers: {} });
+        }
+        
+        const liveUsers = {};
+        const now = Date.now();
+        const usersToCheck = [];
+        
+        // Check cache first
+        for (const name of twitchNames) {
+            if (!name) continue;
+            
+            const cached = twitchLiveCache.get(name.toLowerCase());
+            if (cached && (now - cached.timestamp < TWITCH_LIVE_CACHE_DURATION)) {
+                liveUsers[name.toLowerCase()] = cached.isLive;
+            } else {
+                usersToCheck.push(name.toLowerCase());
+            }
+        }
+        
+        // Fetch live status for uncached users
+        if (usersToCheck.length > 0) {
+            try {
+                // Use Twitch's public API by checking if their channel page returns live status
+                // We'll check the meta tags or JSON data on their channel page
+                const checkPromises = usersToCheck.map(async (username) => {
+                    try {
+                        const response = await fetch(`https://www.twitch.tv/${username}`, {
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            twitchLiveCache.set(username, { isLive: false, timestamp: now });
+                            return { username, isLive: false };
+                        }
+                        
+                        const html = await response.text();
+                        
+                        // Check for live indicators in the HTML
+                        // Look for isLiveBroadcast in JSON-LD or meta tags
+                        const isLive = html.includes('"isLiveBroadcast":true') || 
+                                      html.includes('content="live"') ||
+                                      html.includes('LIVE') && html.includes('stream-title');
+                        
+                        twitchLiveCache.set(username, { isLive, timestamp: now });
+                        return { username, isLive };
+                    } catch (error) {
+                        console.error(`Error checking ${username}:`, error.message);
+                        twitchLiveCache.set(username, { isLive: false, timestamp: now });
+                        return { username, isLive: false };
+                    }
+                });
+                
+                const results = await Promise.all(checkPromises);
+                results.forEach(({ username, isLive }) => {
+                    liveUsers[username] = isLive;
+                });
+            } catch (error) {
+                console.error('Error batch checking Twitch live status:', error);
+            }
+        }
+        
+        res.json({ liveUsers });
+    } catch (error) {
+        console.error('Error checking Twitch live status:', error);
+        res.status(500).json({ error: 'Failed to check live status' });
+    }
+});
 
 app.get('/api/7tv-emotes', async (req, res) => {
     try {
