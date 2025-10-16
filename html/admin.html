@@ -29,11 +29,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .admin-header h1 {
             color: #c7aa6a;
-            font-size: 28px;
+            font-size: 24px;
             text-transform: uppercase;
             letter-spacing: 2px;
             display: flex;
@@ -61,13 +62,158 @@
             background: rgba(199, 170, 106, 0.2);
         }
 
-        .dashboard-container {
+        /* New Sidebar Layout */
+        .admin-container {
             flex: 1;
-            display: grid;
-            grid-template-columns: 400px 400px 1fr 400px;
-            gap: 20px;
-            padding: 20px;
+            display: flex;
             overflow: hidden;
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: rgba(20, 20, 20, 0.95);
+            border-right: 2px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-menu::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-menu::-webkit-scrollbar-thumb {
+            background: rgba(199, 170, 106, 0.3);
+            border-radius: 3px;
+        }
+
+        .menu-item {
+            padding: 16px 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #888;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: rgba(199, 170, 106, 0.05);
+            color: #c7aa6a;
+        }
+
+        .menu-item.active {
+            background: rgba(199, 170, 106, 0.1);
+            border-left-color: #c7aa6a;
+            color: #c7aa6a;
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .admin-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-section {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .content-section.active {
+            display: flex;
+        }
+
+        .section-header {
+            padding: 30px;
+            border-bottom: 2px solid #3a3a3a;
+            background: rgba(199, 170, 106, 0.05);
+        }
+
+        .section-header h2 {
+            color: #c7aa6a;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .section-header p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .section-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .section-content::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .section-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .section-content::-webkit-scrollbar-thumb {
+            background: rgba(199, 170, 106, 0.3);
+            border-radius: 5px;
+        }
+
+        /* Dashboard grid for overview */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .stat-card h3 {
+            color: #888;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .value {
+            color: #c7aa6a;
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .dashboard-container {
+            display: none; /* Hide old grid layout */
         }
 
         .panel {
@@ -602,156 +748,226 @@
         </div>
     </div>
 
-    <div class="dashboard-container">
-        <!-- Admin Chat Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2>
-                    <i class="fas fa-comments"></i>
-                    Admin Chat
-                </h2>
-            </div>
-            <div class="chat-container">
-                <div class="chat-messages" id="chat-messages">
-                    <!-- Chat messages will appear here -->
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <div class="admin-sidebar">
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-section="overview">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Overview</span>
                 </div>
-                <div class="chat-input-area">
-                    <div class="chat-input-wrapper">
-                        <textarea id="chat-input" class="chat-input" placeholder="Type your message..." rows="1"></textarea>
-                        <button id="chat-send-btn" class="chat-send-btn">
-                            <i class="fas fa-paper-plane"></i>
+                <div class="menu-item" data-section="chat">
+                    <i class="fas fa-comments"></i>
+                    <span>Admin Chat</span>
+                </div>
+                <div class="menu-item" data-section="logs">
+                    <i class="fas fa-history"></i>
+                    <span>Admin Logs</span>
+                </div>
+                <div class="menu-item" data-section="users">
+                    <i class="fas fa-users"></i>
+                    <span>All Users</span>
+                </div>
+                <div class="menu-item" data-section="reports">
+                    <i class="fas fa-bug"></i>
+                    <span>Bugs & Reports</span>
+                </div>
+                <div class="menu-item" data-section="banner">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Site Banner</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="admin-content">
+            <!-- Overview Section -->
+            <section id="overview-section" class="content-section active">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-line"></i> Overview</h2>
+                    <p>Quick statistics and insights</p>
+                </div>
+                <div class="section-content">
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <h3>Total Users</h3>
+                            <div class="value" id="overview-total-users">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Leaderboard Users</h3>
+                            <div class="value" id="overview-approved-users">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Admin Users</h3>
+                            <div class="value" id="overview-admin-users">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Reports</h3>
+                            <div class="value" id="overview-total-reports">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Chat Section -->
+            <section id="chat-section" class="content-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-comments"></i> Admin Chat</h2>
+                    <p>Communicate with other administrators</p>
+                </div>
+                <div class="section-content" style="padding: 0; display: flex; flex-direction: column;">
+                    <div class="panel" style="margin: 0; flex: 1; border: none; border-radius: 0;">
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chat-messages">
+                                <!-- Chat messages will appear here -->
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input-wrapper">
+                                    <textarea id="chat-input" class="chat-input" placeholder="Type your message..." rows="1"></textarea>
+                                    <button id="chat-send-btn" class="chat-send-btn">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Logs Section -->
+            <section id="logs-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-history"></i> Admin Logs
+                        <span class="badge" id="log-count" style="margin-left: 10px;">0</span>
+                    </h2>
+                    <p>Activity log and system events</p>
+                </div>
+                <div class="section-content">
+                    <div style="margin-bottom: 20px; text-align: right;">
+                        <button onclick="clearAdminLogs()" class="btn-danger" style="padding: 10px 20px; font-size: 14px; border-radius: 6px; cursor: pointer; background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid #dc3545; transition: all 0.3s;">
+                            <i class="fas fa-trash"></i> Clear All Logs
                         </button>
                     </div>
+                    <div id="admin-log-list">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading...</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Admin Log Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2>
-                    <i class="fas fa-history"></i>
-                    Admin Log
-                    <span class="badge" id="log-count">0</span>
-                </h2>
-                <button onclick="clearAdminLogs()" class="btn-danger" style="padding: 8px 16px; font-size: 12px; border-radius: 6px; cursor: pointer; background: rgba(220, 53, 69, 0.2); color: #dc3545; border: 1px solid #dc3545; transition: all 0.3s;">
-                    <i class="fas fa-trash"></i> Clear All
-                </button>
-            </div>
-            <div class="panel-content" id="admin-log-list">
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading...</p>
+            <!-- All Users Section -->
+            <section id="users-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-users"></i> All Users
+                        <span class="badge" id="users-count" style="margin-left: 10px;">0</span>
+                    </h2>
+                    <p>Manage user accounts and permissions</p>
                 </div>
-            </div>
-        </div>
+                <div class="section-content">
+                    <div class="stats-row" style="margin-bottom: 30px;">
+                        <div class="stat-mini">
+                            <div class="value" id="total-users">0</div>
+                            <div class="label">Total Users</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="value" id="approved-users">0</div>
+                            <div class="label">On Leaderboard</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="value" id="admin-users">0</div>
+                            <div class="label">Admins</div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Filters -->
+                    <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                        <input type="text" id="user-search" placeholder="🔍 Search users..." style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px;">
+                        <select id="user-sort" style="padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px; min-width: 180px;">
+                            <option value="date">Sort: Newest First</option>
+                            <option value="date-old">Sort: Oldest First</option>
+                            <option value="alphabetical">Sort: A-Z</option>
+                            <option value="roles">Sort: By Roles</option>
+                        </select>
+                    </div>
+                    
+                    <div id="all-users-list">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-        <!-- All Users Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2>
-                    <i class="fas fa-users"></i>
-                    All Users
-                    <span class="badge" id="users-count">0</span>
-                </h2>
-            </div>
-            <div class="panel-content">
-                <div class="stats-row">
-                    <div class="stat-mini">
-                        <div class="value" id="total-users">0</div>
-                        <div class="label">Total Users</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="value" id="approved-users">0</div>
-                        <div class="label">On Leaderboard</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="value" id="admin-users">0</div>
-                        <div class="label">Admins</div>
+            <!-- Bugs & Reports Section -->
+            <section id="reports-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-bug"></i> Bugs & Reports
+                        <span class="badge" id="bugs-count" style="margin-left: 10px;">0</span>
+                    </h2>
+                    <p>User feedback and bug reports</p>
+                </div>
+                <div class="section-content">
+                    <div id="bugs-reports-list">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading...</p>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- User Filters -->
-                <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                    <input type="text" id="user-search" placeholder="🔍 Search users..." style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px;">
-                    <select id="user-sort" style="padding: 10px; background: rgba(0,0,0,0.5); border: 2px solid #3a3a3a; border-radius: 6px; color: #fff; font-size: 14px; min-width: 180px;">
-                        <option value="date">Sort: Newest First</option>
-                        <option value="date-old">Sort: Oldest First</option>
-                        <option value="alphabetical">Sort: A-Z</option>
-                        <option value="roles">Sort: By Roles</option>
-                    </select>
-                </div>
-                
-                <div id="all-users-list">
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Reports Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2>
-                    <i class="fas fa-flag"></i>
-                    Bug Reports & Features
-                    <span class="badge" id="reports-count">0</span>
-                </h2>
-            </div>
-            <div class="panel-content">
-                <div class="stats-row">
-                    <div class="stat-mini">
-                        <div class="value" id="pending-reports">0</div>
-                        <div class="label">Pending</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="value" id="bug-reports">0</div>
-                        <div class="label">Bugs</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="value" id="feature-reports">0</div>
-                        <div class="label">Features</div>
+            <!-- Site Banner Section -->
+            <section id="banner-section" class="content-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-bullhorn"></i> Site Banner Message</h2>
+                    <p>Manage the global announcement banner</p>
+                </div>
+                <div class="section-content">
+                    <div class="panel">
+                        <div class="panel-content" style="padding: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" id="banner-enabled" style="width: 20px; height: 20px; cursor: pointer;">
+                                    <span style="font-weight: 600; color: #fff;">Enable Banner</span>
+                                </label>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: #c7aa6a; font-weight: 600;">Banner Message</label>
+                                <textarea id="banner-message" placeholder="Enter banner message..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(199, 170, 106, 0.3); border-radius: 6px; color: #fff; font-size: 14px; font-family: inherit; min-height: 80px; resize: vertical;" maxlength="500"></textarea>
+                                <small style="color: #888;">This message will appear as a banner at the top of the main site when enabled.</small>
+                            </div>
+                            <button onclick="saveBannerSettings()" style="padding: 10px 20px; background: var(--text-highlight); color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                                <i class="fas fa-save"></i> Save Banner Settings
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div id="reports-list">
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading...</p>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
     </div>
 
-    <!-- Site Banner Settings (Full Width) -->
-    <div style="max-width: 1600px; margin: 20px auto;">
-        <div class="panel">
-            <div class="panel-header">
-                <h2>
-                    <i class="fas fa-bullhorn"></i>
-                    Site Banner Message
-                </h2>
-            </div>
-            <div class="panel-content" style="padding: 20px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="banner-enabled" style="width: 20px; height: 20px; cursor: pointer;">
-                        <span style="font-weight: 600; color: #fff;">Enable Banner</span>
-                    </label>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 8px; color: #c7aa6a; font-weight: 600;">Banner Message</label>
-                    <textarea id="banner-message" placeholder="Enter banner message..." style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(199, 170, 106, 0.3); border-radius: 6px; color: #fff; font-size: 14px; font-family: inherit; min-height: 80px; resize: vertical;" maxlength="500"></textarea>
-                    <small style="color: #888;">This message will appear as a banner at the top of the main site when enabled.</small>
-                </div>
-                <button onclick="saveBannerSettings()" style="padding: 10px 20px; background: var(--text-highlight); color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
-                    <i class="fas fa-save"></i> Save Banner Settings
-                </button>
-            </div>
-        </div>
-    </div>
+    <script>
+        // Sidebar Navigation
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const section = item.dataset.section;
+                
+                // Update menu active state
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Update content sections
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`${section}-section`).classList.add('active');
+            });
+        });
+    </script>
 
     <script>
         let adminLogs = [];
@@ -859,6 +1075,11 @@
             document.getElementById('total-users').textContent = allUsers.length;
             document.getElementById('approved-users').textContent = allUsers.filter(u => u.approved).length;
             document.getElementById('admin-users').textContent = allUsers.filter(u => u.isAdmin).length;
+            
+            // Update overview stats
+            document.getElementById('overview-total-users').textContent = allUsers.length;
+            document.getElementById('overview-approved-users').textContent = allUsers.filter(u => u.approved).length;
+            document.getElementById('overview-admin-users').textContent = allUsers.filter(u => u.isAdmin).length;
         }
 
         function displayAdminLogs() {
@@ -1188,7 +1409,7 @@
                 updateReportStats();
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('reports-list').innerHTML = `
+                document.getElementById('bugs-reports-list').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle"></i>
                         <p>Failed to load</p>
@@ -1198,14 +1419,15 @@
         }
 
         function updateReportStats() {
-            document.getElementById('reports-count').textContent = reports.length;
-            document.getElementById('pending-reports').textContent = reports.filter(r => r.status === 'pending').length;
-            document.getElementById('bug-reports').textContent = reports.filter(r => r.type === 'bug' || r.type === 'quest-error').length;
-            document.getElementById('feature-reports').textContent = reports.filter(r => r.type === 'feature').length;
+            const reportCount = reports.length;
+            document.getElementById('bugs-count').textContent = reportCount;
+            
+            // Update overview
+            document.getElementById('overview-total-reports').textContent = reportCount;
         }
 
         function displayReports() {
-            const container = document.getElementById('reports-list');
+            const container = document.getElementById('bugs-reports-list');
             
             if (reports.length === 0) {
                 container.innerHTML = `

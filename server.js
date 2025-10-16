@@ -1054,10 +1054,23 @@ app.get('/api/global-chat', requireAuth, async (req, res) => {
             enrichedMessages.reverse();
         }
         
+        // Get total count for purge detection
+        const totalCount = await prisma.globalChat.count();
+        
+        // Get recent message IDs for deletion detection (last 200 messages)
+        const recentMessages = await prisma.globalChat.findMany({
+            select: { id: true },
+            orderBy: { timestamp: 'desc' },
+            take: 200
+        });
+        const allRecentIds = recentMessages.map(m => m.id);
+        
         res.json({ 
             messages: enrichedMessages,
             pinnedMessage: enrichedPinnedMessage,
-            hasMore: messages.length === take
+            hasMore: messages.length === take,
+            totalCount,
+            allRecentIds
         });
     } catch (error) {
         console.error('Error fetching global chat:', error);
@@ -1317,7 +1330,10 @@ app.get('/api/7tv-emotes', async (req, res) => {
         const emotes = data.emotes.map(emote => ({
             name: emote.name,
             id: emote.id,
-            url: `https://cdn.7tv.app/emote/${emote.id}/1x.webp` // 1x size for chat
+            url1x: `https://cdn.7tv.app/emote/${emote.id}/1x.webp`,
+            url2x: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
+            url3x: `https://cdn.7tv.app/emote/${emote.id}/3x.webp`,
+            url4x: `https://cdn.7tv.app/emote/${emote.id}/4x.webp`
         }));
         
         // Cache the emotes

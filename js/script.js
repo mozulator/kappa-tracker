@@ -3093,23 +3093,28 @@ function replaceEmotes(text) {
             // User typed the same emote multiple times - size it based on count
             const emote = emotes.find(e => e.name === firstWord);
             let emoteSize = '28px';
+            let emoteUrl = emote.url1x;
             
             if (words.length === 1) {
-                emoteSize = '56px'; // 1x = medium
+                emoteSize = '56px'; // 1x = medium, use 2x resolution
+                emoteUrl = emote.url2x || emote.url1x;
             } else if (words.length === 2) {
-                emoteSize = '84px'; // 2x = big
+                emoteSize = '84px'; // 2x = big, use 3x resolution
+                emoteUrl = emote.url3x || emote.url2x || emote.url1x;
             } else if (words.length === 3) {
-                emoteSize = '112px'; // 3x = BIGGEST
+                emoteSize = '112px'; // 3x = BIGGEST, use 4x resolution
+                emoteUrl = emote.url4x || emote.url3x || emote.url2x || emote.url1x;
             }
             
-            return `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: ${emoteSize}; vertical-align: middle; display: inline-block; margin: 0 2px;">`;
+            return `<img src="${emoteUrl}" alt="${emote.name}" title="${emote.name}" style="height: ${emoteSize}; vertical-align: middle; display: inline-block; margin: 0 2px;">`;
         }
     }
     
-    // Default: replace all emotes with normal size
+    // Default: replace all emotes with normal size (use 1x resolution)
     emotes.forEach(emote => {
         const regex = new RegExp(`\\b${emote.name}\\b`, 'g');
-        result = result.replace(regex, `<img src="${emote.url}" alt="${emote.name}" title="${emote.name}" style="height: 28px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
+        const emoteUrl = emote.url1x || emote.url;
+        result = result.replace(regex, `<img src="${emoteUrl}" alt="${emote.name}" title="${emote.name}" style="height: 28px; vertical-align: middle; display: inline-block; margin: 0 2px;">`);
     });
     
     return result;
@@ -3254,6 +3259,33 @@ async function loadGlobalChat() {
         const newMessages = data.messages || [];
         globalChatPinnedMessage = data.pinnedMessage || null;
         hasMoreMessages = data.hasMore || false;
+        const totalCount = data.totalCount || 0;
+        
+        // Check if chat was purged (total count is 0 but we have messages locally)
+        if (totalCount === 0 && globalChatMessages.length > 0) {
+            console.log('Chat was purged, clearing local messages');
+            globalChatMessages = [];
+            lastGlobalChatId = null;
+            oldestChatTimestamp = null;
+            globalChatPinnedMessage = null;
+            displayGlobalChatMessages();
+            return;
+        }
+        
+        // Check for deleted messages by validating our current messages still exist
+        if (lastGlobalChatId && globalChatMessages.length > 0) {
+            const serverMessageIds = new Set(data.allRecentIds || []);
+            if (serverMessageIds.size > 0) {
+                const beforeCount = globalChatMessages.length;
+                globalChatMessages = globalChatMessages.filter(m => serverMessageIds.has(m.id));
+                const afterCount = globalChatMessages.length;
+                
+                if (beforeCount !== afterCount) {
+                    console.log(`Removed ${beforeCount - afterCount} deleted messages`);
+                    displayGlobalChatMessages();
+                }
+            }
+        }
         
         if (newMessages.length > 0) {
             if (lastGlobalChatId) {
