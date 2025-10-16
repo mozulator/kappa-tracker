@@ -94,9 +94,6 @@
                         <a href="/collector-items-overlay" target="_blank" class="dropdown-item" id="collector-items-overlay-link">
                             <i class="fas fa-box-open"></i> Collector Items
                         </a>
-                        <a href="https://www.youtube.com/watch?v=8ysn_HS_Y9k&feature=youtu.be" target="_blank" class="dropdown-item" id="obs-tutorial-link">
-                            <i class="fas fa-video"></i> How to use?
-                        </a>
                     </div>
                 </div>
                 <div class="nav-dropdown">
@@ -115,6 +112,9 @@
                         </a>
                     </div>
                 </div>
+                <a href="#" class="nav-link" id="how-to-use-tab">
+                    <i class="fas fa-question-circle"></i> How to Use
+                </a>
             </nav>
         </div>
         <div class="header-right">
@@ -388,6 +388,144 @@
                                 <i class="fas fa-spinner fa-spin"></i> Loading activity...
                             </div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How to Use Section -->
+            <section class="how-to-use" id="how-to-use" style="display: none;">
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <h2 style="color: var(--text-highlight); font-size: 2.5rem; margin-bottom: 30px; text-align: center;">
+                        <i class="fas fa-question-circle"></i> How to Use Kappa Tracker
+                    </h2>
+                    
+                    <!-- Quick Start -->
+                    <div class="help-section">
+                        <h3><i class="fas fa-rocket"></i> Quick Start</h3>
+                        <p>Welcome to Kappa Tracker! Track your Escape From Tarkov quest progress towards the Kappa Container.</p>
+                        <ol>
+                            <li>Create an account and log in</li>
+                            <li>Set your PMC level and prestige (if applicable)</li>
+                            <li>Check off quests as you complete them</li>
+                            <li>View your progress and compare with other players</li>
+                        </ol>
+                    </div>
+
+                    <!-- Dashboard -->
+                    <div class="help-section">
+                        <h3><i class="fas fa-home"></i> Dashboard</h3>
+                        <p><strong>Your main quest tracking hub.</strong> All quests are organized by map locations.</p>
+                        <ul>
+                            <li><strong>Quest Cards:</strong> Click a quest card to mark it as complete/incomplete</li>
+                            <li><strong>Map Tabs:</strong> Filter quests by map location</li>
+                            <li><strong>Quest Modes:</strong> Toggle between "Kappa Quests" and "All Quests"</li>
+                            <li><strong>Future Quests:</strong> Toggle to show quests you haven't unlocked yet</li>
+                            <li><strong>Prerequisites:</strong> See which quests unlock other quests</li>
+                        </ul>
+                    </div>
+
+                    <!-- Collector Items -->
+                    <div class="help-section">
+                        <h3><i class="fas fa-box-open"></i> Collector Items</h3>
+                        <p>Track all Found in Raid items needed for the Collector quest (required for Kappa).</p>
+                        <ul>
+                            <li>Click items to mark as found</li>
+                            <li>Items automatically move between "Needed" and "Found" lists</li>
+                            <li>Progress bar shows your completion percentage</li>
+                        </ul>
+                    </div>
+
+                    <!-- Rankings -->
+                    <div class="help-section">
+                        <h3><i class="fas fa-trophy"></i> Rankings</h3>
+                        <p>View the global leaderboard and compare your progress.</p>
+                        <ul>
+                            <li><strong>PVP/PVE Toggle:</strong> Switch between PVP and PVE leaderboards</li>
+                            <li><strong>Sort Options:</strong> Sort by prestige or completion percentage</li>
+                            <li>Click on any player to view their public profile</li>
+                        </ul>
+                    </div>
+
+                    <!-- OBS Integration -->
+                    <div class="help-section">
+                        <h3><i class="fas fa-video"></i> OBS Integration</h3>
+                        <p><strong>Show your quest progress on stream!</strong></p>
+                        
+                        <div class="help-subsection">
+                            <h4><i class="fas fa-trophy"></i> Collector Progress</h4>
+                            <p><strong>Recommended Size: 500x100</strong></p>
+                            <ol>
+                                <li>In OBS, add a <strong>Browser Source</strong></li>
+                                <li>Go to <strong>OBS Integration → Collector Progress</strong></li>
+                                <li>Copy the URL and paste it into the Browser Source</li>
+                                <li>Set Width: <code>500</code>, Height: <code>100</code></li>
+                                <li>Position the overlay on your stream</li>
+                            </ol>
+                        </div>
+
+                        <div class="help-subsection">
+                            <h4><i class="fas fa-chart-bar"></i> Kappa Overview</h4>
+                            <p><strong>Recommended: Full stream size in a separate scene</strong></p>
+                            <ol>
+                                <li>Create a <strong>new scene</strong> in OBS called "Kappa Progress"</li>
+                                <li>Add a <strong>Browser Source</strong> to this scene</li>
+                                <li>Go to <strong>OBS Integration → Kappa Overview</strong></li>
+                                <li>Copy the URL and paste it into the Browser Source</li>
+                                <li>Set Width and Height to match your stream resolution (e.g., <code>1920x1080</code>)</li>
+                                <li>Use this scene to show viewers your current Kappa quest progress</li>
+                            </ol>
+                        </div>
+
+                        <div class="help-subsection">
+                            <h4><i class="fas fa-box-open"></i> Collector Items</h4>
+                            <p><strong>Recommended: Full stream size in a separate scene</strong></p>
+                            <ol>
+                                <li>Create a <strong>new scene</strong> in OBS called "Collector Items"</li>
+                                <li>Add a <strong>Browser Source</strong> to this scene</li>
+                                <li>Go to <strong>OBS Integration → Collector Items</strong></li>
+                                <li>Copy the URL and paste it into the Browser Source</li>
+                                <li>Set Width and Height to match your stream resolution (e.g., <code>1920x1080</code>)</li>
+                                <li>Show viewers which collector items you still need</li>
+                            </ol>
+                        </div>
+
+                        <div class="help-note">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Pro Tip:</strong> All OBS overlays update automatically as you check off quests and items!
+                        </div>
+                    </div>
+
+                    <!-- Profile & Settings -->
+                    <div class="help-section">
+                        <h3><i class="fas fa-user"></i> Profile & Settings</h3>
+                        <ul>
+                            <li><strong>PMC Level & Prestige:</strong> Keep your character info up to date</li>
+                            <li><strong>Display Name:</strong> How your name appears on the leaderboard</li>
+                            <li><strong>Twitch Integration:</strong> Link your Twitch channel</li>
+                            <li><strong>Tarkov.dev ID:</strong> Link your Tarkov.dev profile</li>
+                            <li><strong>Bio:</strong> Add a personal message to your profile</li>
+                            <li><strong>Public Profile:</strong> Control if others can view your progress</li>
+                        </ul>
+                    </div>
+
+                    <!-- Feedback -->
+                    <div class="help-section">
+                        <h3><i class="fas fa-comment-dots"></i> Feedback</h3>
+                        <p>Help improve Kappa Tracker!</p>
+                        <ul>
+                            <li><strong>Report a Bug:</strong> Found something broken? Let us know!</li>
+                            <li><strong>Report Quest Error:</strong> Incorrect quest info? Report it!</li>
+                            <li><strong>Request a Feature:</strong> Have an idea? We'd love to hear it!</li>
+                        </ul>
+                    </div>
+
+                    <div class="help-footer" style="text-align: center; margin-top: 40px; padding: 20px; background: rgba(199, 170, 106, 0.1); border-radius: 8px;">
+                        <p style="color: var(--text-highlight); font-size: 1.1rem; margin-bottom: 10px;">
+                            <i class="fas fa-heart"></i> Made by <a href="https://twitch.tv/mozula" target="_blank" style="color: var(--text-highlight); text-decoration: underline;">twitch.tv/mozula</a> for free
+                        </p>
+                        <p style="color: var(--subtext); font-size: 0.9rem;">
+                            Feel free to drop a follow! Need help? Found a bug? Use the Feedback menu!
+                        </p>
                     </div>
                 </div>
             </section>

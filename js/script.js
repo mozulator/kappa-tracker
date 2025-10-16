@@ -334,6 +334,16 @@ class QuestTracker {
             });
         }
 
+        const howToUseTab = document.getElementById('how-to-use-tab');
+        if (howToUseTab) {
+            howToUseTab.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.currentView = 'how-to-use';
+                this.showView('how-to-use');
+                this.updateNavigationState();
+            });
+        }
+
         const statisticsLink = document.getElementById('statistics-link');
         if (statisticsLink) {
             statisticsLink.addEventListener('click', (e) => {
@@ -757,7 +767,7 @@ class QuestTracker {
          * - Each main page has a section in main-content with class matching the page name
          * - Class names are lowercase with hyphens instead of spaces
          * - Section IDs match the class names
-         * - Sections: dashboard, finished-quests, fix-quests, rankings, profile, collector-items, statistics
+         * - Sections: dashboard, finished-quests, fix-quests, rankings, profile, collector-items, statistics, how-to-use
          * - The sidebar is shown on dashboard and finished-quests only
          * - Quest Requirements sidebar (right-sidebar) is part of dashboard section only
          */
@@ -770,6 +780,7 @@ class QuestTracker {
         const profile = document.getElementById('profile');
         const collectorItems = document.getElementById('collector-items');
         const statistics = document.getElementById('statistics');
+        const howToUse = document.getElementById('how-to-use');
         const sidebar = document.querySelector('.sidebar');
 
         if (dashboard) dashboard.style.display = 'none';
@@ -779,6 +790,7 @@ class QuestTracker {
         if (profile) profile.style.display = 'none';
         if (collectorItems) collectorItems.style.display = 'none';
         if (statistics) statistics.style.display = 'none';
+        if (howToUse) howToUse.style.display = 'none';
         if (sidebar) sidebar.style.display = 'none';
 
         // Show relevant section and sidebar based on view
@@ -793,11 +805,13 @@ class QuestTracker {
         } else if (view === 'rankings') {
             if (rankings) rankings.style.display = 'block';
         } else if (view === 'profile') {
-            if (profile) profile.style.display = 'block';
+            if (profile) profile.display = 'block';
         } else if (view === 'collector-items') {
             if (collectorItems) collectorItems.style.display = 'block';
         } else if (view === 'statistics') {
             if (statistics) statistics.style.display = 'block';
+        } else if (view === 'how-to-use') {
+            if (howToUse) howToUse.style.display = 'block';
         }
     }
 
@@ -807,9 +821,10 @@ class QuestTracker {
         const rankingsTab = document.getElementById('rankings-tab');
         const fixQuestsTab = document.getElementById('fix-quests-tab');
         const collectorItemsTab = document.getElementById('collector-items-tab');
+        const howToUseTab = document.getElementById('how-to-use-tab');
         
         // Remove active class from all tabs
-        [dashboardTab, finishedQuestsTab, rankingsTab, fixQuestsTab, collectorItemsTab].forEach(tab => {
+        [dashboardTab, finishedQuestsTab, rankingsTab, fixQuestsTab, collectorItemsTab, howToUseTab].forEach(tab => {
             if (tab) tab.classList.remove('active');
         });
         
@@ -824,6 +839,8 @@ class QuestTracker {
             fixQuestsTab?.classList.add('active');
         } else if (this.currentView === 'collector-items') {
             collectorItemsTab?.classList.add('active');
+        } else if (this.currentView === 'how-to-use') {
+            howToUseTab?.classList.add('active');
         }
     }
 

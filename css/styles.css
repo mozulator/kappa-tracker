@@ -2074,3 +2074,114 @@ input[type="checkbox"]:focus {
         max-height: 600px;
     }
 }
+
+/* How to Use Section */
+.how-to-use {
+    padding: 40px 20px;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.help-section {
+    background: var(--post-bg);
+    border: 2px solid var(--post-border);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.help-section h3 {
+    color: var(--text-highlight);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.help-section h4 {
+    color: var(--text-highlight);
+    font-size: 1.4rem;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.help-section p {
+    color: var(--subtext);
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 15px;
+}
+
+.help-section ul,
+.help-section ol {
+    color: var(--subtext);
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-left: 25px;
+    margin-bottom: 15px;
+}
+
+.help-section li {
+    margin-bottom: 8px;
+}
+
+.help-section strong {
+    color: var(--text-highlight);
+}
+
+.help-section code {
+    background: rgba(199, 170, 106, 0.1);
+    border: 1px solid var(--post-border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--text-highlight);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.help-subsection {
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--post-border);
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 6px;
+}
+
+.help-note {
+    background: rgba(199, 170, 106, 0.1);
+    border: 2px solid var(--post-border);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.help-note i {
+    color: var(--text-highlight);
+    font-size: 1.2rem;
+    margin-top: 2px;
+}
+
+.help-note strong {
+    color: var(--text-highlight);
+}
+
+@media (max-width: 768px) {
+    .help-section {
+        padding: 20px;
+    }
+    
+    .help-section h3 {
+        font-size: 1.5rem;
+    }
+    
+    .help-section h4 {
+        font-size: 1.2rem;
+    }
+}
