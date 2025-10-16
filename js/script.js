@@ -3193,8 +3193,9 @@ function initGlobalChat() {
     const messagesContainer = document.getElementById('global-chat-messages');
     if (messagesContainer) {
         messagesContainer.addEventListener('scroll', async () => {
-            // Check if scrolled to top
-            if (messagesContainer.scrollTop < 100 && hasMoreMessages && !isLoadingMore) {
+            // Check if scrolled to top (within 200px)
+            if (messagesContainer.scrollTop <= 200 && hasMoreMessages && !isLoadingMore) {
+                console.log('Loading more messages...');
                 await loadMoreMessages();
             }
         });
@@ -3304,14 +3305,21 @@ async function loadMoreMessages() {
 
 function displayGlobalChatMessages() {
     const messagesContainer = document.getElementById('global-chat-messages');
+    const pinnedContainer = document.getElementById('global-chat-pinned-container');
     if (!messagesContainer) return;
 
-    let html = '';
-    
-    // Show pinned message if exists
-    if (globalChatPinnedMessage) {
-        html += renderPinnedMessage(globalChatPinnedMessage);
+    // Render pinned message in separate container
+    if (pinnedContainer) {
+        if (globalChatPinnedMessage) {
+            pinnedContainer.innerHTML = renderPinnedMessage(globalChatPinnedMessage);
+            pinnedContainer.style.display = 'block';
+        } else {
+            pinnedContainer.innerHTML = '';
+            pinnedContainer.style.display = 'none';
+        }
     }
+    
+    let html = '';
     
     // Show "Load More" indicator at top if there are more messages
     if (hasMoreMessages && globalChatMessages.length > 0) {
@@ -3350,26 +3358,24 @@ function renderPinnedMessage(msg) {
     const isAdmin = window.currentUser && window.currentUser.isAdmin;
     
     return `
-        <div class="pinned-message" data-message-id="${msg.id}">
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(199, 170, 106, 0.1); border-bottom: 1px solid var(--post-border);">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-thumbtack" style="color: #c7aa6a;"></i>
-                    <span style="color: #c7aa6a; font-size: 12px; font-weight: 600;">PINNED MESSAGE</span>
-                </div>
-                ${isAdmin ? `<button onclick="unpinMessage('${msg.id}')" class="pin-btn" title="Unpin"><i class="fas fa-times"></i></button>` : ''}
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(199, 170, 106, 0.1); border-bottom: 1px solid var(--post-border);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-thumbtack" style="color: #c7aa6a;"></i>
+                <span style="color: #c7aa6a; font-size: 12px; font-weight: 600;">PINNED MESSAGE</span>
             </div>
-            <div class="global-chat-message" style="background: rgba(199, 170, 106, 0.05);">
-                <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar">
-                <div class="global-chat-bubble">
-                    <div class="global-chat-header-info">
-                        <span class="global-chat-name" style="color: ${color};">
-                            ${escapeHtml(displayName)}
-                            ${getUserBadges(msg)}
-                        </span>
-                        <span class="global-chat-time">${timeString}</span>
-                    </div>
-                    <div class="global-chat-text">${replaceEmotes(msg.message)}</div>
+            ${isAdmin ? `<button onclick="unpinMessage('${msg.id}')" class="pin-btn" title="Unpin"><i class="fas fa-times"></i></button>` : ''}
+        </div>
+        <div class="global-chat-message" style="background: rgba(199, 170, 106, 0.05); padding: 10px;">
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar">
+            <div class="global-chat-bubble">
+                <div class="global-chat-header-info">
+                    <span class="global-chat-name" style="color: ${color};">
+                        ${escapeHtml(displayName)}
+                        ${getUserBadges(msg)}
+                    </span>
+                    <span class="global-chat-time">${timeString}</span>
                 </div>
+                <div class="global-chat-text">${replaceEmotes(msg.message)}</div>
             </div>
         </div>
     `;

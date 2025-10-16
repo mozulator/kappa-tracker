@@ -1239,7 +1239,7 @@ app.get('/api/7tv-emotes', async (req, res) => {
         
         // Replace this with your actual 7TV emote set ID
         // You can get this from your 7TV starter pack URL
-        const EMOTE_SET_ID = '01HYGAZ1CWGNE0EY1K5KD5Q06Q'; // Replace with your starter pack ID
+        const EMOTE_SET_ID = '01JY7MAYMCDMQTNN7Z943KJQHX'; // Replace with your starter pack ID
         
         const response = await fetch(`https://7tv.io/v3/emote-sets/${EMOTE_SET_ID}`);
         

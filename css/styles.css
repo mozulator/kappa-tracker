@@ -2422,6 +2422,14 @@ input[type="checkbox"]:focus {
     box-shadow: 0 4px 12px rgba(199, 170, 106, 0.4);
 }
 
+/* Pinned message container */
+.global-chat-pinned-container {
+    border-bottom: 1px solid var(--post-border);
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    display: none;
+}
+
 /* Pinned message */
 .pinned-message {
     margin-bottom: 10px;
