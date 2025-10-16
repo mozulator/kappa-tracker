@@ -1472,20 +1472,29 @@ app.post('/api/twitch/check-live', async (req, res) => {
         if (usersToCheck.length > 0) {
             try {
                 // Use Twitch's CDN preview thumbnail to check live status
-                // If the thumbnail exists, the user is live. If 404, they're offline.
+                // Twitch always returns an image, but offline users get a small placeholder (~2-5KB)
+                // Live users get a real stream thumbnail (>5KB)
                 // Source: https://static-cdn.jtvnw.net/previews-ttv/live_user_USERNAME-440x248.jpg
                 const checkPromises = usersToCheck.map(async (username) => {
                     try {
                         const thumbnailUrl = `https://static-cdn.jtvnw.net/previews-ttv/live_user_${username}-440x248.jpg`;
                         const response = await fetch(thumbnailUrl, {
-                            method: 'HEAD', // Use HEAD to only check if resource exists without downloading it
                             headers: {
                                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                             }
                         });
                         
-                        // If thumbnail exists (200 OK), user is live
-                        const isLive = response.ok && response.status === 200;
+                        if (!response.ok) {
+                            twitchLiveCache.set(username, { isLive: false, timestamp: now });
+                            return { username, isLive: false };
+                        }
+                        
+                        // Get the image as buffer to check size
+                        const buffer = await response.arrayBuffer();
+                        
+                        // Offline placeholder is very small (~2-5KB)
+                        // Live stream thumbnails are much larger (>5KB)
+                        const isLive = buffer.byteLength > 5000;
                         
                         twitchLiveCache.set(username, { isLive, timestamp: now });
                         return { username, isLive };
