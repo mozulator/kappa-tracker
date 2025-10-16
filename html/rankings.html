@@ -356,13 +356,23 @@
         <div class="rankings-header">
             <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 10px;">
                 <h1 style="margin: 0;"><i class="fas fa-trophy"></i> KAPPA RANKINGS</h1>
+            </div>
+            <p>Global Leaderboard of Quest Completion</p>
+
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
+                <label class="quest-mode-toggle" style="margin: 0;">
+                    <input type="checkbox" id="leaderboard-toggle" class="quest-mode-checkbox">
+                    <span class="quest-mode-slider"></span>
+                    <span class="quest-mode-label" id="leaderboard-label">
+                        <i class="fas fa-skull-crossbones"></i> PVP
+                    </span>
+                </label>
                 <label class="quest-mode-toggle" style="margin: 0;">
                     <input type="checkbox" id="include-prestige-toggle" class="quest-mode-checkbox">
                     <span class="quest-mode-slider"></span>
-                    <span class="quest-mode-label">Include Prestige</span>
+                    <span class="quest-mode-label">Sort by Prestige First</span>
                 </label>
             </div>
-            <p>Global Leaderboard of Quest Completion</p>
 
             <div class="nav-links">
                 <a href="/"><i class="fas fa-home"></i> Home</a>
@@ -417,20 +427,43 @@
         }
         
         function renderRankings() {
+            const isPVE = document.getElementById('leaderboard-toggle').checked;
             const includePrestige = document.getElementById('include-prestige-toggle').checked;
             
-            // Sort rankings based on toggle state
-            const sortedRankings = [...rankingsData].sort((a, b) => {
-                // PVE players (-1 prestige) always rank below Prestige players (0-4)
-                const isPVE_A = a.progress.prestige === -1;
-                const isPVE_B = b.progress.prestige === -1;
-                
-                // If one is PVE and the other isn't, non-PVE ranks higher
-                if (isPVE_A && !isPVE_B) return 1;
-                if (!isPVE_A && isPVE_B) return -1;
-                
-                if (includePrestige) {
-                    // Include Prestige: Sort by Prestige > Completion % > Level
+            // Update label
+            const label = document.getElementById('leaderboard-label');
+            if (isPVE) {
+                label.innerHTML = '<i class="fas fa-shield-alt"></i> PVE';
+            } else {
+                label.innerHTML = '<i class="fas fa-skull-crossbones"></i> PVP';
+            }
+            
+            // Filter rankings based on leaderboard type
+            const filteredRankings = rankingsData.filter(user => {
+                if (isPVE) {
+                    // PVE leaderboard: only users with prestige -1
+                    return user.progress.prestige === -1;
+                } else {
+                    // PVP leaderboard: users with prestige >= 0 (0, 1, 2, 3, 4)
+                    return user.progress.prestige !== -1;
+                }
+            });
+
+            // Check if there are any users in this leaderboard
+            if (filteredRankings.length === 0) {
+                document.getElementById('rankings-list').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-trophy"></i>
+                        <p>No ${isPVE ? 'PVE' : 'PVP'} players yet. Be the first!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort rankings based on toggle state and leaderboard type
+            const sortedRankings = [...filteredRankings].sort((a, b) => {
+                if (!isPVE && includePrestige) {
+                    // PVP with Prestige First: Sort by Prestige > Completion % > Level
                     const prestigeA = a.progress.prestige || 0;
                     const prestigeB = b.progress.prestige || 0;
                     
@@ -449,7 +482,7 @@
                     // If same completion, sort by level
                     return b.progress.pmcLevel - a.progress.pmcLevel;
                 } else {
-                    // Default: Sort by Completion % > Prestige > Level
+                    // Default (both PVP and PVE): Sort by Completion % > Prestige > Level
                     const completionA = a.progress.completionRate;
                     const completionB = b.progress.completionRate;
                     
@@ -457,7 +490,7 @@
                         return completionB - completionA;
                     }
                     
-                    // If same completion, sort by prestige
+                    // If same completion, sort by prestige (for PVP)
                     const prestigeA = a.progress.prestige || 0;
                     const prestigeB = b.progress.prestige || 0;
                     
@@ -577,9 +610,17 @@
             return 'Just now';
         }
 
-        // Toggle event listener
+        // Toggle event listeners
         document.addEventListener('DOMContentLoaded', () => {
+            const leaderboardToggle = document.getElementById('leaderboard-toggle');
             const includePrestigeToggle = document.getElementById('include-prestige-toggle');
+            
+            if (leaderboardToggle) {
+                leaderboardToggle.addEventListener('change', () => {
+                    renderRankings();
+                });
+            }
+            
             if (includePrestigeToggle) {
                 includePrestigeToggle.addEventListener('change', () => {
                     renderRankings();
