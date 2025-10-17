@@ -754,8 +754,8 @@ app.post('/api/reports', requireAuth, async (req, res) => {
         const { type, title, description } = req.body;
         
         // Validation
-        if (!type || !['bug', 'feature'].includes(type)) {
-            return res.status(400).json({ error: 'Type must be "bug" or "feature"' });
+        if (!type || !['bug', 'feature', 'quest-error'].includes(type)) {
+            return res.status(400).json({ error: 'Type must be "bug", "feature", or "quest-error"' });
         }
         
         if (!title || title.trim().length < 3) {
