@@ -1652,24 +1652,24 @@
                 });
                 
                 const pinnedHtml = `
-                    <div class="pinned-message" style="background: rgba(199, 170, 106, 0.15); border: 2px solid rgba(199, 170, 106, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <div class="pinned-message" style="background: rgba(199, 170, 106, 0.15); border: 2px solid rgba(199, 170, 106, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
                             <i class="fas fa-thumbtack" style="color: #c7aa6a;"></i>
                             <span style="color: #c7aa6a; font-weight: 600; font-size: 12px; text-transform: uppercase;">Pinned Message</span>
                             <button onclick="unpinAdminChatMessage('${adminChatPinnedMessage.id}')" class="pin-btn" title="Unpin message" style="margin-left: auto; padding: 4px 8px; font-size: 11px; background: rgba(199, 170, 106, 0.2); border: 1px solid #c7aa6a; color: #c7aa6a; border-radius: 4px; cursor: pointer;">
                                 <i class="fas fa-times"></i> Unpin
                             </button>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <div class="chat-avatar" style="width: 32px; height: 32px;">
+                        <div style="display: flex; gap: 10px; min-width: 0;">
+                            <div class="chat-avatar" style="width: 32px; height: 32px; flex-shrink: 0;">
                                 ${adminChatPinnedMessage.avatarUrl ? `<img src="${adminChatPinnedMessage.avatarUrl}" alt="${adminChatPinnedMessage.username}">` : initials}
                             </div>
-                            <div style="flex: 1;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
                                     <span style="color: #c7aa6a; font-weight: 600; font-size: 13px;">${adminChatPinnedMessage.username}</span>
                                     <span style="color: #666; font-size: 11px;">${time}</span>
                                 </div>
-                                <div style="color: #ddd; font-size: 13px; line-height: 1.4;">${replaceAdminChatEmotes(adminChatPinnedMessage.message)}</div>
+                                <div style="color: #ddd; font-size: 13px; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap;">${replaceAdminChatEmotes(adminChatPinnedMessage.message)}</div>
                             </div>
                         </div>
                     </div>

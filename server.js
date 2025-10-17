@@ -249,7 +249,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
         const isFirstUser = userCount === 0;
 
         // Create user and progress
-        // All users get immediate access, approval now only controls leaderboard visibility
+        // All users get immediate access and are added to leaderboard by default
         const user = await prisma.user.create({
             data: {
                 email: email.toLowerCase(),
@@ -261,7 +261,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
                 twitchName,
                 avatarUrl,
                 profileColor: profileColor || '#c7aa6a',
-                approved: isFirstUser, // First user (admin) auto-approved for leaderboard
+                approved: true, // All users auto-approved for leaderboard
                 isAdmin: isFirstUser,  // First user is admin
                 progress: {
                     create: {
