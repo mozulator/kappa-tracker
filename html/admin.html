@@ -1662,7 +1662,7 @@
                         </div>
                         <div style="display: flex; gap: 10px; min-width: 0;">
                             <div class="chat-avatar" style="width: 32px; height: 32px; flex-shrink: 0;">
-                                ${adminChatPinnedMessage.avatarUrl ? `<img src="${adminChatPinnedMessage.avatarUrl}" alt="${adminChatPinnedMessage.username}">` : initials}
+                                ${adminChatPinnedMessage.avatarUrl ? `<img src="${adminChatPinnedMessage.avatarUrl}" alt="${adminChatPinnedMessage.username}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(adminChatPinnedMessage.username)}&background=1a1a1a&color=c7aa6a&size=64'">` : initials}
                             </div>
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
@@ -1690,7 +1690,7 @@
                 const messageHtml = `
                     <div class="chat-message" data-message-id="${msg.id}">
                         <div class="chat-avatar">
-                            ${msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.username}">` : initials}
+                            ${msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.username}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(msg.username)}&background=1a1a1a&color=c7aa6a&size=64'">` : initials}
                         </div>
                         <div class="chat-bubble">
                             <div class="chat-header-info">
