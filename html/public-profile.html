@@ -245,7 +245,7 @@
                 document.getElementById('profile-content').innerHTML = `
                     <div class="profile-header-section">
                         ${user.avatarUrl ? `
-                            <img src="${user.avatarUrl}" alt="${displayName}" class="profile-avatar" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a1a&color=c7aa6a&size=128'"
+                            <img src="${user.avatarUrl}" alt="${displayName}" class="profile-avatar" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a1a&color=c7aa6a&size=128'">
                         ` : `
                             <div class="profile-avatar" style="display: flex; align-items: center; justify-content: center; background: rgba(30, 30, 30, 0.8); border: 3px solid #c7aa6a;">
                                 <i class="fas fa-user" style="font-size: 60px; color: #c7aa6a;"></i>

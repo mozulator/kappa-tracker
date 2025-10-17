@@ -2087,7 +2087,7 @@ class QuestTracker {
                                                         <img src="${user.avatarUrl}" alt="${displayName}" 
                                                              style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #c7aa6a;" 
                                                              loading="lazy"
-                                                             onerror="handleBrokenAvatar(this, '${displayName.replace(/'/g, "\\'")}')"
+                                                             onerror="handleBrokenAvatar(this, '${displayName.replace(/'/g, "\\'")}')" >
                                                     ` : `
                                                         <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(30, 30, 30, 0.8); border: 2px solid #c7aa6a; display: flex; align-items: center; justify-content: center; color: #c7aa6a; font-size: 24px;">
                                                             <i class="fas fa-user"></i>
@@ -3489,7 +3489,7 @@ function renderPinnedMessage(msg) {
             ${isAdmin ? `<button onclick="unpinMessage('${msg.id}')" class="pin-btn" title="Unpin"><i class="fas fa-times"></i></button>` : ''}
         </div>
         <div class="global-chat-message" style="background: rgba(199, 170, 106, 0.05); padding: 10px;">
-            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar" onerror="handleBrokenAvatar(this, '${escapeHtml(displayName)}')"
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar" onerror="handleBrokenAvatar(this, '${escapeHtml(displayName)}')">
             <div class="global-chat-bubble">
                 <div class="global-chat-header-info">
                     <span class="global-chat-name" style="color: ${color};">
@@ -3514,7 +3514,7 @@ function renderMessage(msg) {
     
     return `
         <div class="global-chat-message" data-message-id="${msg.id}">
-            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar" onerror="handleBrokenAvatar(this, '${escapeHtml(displayName)}')"
+            <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName)}" class="global-chat-avatar" onerror="handleBrokenAvatar(this, '${escapeHtml(displayName)}')">
             <div class="global-chat-bubble">
                 <div class="global-chat-header-info">
                     <span class="global-chat-name" style="color: ${color};">
