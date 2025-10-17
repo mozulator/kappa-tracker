@@ -3277,13 +3277,11 @@ function initGlobalChat() {
         });
     }
     
-    // Add scroll listener for "load more" functionality
-    const messagesContainer = document.getElementById('global-chat-messages');
-    if (messagesContainer) {
-        messagesContainer.addEventListener('scroll', async () => {
-            // Check if scrolled to top (within 200px)
-            if (messagesContainer.scrollTop <= 200 && hasMoreMessages && !isLoadingMore) {
-                console.log('Loading more messages...');
+    // Add load more button handler
+    const loadMoreBtn = document.getElementById('load-more-chat-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', async () => {
+            if (!isLoadingMore && hasMoreMessages) {
                 await loadMoreMessages();
             }
         });
@@ -3372,6 +3370,12 @@ async function loadGlobalChat() {
                 displayGlobalChatMessages();
             }
         }
+        
+        // Update load more button visibility
+        const loadMoreBtn = document.getElementById('load-more-chat-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = hasMoreMessages ? 'flex' : 'none';
+        }
     } catch (error) {
         console.error('Error loading global chat:', error);
     }
@@ -3382,7 +3386,14 @@ async function loadMoreMessages() {
     
     isLoadingMore = true;
     const messagesContainer = document.getElementById('global-chat-messages');
+    const loadMoreBtn = document.getElementById('load-more-chat-btn');
     const oldScrollHeight = messagesContainer.scrollHeight;
+    
+    // Update button state
+    if (loadMoreBtn) {
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    }
     
     try {
         const response = await fetch(`/api/global-chat?before=${oldestChatTimestamp}&limit=50`, {
@@ -3415,6 +3426,12 @@ async function loadMoreMessages() {
         console.error('Error loading more messages:', error);
     } finally {
         isLoadingMore = false;
+        // Update button state
+        if (loadMoreBtn) {
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Load More Messages';
+            loadMoreBtn.style.display = hasMoreMessages ? 'flex' : 'none';
+        }
     }
 }
 

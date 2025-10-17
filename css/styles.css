@@ -2458,12 +2458,45 @@ input[type="checkbox"]:focus {
     display: none;
 }
 
+/* Load More button */
+.load-more-chat-btn {
+    width: 100%;
+    padding: 10px 15px;
+    background: rgba(199, 170, 106, 0.1);
+    border: none;
+    border-bottom: 1px solid var(--post-border);
+    color: var(--text-highlight);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.load-more-chat-btn:hover {
+    background: rgba(199, 170, 106, 0.2);
+}
+
+.load-more-chat-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.load-more-chat-btn i {
+    font-size: 12px;
+}
+
 /* Pinned message */
 .pinned-message {
     margin-bottom: 10px;
     border: 1px solid rgba(199, 170, 106, 0.3);
     border-radius: 8px;
     overflow: hidden;
+    min-height: fit-content;
 }
 
 /* Admin action buttons */
