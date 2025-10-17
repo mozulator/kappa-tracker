@@ -3183,12 +3183,12 @@ function initGlobalChat() {
     }
 
     // Toggle chat box
-    chatButton.addEventListener('click', () => {
+    chatButton.addEventListener('click', async () => {
         globalChatOpen = !globalChatOpen;
         chatBox.style.display = globalChatOpen ? 'flex' : 'none';
         
         if (globalChatOpen) {
-            loadGlobalChat();
+            await loadGlobalChat();
             // Hide unread badge when opening
             const badge = document.getElementById('chat-unread-badge');
             if (badge) badge.style.display = 'none';
@@ -3452,15 +3452,6 @@ function displayGlobalChatMessages() {
     }
     
     let html = '';
-    
-    // Show "Load More" indicator at top if there are more messages
-    if (hasMoreMessages && globalChatMessages.length > 0) {
-        html += `
-            <div style="text-align: center; padding: 10px; color: #888; font-size: 12px;">
-                <i class="fas fa-chevron-up"></i> Scroll to top to load more
-            </div>
-        `;
-    }
 
     if (globalChatMessages.length === 0) {
         html += `
