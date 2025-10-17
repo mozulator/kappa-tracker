@@ -3277,15 +3277,8 @@ function initGlobalChat() {
         });
     }
     
-    // Add load more button handler
-    const loadMoreBtn = document.getElementById('load-more-chat-btn');
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', async () => {
-            if (!isLoadingMore && hasMoreMessages) {
-                await loadMoreMessages();
-            }
-        });
-    }
+    // Load more button is now rendered dynamically in displayGlobalChatMessages()
+    // and uses onclick handler directly in the HTML
 
     // Load 7TV emotes
     load7TVEmotes();
@@ -3370,12 +3363,6 @@ async function loadGlobalChat() {
                 displayGlobalChatMessages();
             }
         }
-        
-        // Update load more button visibility
-        const loadMoreBtn = document.getElementById('load-more-chat-btn');
-        if (loadMoreBtn) {
-            loadMoreBtn.style.display = hasMoreMessages ? 'flex' : 'none';
-        }
     } catch (error) {
         console.error('Error loading global chat:', error);
     }
@@ -3386,14 +3373,10 @@ async function loadMoreMessages() {
     
     isLoadingMore = true;
     const messagesContainer = document.getElementById('global-chat-messages');
-    const loadMoreBtn = document.getElementById('load-more-chat-btn');
     const oldScrollHeight = messagesContainer.scrollHeight;
     
-    // Update button state
-    if (loadMoreBtn) {
-        loadMoreBtn.disabled = true;
-        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-    }
+    // Re-render to show loading state
+    displayGlobalChatMessages();
     
     try {
         const response = await fetch(`/api/global-chat?before=${oldestChatTimestamp}&limit=50`, {
@@ -3426,12 +3409,8 @@ async function loadMoreMessages() {
         console.error('Error loading more messages:', error);
     } finally {
         isLoadingMore = false;
-        // Update button state
-        if (loadMoreBtn) {
-            loadMoreBtn.disabled = false;
-            loadMoreBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Load More Messages';
-            loadMoreBtn.style.display = hasMoreMessages ? 'flex' : 'none';
-        }
+        // Re-render to show normal state
+        displayGlobalChatMessages();
     }
 }
 
@@ -3452,6 +3431,15 @@ function displayGlobalChatMessages() {
     }
     
     let html = '';
+
+    // Add load more button at the top if there are more messages
+    if (globalChatMessages.length > 0 && hasMoreMessages) {
+        html += `
+            <button id="load-more-chat-btn" class="load-more-chat-btn" onclick="loadMoreMessages()" ${isLoadingMore ? 'disabled' : ''}>
+                <i class="fas fa-${isLoadingMore ? 'spinner fa-spin' : 'chevron-up'}"></i> ${isLoadingMore ? 'Loading...' : 'Load More Messages'}
+            </button>
+        `;
+    }
 
     if (globalChatMessages.length === 0) {
         html += `
