@@ -3368,7 +3368,8 @@ async function loadGlobalChat() {
     }
 }
 
-async function loadMoreMessages() {
+window.loadMoreMessages = async function() {
+    console.log('loadMoreMessages called', { isLoadingMore, hasMoreMessages, oldestChatTimestamp });
     if (isLoadingMore || !hasMoreMessages || !oldestChatTimestamp) return;
     
     isLoadingMore = true;
@@ -3412,7 +3413,7 @@ async function loadMoreMessages() {
         // Re-render to show normal state
         displayGlobalChatMessages();
     }
-}
+};
 
 function displayGlobalChatMessages() {
     const messagesContainer = document.getElementById('global-chat-messages');
