@@ -1475,7 +1475,7 @@
                             <div class="name">
                                 <span class="report-type-badge ${typeBadge}">${report.type}</span>
                                 <span class="report-status ${statusClass}">${report.status}</span>
-                                ${report.title}
+                                ${report.type === 'quest-error' && report.questName ? `[${report.questName}] ` : ''}${report.title}
                             </div>
                             ${report.questName ? `
                                 <div class="details" style="margin-top: 4px; color: #c7aa6a; font-size: 13px;">
