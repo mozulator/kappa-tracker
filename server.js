@@ -1708,7 +1708,11 @@ app.get('/api/users/:username', optionalAuth, async (req, res) => {
                         totalCompleted: true,
                         lastQuestDate: true,
                         completedQuests: true,
-                        collectorItemsFound: true
+                        collectorItemsFound: true,
+                        collectorTextAlign: true,
+                        collectorStyle: true,
+                        collectorTitle: true,
+                        collectorShowRank: true
                     }
                 }
             }
@@ -2368,6 +2372,51 @@ app.post('/api/reset-progress', requireAuth, async (req, res) => {
         });
     } catch (error) {
         console.error(`[RESET] Error resetting progress for user ${req.user.username}:`, error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update collector overlay settings
+app.put('/api/progress/collector-settings', requireAuth, async (req, res) => {
+    try {
+        const { collectorTitle, collectorStyle, collectorTextAlign, collectorShowRank } = req.body;
+
+        // Validate inputs
+        if (collectorTitle && collectorTitle.length > 50) {
+            return res.status(400).json({ error: 'Title must be 50 characters or less' });
+        }
+
+        const validStyles = ['Transparent', 'Bosses', 'Maps'];
+        if (collectorStyle && !validStyles.includes(collectorStyle)) {
+            return res.status(400).json({ error: 'Invalid style. Must be "Transparent", "Bosses", or "Maps"' });
+        }
+
+        const validAlignments = ['left', 'center', 'right'];
+        if (collectorTextAlign && !validAlignments.includes(collectorTextAlign)) {
+            return res.status(400).json({ error: 'Invalid alignment. Must be "left", "center", or "right"' });
+        }
+
+        // Update progress with new collector settings
+        const progress = await prisma.userProgress.update({
+            where: { userId: req.user.id },
+            data: {
+                collectorTitle: collectorTitle || 'Kappa Progress',
+                collectorStyle: collectorStyle || 'Bosses',
+                collectorTextAlign: collectorTextAlign || 'left',
+                collectorShowRank: collectorShowRank !== undefined ? collectorShowRank : false
+            }
+        });
+
+        console.log(`[COLLECTOR-SETTINGS] User ${req.user.username} updated settings:`, {
+            title: collectorTitle,
+            style: collectorStyle,
+            align: collectorTextAlign,
+            showRank: collectorShowRank
+        });
+
+        res.json({ message: 'Collector settings updated successfully', progress });
+    } catch (error) {
+        console.error(`[COLLECTOR-SETTINGS] Error updating settings for user ${req.user.username}:`, error);
         res.status(500).json({ error: error.message });
     }
 });

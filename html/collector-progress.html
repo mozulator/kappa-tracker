@@ -30,6 +30,7 @@
             width: 100%;
             height: 100%;
             z-index: -2;
+            background-color: #000000; /* Black background for transitions */
         }
 
         /* Individual background images */
@@ -81,6 +82,17 @@
             padding-left: 32px;
         }
 
+        .collector-progress-bar.align-center {
+            align-items: center;
+            padding-left: 0;
+        }
+
+        .collector-progress-bar.align-right {
+            align-items: flex-end;
+            padding-left: 0;
+            padding-right: 32px;
+        }
+
         .collector-progress-text {
             font-size: 32px;
             font-weight: 700;
@@ -90,6 +102,14 @@
             pointer-events: none;
             letter-spacing: 1px;
             text-transform: uppercase;
+        }
+
+        .collector-progress-text.align-center {
+            text-align: center;
+        }
+
+        .collector-progress-text.align-right {
+            text-align: right;
         }
 
         .collector-progress-container {
@@ -110,22 +130,73 @@
             pointer-events: none;
             margin-bottom: 6px;
         }
+
+        .collector-progress-label.align-center {
+            text-align: center;
+        }
+
+        .collector-progress-label.align-right {
+            text-align: right;
+        }
+
+        .collector-progress-rank {
+            text-align: left;
+        }
+
+        .collector-progress-rank.align-center {
+            text-align: center;
+        }
+
+        .collector-progress-rank.align-right {
+            text-align: right;
+        }
+
+        /* Transparent style - hide backgrounds and border */
+        body.transparent-style {
+            outline: none;
+            background: transparent !important;
+        }
+
+        body.transparent-style::before {
+            display: none !important;
+            background: none !important;
+            content: none !important;
+        }
+
+        body.transparent-style .background-slideshow {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
-    <!-- Background slideshow -->
-    <div class="background-slideshow">
-        <div class="background-image" style="background-image: url('/imgs/shturman.png');" data-image="shturman"></div>
-        <div class="background-image" style="background-image: url('/imgs/goons.png');" data-image="goons"></div>
-        <div class="background-image" style="background-image: url('/imgs/kaban.png');" data-image="kaban"></div>
-        <div class="background-image" style="background-image: url('/imgs/killa.png');" data-image="killa"></div>
-        <div class="background-image" style="background-image: url('/imgs/tagilla.png');" data-image="tagilla"></div>
+    <!-- Background slideshow for Bosses -->
+    <div class="background-slideshow bosses-slideshow">
+        <div class="background-image" style="background-image: url('/imgs/bosses/shturman.png');" data-image="shturman"></div>
+        <div class="background-image" style="background-image: url('/imgs/bosses/goons.png');" data-image="goons"></div>
+        <div class="background-image" style="background-image: url('/imgs/bosses/kaban.png');" data-image="kaban"></div>
+        <div class="background-image" style="background-image: url('/imgs/bosses/killa.png');" data-image="killa"></div>
+        <div class="background-image" style="background-image: url('/imgs/bosses/tagilla.png');" data-image="tagilla"></div>
+    </div>
+    
+    <!-- Background slideshow for Maps -->
+    <div class="background-slideshow maps-slideshow" style="display: none;">
+        <div class="background-image" style="background-image: url('/imgs/maps/customs.png');" data-image="customs"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/factory.png');" data-image="factory"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/ground-zero.png');" data-image="ground-zero"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/interchange.png');" data-image="interchange"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/labs.png');" data-image="labs"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/lighthouse.png');" data-image="lighthouse"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/reserve.png');" data-image="reserve"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/shoreline.png');" data-image="shoreline"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/streets.png');" data-image="streets"></div>
+        <div class="background-image" style="background-image: url('/imgs/maps/woods.png');" data-image="woods"></div>
     </div>
 
     <div class="collector-progress-container">
         <div class="collector-progress-bar">
             <div class="collector-progress-label">KAPPA PROGRESS</div>
             <div class="collector-progress-text" id="collector-progress-text">0% (0/0)</div>
+            <div class="collector-progress-rank" id="collector-progress-rank" style="display: none; font-size: 16px; font-weight: 600; color: #c7aa6a; margin-top: 8px; letter-spacing: 1px;"></div>
         </div>
     </div>
 
@@ -133,49 +204,224 @@
         let lastUpdateTime = 0;
         let currentData = null;
         let lastProgressState = null;
+        let userSettings = {
+            collectorTitle: 'Kappa Progress',
+            collectorStyle: 'Bosses',
+            collectorTextAlign: 'left',
+            collectorShowRank: false
+        };
+        let userRank = null;
+        let currentUserId = null;
+        let currentUsername = null;
 
         // Background slideshow functionality
         let currentImageIndex = 0;
-        const backgroundImages = document.querySelectorAll('.background-image');
-        const totalImages = backgroundImages.length;
+        let currentSlideshow = 'bosses'; // 'bosses' or 'maps'
+        let slideshowInterval = null;
+        let slideshowInitialized = false;
 
         // Initialize slideshow
-        function initSlideshow() {
+        function initSlideshow(style = 'Bosses') {
+            console.log('Initializing slideshow with style:', style);
+            
+            // Clear existing interval
+            if (slideshowInterval) {
+                clearInterval(slideshowInterval);
+            }
+            
+            // Determine which slideshow to use
+            currentSlideshow = style === 'Maps' ? 'maps' : 'bosses';
+            const slideshowClass = style === 'Maps' ? '.maps-slideshow' : '.bosses-slideshow';
+            const backgroundImages = document.querySelectorAll(`${slideshowClass} .background-image`);
+            
+            console.log('Found', backgroundImages.length, 'images for', style, 'slideshow');
+            
+            // Reset index
+            currentImageIndex = 0;
+            
+            // Remove all active classes
+            document.querySelectorAll('.background-image').forEach(img => img.classList.remove('active'));
+            
             // Set first image as active
             if (backgroundImages.length > 0) {
                 backgroundImages[0].classList.add('active');
+                console.log('First image activated:', backgroundImages[0].getAttribute('data-image'));
             }
             
             // Start the slideshow timer
-            setInterval(changeBackground, 60000); // Change every 1 minute
+            slideshowInterval = setInterval(() => changeBackground(style), 60000); // Change every 1 minute
+            console.log('Slideshow timer started, will change every 60 seconds');
         }
 
         // Change to next background image
-        function changeBackground() {
+        function changeBackground(style = 'Bosses') {
+            console.log('changeBackground called for style:', style);
+            const slideshowClass = style === 'Maps' ? '.maps-slideshow' : '.bosses-slideshow';
+            const backgroundImages = document.querySelectorAll(`${slideshowClass} .background-image`);
+            const totalImages = backgroundImages.length;
+            
+            console.log('Current index:', currentImageIndex, 'Total images:', totalImages);
+            
+            if (totalImages === 0) {
+                console.log('No images found, returning');
+                return;
+            }
+            
             // Remove active class from current image
+            const oldImage = backgroundImages[currentImageIndex].getAttribute('data-image');
             backgroundImages[currentImageIndex].classList.remove('active');
             
             // Move to next image (loop back to 0 if at end)
             currentImageIndex = (currentImageIndex + 1) % totalImages;
             
             // Add active class to new image
+            const newImage = backgroundImages[currentImageIndex].getAttribute('data-image');
             backgroundImages[currentImageIndex].classList.add('active');
+            
+            console.log('Changed from', oldImage, 'to', newImage, '(index:', currentImageIndex, ')');
         }
 
         // Preload all images for seamless transitions
         function preloadImages() {
-            const imageUrls = [
-                '/imgs/shturman.png',
-                '/imgs/goons.png', 
-                '/imgs/kaban.png',
-                '/imgs/killa.png',
-                '/imgs/tagilla.png'
+            const bossImageUrls = [
+                '/imgs/bosses/shturman.png',
+                '/imgs/bosses/goons.png', 
+                '/imgs/bosses/kaban.png',
+                '/imgs/bosses/killa.png',
+                '/imgs/bosses/tagilla.png'
             ];
             
-            imageUrls.forEach(url => {
+            const mapImageUrls = [
+                '/imgs/maps/customs.png',
+                '/imgs/maps/factory.png',
+                '/imgs/maps/ground-zero.png',
+                '/imgs/maps/interchange.png',
+                '/imgs/maps/labs.png',
+                '/imgs/maps/lighthouse.png',
+                '/imgs/maps/reserve.png',
+                '/imgs/maps/shoreline.png',
+                '/imgs/maps/streets.png',
+                '/imgs/maps/woods.png'
+            ];
+            
+            [...bossImageUrls, ...mapImageUrls].forEach(url => {
                 const img = new Image();
                 img.src = url;
             });
+        }
+
+        // Apply user settings to the overlay
+        function applySettings() {
+            const body = document.body;
+            const progressBar = document.querySelector('.collector-progress-bar');
+            const progressLabel = document.querySelector('.collector-progress-label');
+            const progressText = document.querySelector('.collector-progress-text');
+            const progressRank = document.querySelector('.collector-progress-rank');
+            const bossesSlideshow = document.querySelector('.bosses-slideshow');
+            const mapsSlideshow = document.querySelector('.maps-slideshow');
+
+            // Apply text alignment
+            progressBar.classList.remove('align-left', 'align-center', 'align-right');
+            progressLabel.classList.remove('align-left', 'align-center', 'align-right');
+            progressText.classList.remove('align-left', 'align-center', 'align-right');
+            progressRank.classList.remove('align-left', 'align-center', 'align-right');
+
+            if (userSettings.collectorTextAlign !== 'left') {
+                progressBar.classList.add(`align-${userSettings.collectorTextAlign}`);
+                progressLabel.classList.add(`align-${userSettings.collectorTextAlign}`);
+                progressText.classList.add(`align-${userSettings.collectorTextAlign}`);
+                progressRank.classList.add(`align-${userSettings.collectorTextAlign}`);
+            }
+
+            // Apply style
+            if (userSettings.collectorStyle === 'Transparent') {
+                body.classList.add('transparent-style');
+                bossesSlideshow.style.display = 'none';
+                mapsSlideshow.style.display = 'none';
+                // Clear slideshow if it was running
+                if (slideshowInterval) {
+                    clearInterval(slideshowInterval);
+                    slideshowInterval = null;
+                    slideshowInitialized = false;
+                }
+            } else {
+                body.classList.remove('transparent-style');
+                
+                // Show appropriate slideshow based on style
+                if (userSettings.collectorStyle === 'Maps') {
+                    bossesSlideshow.style.display = 'none';
+                    mapsSlideshow.style.display = 'block';
+                    // Only initialize if not already initialized or if style changed
+                    if (!slideshowInitialized || currentSlideshow !== 'maps') {
+                        initSlideshow('Maps');
+                        slideshowInitialized = true;
+                    }
+                } else {
+                    // Default to Bosses
+                    bossesSlideshow.style.display = 'block';
+                    mapsSlideshow.style.display = 'none';
+                    // Only initialize if not already initialized or if style changed
+                    if (!slideshowInitialized || currentSlideshow !== 'bosses') {
+                        initSlideshow('Bosses');
+                        slideshowInitialized = true;
+                    }
+                }
+            }
+
+            // Apply title
+            progressLabel.textContent = userSettings.collectorTitle.toUpperCase();
+            
+            // Update rank display
+            updateRankDisplay();
+        }
+        
+        // Update rank display based on settings
+        function updateRankDisplay() {
+            const progressRank = document.getElementById('collector-progress-rank');
+            
+            console.log('updateRankDisplay called - showRank:', userSettings.collectorShowRank, 'userRank:', userRank);
+            
+            if (userSettings.collectorShowRank && userRank !== null) {
+                progressRank.textContent = `#${userRank} on obs-kappa-tracker.com`;
+                progressRank.style.display = 'block';
+                console.log('Rank display shown:', progressRank.textContent);
+            } else {
+                progressRank.style.display = 'none';
+                console.log('Rank display hidden');
+            }
+        }
+        
+        // Fetch user rank from rankings
+        async function fetchUserRank() {
+            if (!currentUsername) {
+                console.log('Cannot fetch rank: currentUsername is not set');
+                return;
+            }
+            
+            console.log('Fetching rank for username:', currentUsername);
+            
+            try {
+                const response = await fetch('/api/rankings?limit=1000', { credentials: 'include' });
+                if (response.ok) {
+                    const data = await response.json();
+                    const rankingsArray = data.rankings; // Extract the rankings array from the response object
+                    console.log('Rankings fetched:', rankingsArray.length, 'users');
+                    
+                    const userIndex = rankingsArray.findIndex(r => r.username === currentUsername);
+                    console.log('User index in rankings:', userIndex);
+                    if (userIndex !== -1) {
+                        userRank = userIndex + 1;
+                        console.log('User rank set to:', userRank);
+                        updateRankDisplay();
+                    } else {
+                        console.log('User not found in rankings (user may not be public or approved)');
+                    }
+                } else {
+                    console.error('Failed to fetch rankings:', response.status);
+                }
+            } catch (error) {
+                console.error('Error fetching user rank:', error);
+            }
         }
 
         // Load progress data from parent window or API
@@ -192,6 +438,12 @@
                 // Extract username from URL query parameter (format: ?username=XXX)
                 const urlParams = new URLSearchParams(window.location.search);
                 const username = urlParams.get('username');
+                
+                // Store username for rank fetching
+                if (username) {
+                    currentUsername = username;
+                    console.log('Username from URL:', currentUsername);
+                }
 
                 // Fallback to API if no parent window
                 const [questsResponse, progressResponse] = await Promise.all([
@@ -217,14 +469,73 @@
                 }
                 
                 // Handle different response formats
-                // /api/users/:username returns {user, progress: {...}}
-                // /api/progress returns {...} directly
-                const userProgress = progressData.progress || progressData;
+                // /api/users/:username returns {user data with id, progress: {...}}
+                // /api/progress returns {userId, ...other fields}
+                let userProgress;
+                let userId;
+                
+                if (progressData.progress) {
+                    // Response from /api/users/:username
+                    userProgress = progressData.progress;
+                    userId = progressData.id; // User ID is in the parent object
+                } else {
+                    // Response from /api/progress
+                    userProgress = progressData;
+                    userId = progressData.userId; // userId is in the progress object
+                }
                 
                 // Validate we have the required data
                 if (!userProgress || !userProgress.completedQuests) {
                     console.error('Missing required progress data');
                     return;
+                }
+
+                // Store user ID for rank fetching
+                if (userId) {
+                    currentUserId = userId;
+                    console.log('User ID set to:', currentUserId);
+                } else {
+                    console.log('No userId found in response');
+                }
+                
+                // If we don't have username yet (no URL param), get it from auth endpoint
+                if (!currentUsername) {
+                    try {
+                        const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
+                        if (meResponse.ok) {
+                            const meData = await meResponse.json();
+                            currentUsername = meData.user.username;
+                            console.log('Username from auth:', currentUsername);
+                        }
+                    } catch (error) {
+                        console.error('Error getting username:', error);
+                    }
+                }
+
+                // Load user settings from progress data
+                if (userProgress.collectorTitle) {
+                    userSettings.collectorTitle = userProgress.collectorTitle;
+                }
+                if (userProgress.collectorStyle) {
+                    userSettings.collectorStyle = userProgress.collectorStyle;
+                }
+                if (userProgress.collectorTextAlign) {
+                    userSettings.collectorTextAlign = userProgress.collectorTextAlign;
+                }
+                if (userProgress.collectorShowRank !== undefined) {
+                    userSettings.collectorShowRank = userProgress.collectorShowRank;
+                    console.log('Loaded collectorShowRank:', userProgress.collectorShowRank);
+                }
+
+                // Apply settings to UI
+                applySettings();
+                
+                // Fetch user rank if show rank is enabled
+                if (userSettings.collectorShowRank) {
+                    console.log('Show rank is enabled, fetching rank...');
+                    fetchUserRank();
+                } else {
+                    console.log('Show rank is disabled');
                 }
                 
                 // completedQuests is already parsed by server
@@ -270,7 +581,7 @@
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', function() {
             preloadImages(); // Preload all background images
-            initSlideshow(); // Initialize the slideshow
+            // Don't initialize slideshow here - it will be initialized in applySettings after loading user preferences
             loadCollectorProgress(); // Load the quest progress data
             
             // Auto-refresh every 3 seconds to check for updates

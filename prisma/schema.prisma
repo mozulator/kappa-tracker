@@ -85,6 +85,12 @@ model UserProgress {
   totalCompleted  Int      @default(0)
   lastQuestDate   DateTime?
   
+  // Collector overlay settings
+  collectorTextAlign String @default("left") // "left", "center", "right"
+  collectorStyle     String @default("Bosses") // "Transparent", "Bosses", "Maps"
+  collectorTitle     String @default("Kappa Progress")
+  collectorShowRank  Boolean @default(false) // Show leaderboard position
+  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

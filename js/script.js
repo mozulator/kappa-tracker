@@ -2474,6 +2474,73 @@ class QuestTracker {
                             ` : ''}
                         </div>
                         
+                        <div style="border-top: 1px solid #3a3a3a; padding-top: 20px; margin-bottom: 20px;">
+                            <h4 style="color: #c7aa6a; font-size: 16px; margin-bottom: 15px;">
+                                <i class="fas fa-tv"></i> Collector Progress Overlay Settings
+                            </h4>
+                            <div style="color: #888; font-size: 14px; margin-bottom: 15px;">Customize how your collector progress overlay appears in OBS</div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; color: #c7aa6a; font-size: 14px; margin-bottom: 8px; font-weight: 600;">Title</label>
+                                <input 
+                                    type="text" 
+                                    id="collector-title-input" 
+                                    value="Kappa Progress" 
+                                    maxlength="50"
+                                    placeholder="Kappa Progress"
+                                    style="width: 100%; padding: 10px 15px; background: rgba(20, 20, 20, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px;"
+                                />
+                                <div style="color: #666; font-size: 12px; margin-top: 5px;">The title shown on your overlay</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; color: #c7aa6a; font-size: 14px; margin-bottom: 8px; font-weight: 600;">Style</label>
+                                <select 
+                                    id="collector-style-select"
+                                    style="width: 100%; padding: 10px 15px; background: rgba(20, 20, 20, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px; cursor: pointer;"
+                                >
+                                    <option value="Bosses">Bosses</option>
+                                    <option value="Maps">Maps</option>
+                                    <option value="Transparent">Transparent</option>
+                                </select>
+                                <div style="color: #666; font-size: 12px; margin-top: 5px;">Visual style for your overlay</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;" id="collector-align-container">
+                                <label style="display: block; color: #c7aa6a; font-size: 14px; margin-bottom: 8px; font-weight: 600;">Text Alignment</label>
+                                <select 
+                                    id="collector-align-select"
+                                    style="width: 100%; padding: 10px 15px; background: rgba(20, 20, 20, 0.8); border: 2px solid #3a3a3a; border-radius: 8px; color: #fff; font-size: 16px; cursor: pointer;"
+                                >
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                                <div style="color: #666; font-size: 12px; margin-top: 5px;">Text alignment for the progress display (only for Transparent style)</div>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #c7aa6a; font-size: 14px; font-weight: 600;">
+                                    <input 
+                                        type="checkbox" 
+                                        id="collector-show-rank-checkbox"
+                                        style="width: 20px; height: 20px; cursor: pointer;"
+                                    />
+                                    <span>Show my leaderboard position</span>
+                                </label>
+                                <div style="color: #666; font-size: 12px; margin-top: 5px; margin-left: 30px;">Display your rank (#x on obs-kappa-tracker.com) below the progress</div>
+                            </div>
+                            
+                            <button 
+                                id="save-collector-settings-btn" 
+                                style="padding: 10px 20px; background: #c7aa6a; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px; transition: background 0.2s; width: 100%;"
+                                onmouseover="this.style.background='#d4ba7f'"
+                                onmouseout="this.style.background='#c7aa6a'"
+                            >
+                                <i class="fas fa-save"></i> Save Overlay Settings
+                            </button>
+                        </div>
+                        
                         </div>
                     </div>
                 </div>
@@ -2589,6 +2656,87 @@ class QuestTracker {
                         this.showNotification('Failed to save Tarkov.dev ID', 'error');
                         saveTarkovDevBtn.disabled = false;
                         saveTarkovDevBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+                    }
+                });
+            }
+            
+            // Load collector overlay settings
+            const loadCollectorSettings = async () => {
+                try {
+                    const response = await fetch('/api/progress', { credentials: 'include' });
+                    if (response.ok) {
+                        const progress = await response.json();
+                        document.getElementById('collector-title-input').value = progress.collectorTitle || 'Kappa Progress';
+                        document.getElementById('collector-style-select').value = progress.collectorStyle || 'Bosses';
+                        document.getElementById('collector-align-select').value = progress.collectorTextAlign || 'left';
+                        document.getElementById('collector-show-rank-checkbox').checked = progress.collectorShowRank || false;
+                        
+                        // Update text align state based on initial style
+                        toggleTextAlignAvailability(progress.collectorStyle || 'Bosses');
+                    }
+                } catch (error) {
+                    console.error('Error loading collector settings:', error);
+                }
+            };
+            loadCollectorSettings();
+            
+            // Function to toggle text align availability based on style
+            const toggleTextAlignAvailability = (style) => {
+                const alignSelect = document.getElementById('collector-align-select');
+                const alignContainer = document.getElementById('collector-align-container');
+                
+                if (style === 'Bosses' || style === 'Maps') {
+                    alignSelect.disabled = true;
+                    alignSelect.style.opacity = '0.5';
+                    alignSelect.style.cursor = 'not-allowed';
+                    alignContainer.style.opacity = '0.5';
+                } else {
+                    alignSelect.disabled = false;
+                    alignSelect.style.opacity = '1';
+                    alignSelect.style.cursor = 'pointer';
+                    alignContainer.style.opacity = '1';
+                }
+            };
+            
+            // Add event listener to style select to toggle text align
+            const styleSelect = document.getElementById('collector-style-select');
+            if (styleSelect) {
+                styleSelect.addEventListener('change', (e) => {
+                    toggleTextAlignAvailability(e.target.value);
+                });
+            }
+            
+            // Add event listener for collector settings save button
+            const saveCollectorSettingsBtn = document.getElementById('save-collector-settings-btn');
+            if (saveCollectorSettingsBtn) {
+                saveCollectorSettingsBtn.addEventListener('click', async () => {
+                    const collectorTitle = document.getElementById('collector-title-input').value;
+                    const collectorStyle = document.getElementById('collector-style-select').value;
+                    const collectorTextAlign = document.getElementById('collector-align-select').value;
+                    const collectorShowRank = document.getElementById('collector-show-rank-checkbox').checked;
+                    
+                    try {
+                        saveCollectorSettingsBtn.disabled = true;
+                        saveCollectorSettingsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                        
+                        const response = await fetch('/api/progress/collector-settings', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ collectorTitle, collectorStyle, collectorTextAlign, collectorShowRank })
+                        });
+                        
+                        if (response.ok) {
+                            this.showNotification('Collector overlay settings saved successfully!', 'success');
+                        } else {
+                            throw new Error('Failed to save');
+                        }
+                    } catch (error) {
+                        console.error('Error saving collector settings:', error);
+                        this.showNotification('Failed to save collector settings', 'error');
+                    } finally {
+                        saveCollectorSettingsBtn.disabled = false;
+                        saveCollectorSettingsBtn.innerHTML = '<i class="fas fa-save"></i> Save Overlay Settings';
                     }
                 });
             }
